@@ -3,23 +3,24 @@
 import logging
 import warnings
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Literal, Optional, Sequence, Union
 
 from datasets import Dataset, DatasetDict, config, load_dataset
 from datasets.splits import Split
 
 from cyclops.data.slicer import SliceSpec
-from cyclops.data.utils import (
-    check_required_columns,
-    get_columns_as_numpy_array,
-    set_decode,
-)
+from cyclops.data.utils import set_decode
 from cyclops.evaluate.fairness.config import FairnessConfig
 from cyclops.evaluate.fairness.evaluator import evaluate_fairness
 from cyclops.evaluate.metrics.experimental.metric import Metric
 from cyclops.evaluate.metrics.experimental.metric_dict import MetricDict
 from cyclops.evaluate.metrics.experimental.utils.types import Array
-from cyclops.evaluate.utils import _format_column_names, choose_split
+from cyclops.evaluate.utils import (
+    _format_column_names,
+    check_required_columns,
+    choose_split,
+    get_columns_as_array,
+)
 from cyclops.utils.log import setup_logging
 
 
@@ -40,6 +41,7 @@ def evaluate(
     fairness_config: Optional[FairnessConfig] = None,
     override_fairness_metrics: bool = True,
     load_dataset_kwargs: Optional[Dict[str, Any]] = None,
+    array_lib: Literal["numpy", "torch", "cupy"] = "numpy",
 ) -> Dict[str, Any]:
     """Evaluate one or more models on a dataset using one or more metrics.
 
@@ -97,6 +99,9 @@ def evaluate(
     load_dataset_kwargs : Dict[str, Any], optional
         Keyword arguments to pass to `datasets.load_dataset`. Only used if
         `dataset` is a string.
+    array_lib : {"numpy", "torch", "cupy"}, default="numpy"
+        The array library to use for the metric computation. The metric results
+        will be returned in the format of `array_lib`.
 
     Returns
     -------
@@ -131,6 +136,7 @@ def evaluate(
         ignore_columns=ignore_columns,
         batch_size=batch_size,
         raise_on_empty_slice=raise_on_empty_slice,
+        array_lib=array_lib,
     )
 
     results = {}
@@ -232,6 +238,7 @@ def _compute_metrics(
     ignore_columns: Optional[Union[str, List[str]]] = None,
     batch_size: Optional[int] = config.DEFAULT_MAX_BATCH_SIZE,
     raise_on_empty_slice: bool = False,
+    array_lib: Literal["numpy", "torch", "cupy"] = "numpy",
 ) -> Dict[str, Dict[str, Any]]:
     """Compute metrics for a dataset."""
     target_columns = _format_column_names(target_columns)
@@ -240,11 +247,7 @@ def _compute_metrics(
     # temporarily stop decoding features to save memory
     set_decode(dataset, False, exclude=target_columns + prediction_columns)
 
-    with dataset.formatted_as(
-        "numpy",
-        columns=target_columns + prediction_columns,
-        output_all_columns=True,
-    ):
+    with dataset.formatted_as("arrow", columns=target_columns + prediction_columns):
         results: Dict[str, Dict[str, Any]] = {}
         for slice_name, slice_fn in slice_spec.slices():
             sliced_dataset = dataset.remove_columns(ignore_columns or []).filter(
@@ -275,24 +278,26 @@ def _compute_metrics(
                 elif (
                     batch_size is None or batch_size < 0
                 ):  # dataset.iter does not support getting all batches at once
-                    targets = get_columns_as_numpy_array(
+                    targets = get_columns_as_array(
                         dataset=sliced_dataset,
                         columns=target_columns,
+                        array_lib=array_lib,
                     )
-                    predictions = get_columns_as_numpy_array(
+                    predictions = get_columns_as_array(
                         dataset=sliced_dataset,
                         columns=prediction_column,
+                        array_lib=array_lib,
                     )
                     metric_output = metrics(targets, predictions)
                 else:
                     for batch in sliced_dataset.iter(batch_size=batch_size):
-                        targets = get_columns_as_numpy_array(
-                            dataset=batch,
-                            columns=target_columns,
+                        targets = get_columns_as_array(
+                            dataset=batch, columns=target_columns, array_lib=array_lib
                         )
-                        predictions = get_columns_as_numpy_array(
+                        predictions = get_columns_as_array(
                             dataset=batch,
                             columns=prediction_column,
+                            array_lib=array_lib,
                         )
 
                         # update the metric state

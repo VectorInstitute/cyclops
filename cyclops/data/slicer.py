@@ -9,8 +9,11 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
+import pyarrow as pa
+import pyarrow.compute as pc
+from datasets.formatting.formatting import LazyBatch
 from dateutil.parser import parse
-from pandas.api.types import is_datetime64_any_dtype, is_numeric_dtype
+from pyarrow import ArrowInvalid
 
 
 @dataclass
@@ -175,7 +178,7 @@ class SliceSpec:
     include_overall: bool = True
     column_names: Optional[List[str]] = None
 
-    _registry: Dict[str, Callable[[Dict[str, Any]], Union[bool, List[bool]]]] = field(
+    _registry: Dict[str, Callable[[Dict[str, Any]], List[bool]]] = field(
         default_factory=dict,
         init=False,
         repr=False,
@@ -211,7 +214,7 @@ class SliceSpec:
 
     def get_slices(
         self,
-    ) -> Dict[str, Callable[[Dict[str, Any]], Union[bool, List[bool]]]]:
+    ) -> Dict[str, Callable[[Dict[str, Any]], List[bool]]]:
         """Return the slice function registry."""
         return self._registry
 
@@ -278,7 +281,7 @@ class SliceSpec:
     def _parse_single_spec_dict(
         self,
         slice_spec: Dict[str, Dict[str, Any]],
-    ) -> Tuple[str, Callable[..., Union[bool, List[bool]]]]:
+    ) -> Tuple[str, Callable[..., List[bool]]]:
         """Return the registration key and slice function for a single slice spec."""
         column_name, spec = next(iter(slice_spec.items()))
 
@@ -432,53 +435,57 @@ class SliceSpec:
 
 
 # filter functions
-def overall(examples: Dict[str, Any]) -> Union[bool, List[bool]]:
+def overall(examples: Union[pa.Table, LazyBatch]) -> List[bool]:
     """Return True for all examples.
 
     Parameters
     ----------
-    examples : Dict[str, Any]
-        A dictionary of features and values.
+    examples : pyarrow.Table, datasets.formatting.formatting.LazyBatch
+        A batch of examples.
 
     Returns
     -------
-    Union[bool, List[bool]]
-        A boolean or a list of booleans containing `True` for all examples.
+    List[bool]
+        A list of booleans containing `True` for all examples.
 
     """
-    result: List[bool] = np.ones_like(
-        next(iter(examples.values())),
-        dtype=bool,
-    ).tolist()
-    if len(result) == 1:
-        return result[0]
-    return result
+    _check_examples(examples)
+    return [True] * (
+        len(list(examples.values())[0])
+        if isinstance(examples, LazyBatch)
+        else len(examples)
+    )
 
 
 def filter_non_null(
-    examples: Dict[str, Any],
+    examples: Union[pa.Table, LazyBatch],
     column_names: Union[str, List[str]],
     negate: bool = False,
-) -> Union[bool, List[bool]]:
+) -> List[bool]:
     """Return True for all examples where the feature/column is not null.
 
     Parameters
     ----------
-    examples : Dict[str, Any]
-        A dictionary of features and values.
+    examples : pyarrow.Table, datasets.formatting.formatting.LazyBatch
+        A batch of examples to filter.
     column_names : Union[str, List[str]]
         The column name(s) on which to filter.
     negate : bool, optional, default=False
         If `True`, negate the filter, i.e. return `True` for all examples where
-        the value is null/nan.
+        the value is null.
 
     Returns
     -------
-    Union[bool, List[bool]]
-        A boolean or a list of booleans containing `True` for all examples where
-        the value is not null/nan.
+    List[bool]
+        A list of booleans containing `True` for all examples where the value is
+        not null.
+
+    Notes
+    -----
+    Floating-point NaN values will not be considered as null.
 
     """
+    _check_examples(examples)
     if not (
         isinstance(column_names, str)
         or (
@@ -494,29 +501,29 @@ def filter_non_null(
     if isinstance(column_names, str):
         column_names = [column_names]
 
-    result = pd.notnull(examples[column_names[0]])
+    mask = pc.invert(pc.is_null(examples[column_names[0]]))
     for column_name in column_names[1:]:
-        result &= pd.notnull(examples[column_name])
+        mask = pc.and_not(mask, pc.is_null(examples[column_name]))
 
     if negate:
-        result = ~result
+        mask = pc.invert(mask)
 
-    return result.tolist()  # type: ignore
+    return mask.to_pylist()  # type: ignore
 
 
 def filter_value(
-    examples: Dict[str, Any],
+    examples: Union[pa.Table, LazyBatch],
     column_name: str,
     value: Union[Any, List[Any]],
     negate: bool = False,
     keep_nulls: bool = False,
-) -> Union[bool, List[bool]]:
+) -> List[bool]:
     """Return True for all examples where the feature/column has the given value.
 
     Parameters
     ----------
-    examples : Dict[str, Any]
-        A dictionary of features and values.
+    examples : pyarrow.Table, datasets.formatting.formatting.LazyBatch
+        A batch of examples to filter.
     column_name : str
         The column name on which to filter.
     value : Union[Any, List[Any]]
@@ -529,35 +536,40 @@ def filter_value(
 
     Returns
     -------
-    Union[bool, List[bool]]
-        A boolean or a list of booleans containing `True` for all examples where
-        the feature has the given value or values.
+    List[bool]
+        A list of booleans containing `True` for all examples where the feature
+        has the given value or values.
 
     """
+    _check_examples(examples)
     value_is_datetime = is_datetime(value)  # only checks timestrings
 
-    value = pd.Series(
-        value,
-        dtype="datetime64[ns]" if value_is_datetime else None,
-    ).to_numpy()
+    if not isinstance(value, list):
+        value = [value]
+    value_arr: pa.Array = pa.array(value)
 
-    example_values = pd.Series(
-        examples[column_name],
-        dtype="datetime64[ns]" if value_is_datetime else None,
-    ).to_numpy()
+    if value_is_datetime:
+        value_arr = pc.cast(value_arr, pa.timestamp("ns"))
 
-    result = np.isin(example_values, value, invert=negate)
+    example_values = (
+        pc.cast(examples[column_name], pa.timestamp("ns"))
+        if value_is_datetime
+        else examples[column_name]
+    )
 
-    if keep_nulls:
-        result |= pd.isnull(example_values)
-    else:
-        result &= pd.notnull(example_values)
+    mask = pc.is_in(example_values, value_arr)
 
-    return result.tolist()  # type: ignore
+    if negate:
+        mask = pc.invert(mask)
+
+    nulls = pc.is_null(example_values)
+    mask = pc.or_(mask, nulls) if keep_nulls else pc.and_not(mask, nulls)
+
+    return mask.to_pylist()  # type: ignore
 
 
 def filter_range(
-    examples: Dict[str, Any],
+    examples: Union[pa.Table, LazyBatch],
     column_name: str,
     min_value: float = -np.inf,
     max_value: float = np.inf,
@@ -565,13 +577,13 @@ def filter_range(
     max_inclusive: bool = True,
     negate: bool = False,
     keep_nulls: bool = False,
-) -> Union[bool, List[bool]]:
+) -> List[bool]:
     """Return True for all examples where the value is in the given range.
 
     Parameters
     ----------
-    examples : Dict[str, Any]
-        A dictionary of features and values.
+    examples : pyarrow.Table, datasets.formatting.formatting.LazyBatch
+        A batch of examples to filter.
     column_name : str
         The column name on which to filter.
     min_value : float, optional, default=-np.inf
@@ -590,9 +602,9 @@ def filter_range(
 
     Returns
     -------
-    Union[bool, List[bool]]
-        A boolean or a list of booleans containing `True` for all examples in the
-        column where the value is in the given range.
+    List[bool]
+        A list of booleans containing `True` for all examples in the column where
+        the value is in the given range.
 
     Raises
     ------
@@ -603,6 +615,7 @@ def filter_range(
         If the column does not contain numeric or datetime values.
 
     """
+    _check_examples(examples)
     # handle datetime values
     min_value, max_value, value_is_datetime = _maybe_convert_to_datetime(
         min_value,
@@ -620,39 +633,46 @@ def filter_range(
             "`max_inclusive` is False. This would result in an empty range.",
         )
 
-    example_values = pd.Series(
-        examples[column_name],
-        dtype="datetime64[ns]" if value_is_datetime else None,
-    )
+    example_values = pa.array(examples[column_name])
+    if value_is_datetime:
+        example_values = pc.cast(example_values, pa.timestamp("ns"))
+        min_value = np.repeat(min_value, len(example_values))  # type: ignore[assignment]
+        max_value = np.repeat(max_value, len(example_values))  # type: ignore[assignment]
 
     if not (  # column does not contain number or datetime values
-        is_numeric_dtype(example_values.dtype)
-        or is_datetime64_any_dtype(example_values.dtype)
+        pa.types.is_integer(example_values.type)
+        or pa.types.is_floating(example_values.type)
+        or pa.types.is_timestamp(example_values.type)
     ):
         raise TypeError(
             "Expected feature to be numeric or datetime, but got "
-            f"{example_values.dtype}.",
+            f"{example_values.type}.",
         )
 
-    result = (
-        ((example_values > min_value) & (example_values < max_value))
-        | ((example_values == min_value) & min_inclusive)
-        | ((example_values == max_value) & max_inclusive)
+    ge = (
+        pc.greater_equal(example_values, min_value)
+        if min_inclusive
+        else pc.greater(example_values, min_value)
+    )
+    le = (
+        pc.less_equal(example_values, max_value)
+        if max_inclusive
+        else pc.less(example_values, max_value)
     )
 
+    mask = pc.and_(ge, le).fill_null(False)
+
     if negate:
-        result = ~result
+        mask = pc.invert(mask)
 
-    if keep_nulls:
-        result |= pd.isnull(example_values)
-    else:
-        result &= pd.notnull(example_values)
+    nulls = pc.is_null(example_values)
+    mask = pc.or_(mask, nulls) if keep_nulls else pc.and_not(mask, nulls)
 
-    return result.tolist()  # type: ignore
+    return mask.to_pylist()  # type: ignore
 
 
 def filter_datetime(
-    examples: Dict[str, Any],
+    examples: Union[pa.Table, LazyBatch],
     column_name: str,
     year: Optional[Union[int, str, List[int], List[str]]] = None,
     month: Optional[Union[int, List[int]]] = None,
@@ -660,13 +680,13 @@ def filter_datetime(
     hour: Optional[Union[int, List[int]]] = None,
     negate: bool = False,
     keep_nulls: bool = False,
-) -> Union[bool, List[bool]]:
+) -> List[bool]:
     """Return True for all examples where the datetime value matches the given datetime.
 
     Parameters
     ----------
-    examples : Dict[str, Any]
-        A dictionary of features and values.
+    examples : pyarrow.Table, datasets.formatting.formatting.LazyBatch
+        A batch of examples to filter.
     column_name : str
         The column name on which to filter.
     year : int, str, List[int], List[str], optional, default=None
@@ -686,13 +706,13 @@ def filter_datetime(
         If `True`, return `True` for all examples where the value does not match
         the given datetime components.
     keep_nulls : bool, optional, default=False
-        If `True`, return `True` for all examples that have a null/nan/NaT value.
+        If `True`, return `True` for all examples that have a null value.
 
     Returns
     -------
-    Union[bool, List[bool]]
-        A boolean or a list of booleans containing `True` for all examples where
-        the value of a column matches the given datetime components.
+    List[bool]
+        A list of booleans containing `True` for all examples where the value of
+        a column matches the given datetime components.
 
     Raises
     ------
@@ -700,73 +720,72 @@ def filter_datetime(
         If the column does not contain datetime values.
 
     """
-    # make sure the column has datetime type
-    example_values = pd.Series(examples[column_name]).to_numpy()
+    _check_examples(examples)
+    example_values = pa.array(examples[column_name])
     try:
-        example_values = example_values.astype("datetime64")
-    except ValueError as exc:
+        example_values = pc.cast(example_values, pa.timestamp("ns"))
+    except ArrowInvalid as exc:
         raise TypeError(
             "Expected datetime feature, but got feature of type "
             f"{example_values.dtype.name}.",
         ) from exc
 
-    # convert the datetime values to year, month, day, hour
-    years, months, days = [
-        example_values.astype(f"M8[{unit}]") for unit in ["Y", "M", "D"]
-    ]
+    def _apply_mask(
+        values: pa.Int64Array,
+        value_set: Union[int, str, List[int], List[str]],
+        mask: pa.BooleanArray,
+    ) -> pa.BooleanArray:
+        if isinstance(value_set, (str, int)):
+            value_set = [value_set]  # type: ignore[assignment]
 
-    # get all the values that match the given datetime
-    # acknowledgement: https://stackoverflow.com/a/56260054
-    result = np.ones_like(example_values, dtype=bool)
+        return pc.and_(
+            mask,
+            pc.is_in(
+                values,
+                pa.array(np.asanyarray(value_set, dtype=int), type=pa.int64()),
+            ),
+        )
+
+    mask = pa.array([True] * len(example_values), type=pa.bool_())
     if year is not None:
-        result &= np.isin(
-            element=years.astype(int) + 1970,
-            test_elements=np.asanyarray(year, dtype=int),
-        )
+        years = pc.year(example_values)
+        mask = _apply_mask(years, year, mask)
     if month is not None:
-        result &= np.isin(
-            element=((months - years) + 1).astype(int),
-            test_elements=np.asanyarray(month, dtype=int),
-        )
+        months = pc.month(example_values)
+        mask = _apply_mask(months, month, mask)
     if day is not None:
-        result &= np.isin(
-            element=((days - months) + 1).astype(int),
-            test_elements=np.asanyarray(day, dtype=int),
-        )
+        days = pc.year(example_values)
+        mask = _apply_mask(days, day, mask)
     if hour is not None:
-        result &= np.isin(
-            element=(example_values - days).astype("m8[h]").astype(int),
-            test_elements=np.asanyarray(hour, dtype=int),
-        )
+        hours = pc.hour(example_values)
+        mask = _apply_mask(hours, hour, mask)
 
     if negate:
-        result = ~result
+        mask = pc.invert(mask)
 
-    if keep_nulls:
-        result |= pd.isnull(example_values)
-    else:
-        result &= pd.notnull(example_values)
+    nulls = pc.is_null(example_values)
+    mask = pc.or_(mask, nulls) if keep_nulls else pc.and_not(mask, nulls)
 
-    return result.tolist()  # type: ignore
+    return mask.to_pylist()  # type: ignore
 
 
 def filter_string_contains(
-    examples: Dict[str, Any],
+    examples: Union[pa.Table, LazyBatch],
     column_name: str,
     contains: Union[str, List[str]],
     negate: bool = False,
     keep_nulls: bool = False,
-) -> Union[bool, List[bool]]:
+) -> List[bool]:
     """Return True for all examples where the value contains the given substring.
 
     Parameters
     ----------
-    examples : Dict[str, Any]
-        A dictionary of features and values.
+    examples : pyarrow.Table, datasets.formatting.formatting.LazyBatch
+        A batch of examples to filter.
     column_name : str
         The column name on which to filter.
     contains : str, List[str]
-        The substring to match. If a list is provided, return `True` for all
+        The substring(s) to match. If a list is provided, return `True` for all
         examples where the value contains any of the substrings in the list.
     negate : bool, optional, default=False
         If `True`, return `True` for all examples where the value does not contain
@@ -776,9 +795,9 @@ def filter_string_contains(
 
     Returns
     -------
-    Union[bool, List[bool]]
-        A boolean or a list of booleans containing `True` for all examples where
-        the value of a column contains the given substring.
+    List[bool]
+        A list of booleans containing `True` for all examples where the value of
+        a column contains the given substring.
 
     Raises
     ------
@@ -787,27 +806,17 @@ def filter_string_contains(
         `contains` are not strings.
 
     """
+    _check_examples(examples)
     # make sure the column has string type
-    example_values = pd.Series(examples[column_name])
-    if example_values.dtype.name != "object" and not isinstance(
-        example_values.dtype,
-        pd.StringDtype,
-    ):
+    example_values = pa.array(examples[column_name])
+    if not pa.types.is_string(example_values.type):
         raise ValueError(
             "Expected string feature, but got feature of type "
-            f"{example_values.dtype.name}.",
+            f"{example_values.type}.",
         )
-    if example_values.dtype.name == "object":  # object type could be string
-        try:
-            _ = example_values.str
-        except AttributeError as exc:
-            raise TypeError(
-                "Expected string feature, but got feature of type "
-                f"{example_values.dtype.name}.",
-            ) from exc
 
     # get all the values that contain the given substring
-    result = np.zeros_like(example_values, dtype=bool)
+    mask = pa.array([False] * len(example_values), type=pa.bool_())
     if isinstance(contains, str):
         contains = [contains]
 
@@ -817,51 +826,58 @@ def filter_string_contains(
                 f"Expected string value for `contains`, but got value of type "
                 f"{type(substring)}.",
             )
-        result |= example_values.str.contains(substring, case=False).to_numpy(
-            dtype=bool,
-        )
+        mask = pc.or_(mask, pc.match_substring(example_values, substring))
 
     if negate:
-        result = ~result
+        mask = pc.invert(mask)
 
-    if keep_nulls:
-        result |= pd.isnull(example_values)
-    else:
-        result &= pd.notnull(example_values)
+    nulls = pc.is_null(example_values)
+    mask = pc.or_(mask, nulls) if keep_nulls else pc.and_not(mask, nulls)
 
-    return result.tolist()  # type: ignore
+    return mask.to_pylist()  # type: ignore
 
 
 def compound_filter(
-    examples: Dict[str, Any],
-    slice_functions: List[Callable[..., Union[bool, List[bool]]]],
-) -> Union[bool, List[bool]]:
+    examples: Union[pa.Table, LazyBatch],
+    slice_functions: List[Callable[..., List[bool]]],
+) -> List[bool]:
     """Combine the result of multiple slices using bitwise AND.
 
     Parameters
     ----------
-    examples : Dict[str, Any]
+    examples : pyarrow.Table, datasets.formatting.formatting.LazyBatch
         A dictionary mapping column names to values.
-    slice_functions : List[Callable]
+    slice_functions : List[Callable[..., List[bool]]]
         A list of functions to apply to the examples. The signature of each
-        function should be: `slice_function(examples, **kwargs)`.
-        The result of each function should be a boolean or a list of booleans.
+        function should be: `slice_function(examples, **kwargs)`. The result of
+        each function should be a list of booleans.
 
     Returns
     -------
-    Union[bool, List[bool]]
-        A boolean or a list of booleans containing `True` for all examples where
-        each slice function returns `True`.
+    List[bool]
+        A list of booleans containing `True` for all examples where each slice
+        function returns `True`.
 
     """
-    result: Union[bool, List[bool]] = np.bitwise_and.reduce(
+    _check_examples(examples)
+    mask: List[bool] = np.bitwise_and.reduce(
         [slice_function(examples) for slice_function in slice_functions],
     )
 
-    return result
+    return mask
 
 
 # utility functions
+def _check_examples(examples: Union[pa.Table, LazyBatch]) -> None:
+    """Check the type of `examples."""
+    if not isinstance(examples, (pa.Table, LazyBatch)):
+        raise TypeError(
+            "Expected `examples` to be an instance of pyarrow.table or "
+            "datasets.formatting.formatting.LazyBatch but got "
+            f"{type(examples)}"
+        )
+
+
 def is_datetime(
     value: Union[
         str,

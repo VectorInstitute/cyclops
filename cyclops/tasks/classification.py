@@ -2,7 +2,7 @@
 
 import logging
 from functools import partial
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -271,6 +271,7 @@ class BinaryTabularClassificationTask(BaseTask):
         remove_columns: Optional[Union[str, List[str]]] = None,
         fairness_config: Optional[FairnessConfig] = None,
         override_fairness_metrics: bool = False,
+        array_lib: Literal["numpy", "torch", "cupy"] = "numpy",
     ) -> Tuple[Dict[str, Any], Dataset]:
         """Evaluate model(s) on a HuggingFace dataset.
 
@@ -305,6 +306,9 @@ class BinaryTabularClassificationTask(BaseTask):
         override_fairness_metrics : bool, optional
             If True, the `metrics` argument in fairness_config will be overridden by \
             the `metrics`, by default False
+        array_lib : {"numpy", "torch", "cupy"}, default="numpy"
+            The array library to use for the metric computation. The metric results
+            will be returned in the format of `array_lib`.
 
         Returns
         -------
@@ -374,6 +378,7 @@ class BinaryTabularClassificationTask(BaseTask):
             batch_size=batch_size,
             fairness_config=fairness_config,
             override_fairness_metrics=override_fairness_metrics,
+            array_lib=array_lib,
         )
         return results, dataset
 
@@ -474,6 +479,7 @@ class MultilabelImageClassificationTask(BaseTask):
         remove_columns: Optional[Union[str, List[str]]] = None,
         fairness_config: Optional[FairnessConfig] = None,
         override_fairness_metrics: bool = False,
+        array_lib: Literal["numpy", "torch", "cupy"] = "numpy",
     ) -> Tuple[Dict[str, Any], Dataset]:
         """Evaluate model(s) on a HuggingFace dataset.
 
@@ -506,6 +512,9 @@ class MultilabelImageClassificationTask(BaseTask):
         override_fairness_metrics : bool, optional
             If True, the `metrics` argument in fairness_config will be overridden by \
             the `metrics`, by default False
+        array_lib : {"numpy", "torch", "cupy"}, default="numpy"
+            The array library to use for the metric computation. The metric results
+            will be returned in the format of `array_lib`.
 
         Returns
         -------
@@ -569,6 +578,7 @@ class MultilabelImageClassificationTask(BaseTask):
             batch_size=batch_size,
             fairness_config=fairness_config,
             override_fairness_metrics=override_fairness_metrics,
+            array_lib=array_lib,
         )
 
         return results, dataset
