@@ -4,15 +4,14 @@ import logging
 from contextlib import nullcontext
 from typing import Any, List, Literal, Mapping, Union
 
-import array_api_compat.cupy
 import array_api_compat.numpy
-import array_api_compat.torch
 import pyarrow as pa
 from datasets import Dataset, DatasetDict, IterableDatasetDict, get_dataset_split_names
 
 from cyclops.evaluate.metrics.experimental.utils.ops import squeeze_all
 from cyclops.evaluate.metrics.experimental.utils.types import Array
 from cyclops.utils.log import setup_logging
+from cyclops.utils.optional import import_optional_module
 
 
 # Logging.
@@ -20,11 +19,14 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
-_SUPPORTED_ARRAY_LIBS = {
-    "torch": array_api_compat.torch,
-    "numpy": array_api_compat.numpy,
-    "cupy": array_api_compat.cupy,
-}
+_SUPPORTED_ARRAY_LIBS = {"numpy": array_api_compat.numpy}
+
+cupy = import_optional_module("array_api_compat.cupy", error="warn")
+torch = import_optional_module("array_api_compat.torch", error="warn")
+if cupy is not None:
+    _SUPPORTED_ARRAY_LIBS["cupy"] = cupy
+if torch is not None:
+    _SUPPORTED_ARRAY_LIBS["torch"] = torch
 
 
 def check_required_columns(
