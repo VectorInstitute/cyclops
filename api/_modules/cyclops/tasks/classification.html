@@ -328,7 +328,7 @@
 
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
@@ -607,6 +607,7 @@
         <span class="n">remove_columns</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">fairness_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FairnessConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">override_fairness_metrics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">array_lib</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;numpy&quot;</span><span class="p">,</span> <span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="s2">&quot;cupy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;numpy&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Dataset</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate model(s) on a HuggingFace dataset.</span>
 
@@ -641,6 +642,9 @@
 <span class="sd">        override_fairness_metrics : bool, optional</span>
 <span class="sd">            If True, the `metrics` argument in fairness_config will be overridden by \</span>
 <span class="sd">            the `metrics`, by default False</span>
+<span class="sd">        array_lib : {&quot;numpy&quot;, &quot;torch&quot;, &quot;cupy&quot;}, default=&quot;numpy&quot;</span>
+<span class="sd">            The array library to use for the metric computation. The metric results</span>
+<span class="sd">            will be returned in the format of `array_lib`.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -710,6 +714,7 @@
             <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
             <span class="n">fairness_config</span><span class="o">=</span><span class="n">fairness_config</span><span class="p">,</span>
             <span class="n">override_fairness_metrics</span><span class="o">=</span><span class="n">override_fairness_metrics</span><span class="p">,</span>
+            <span class="n">array_lib</span><span class="o">=</span><span class="n">array_lib</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="n">dataset</span></div>
 </div>
@@ -819,6 +824,7 @@
         <span class="n">remove_columns</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">fairness_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FairnessConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">override_fairness_metrics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">array_lib</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;numpy&quot;</span><span class="p">,</span> <span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="s2">&quot;cupy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;numpy&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Dataset</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate model(s) on a HuggingFace dataset.</span>
 
@@ -851,6 +857,9 @@
 <span class="sd">        override_fairness_metrics : bool, optional</span>
 <span class="sd">            If True, the `metrics` argument in fairness_config will be overridden by \</span>
 <span class="sd">            the `metrics`, by default False</span>
+<span class="sd">        array_lib : {&quot;numpy&quot;, &quot;torch&quot;, &quot;cupy&quot;}, default=&quot;numpy&quot;</span>
+<span class="sd">            The array library to use for the metric computation. The metric results</span>
+<span class="sd">            will be returned in the format of `array_lib`.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -914,6 +923,7 @@
             <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
             <span class="n">fairness_config</span><span class="o">=</span><span class="n">fairness_config</span><span class="p">,</span>
             <span class="n">override_fairness_metrics</span><span class="o">=</span><span class="n">override_fairness_metrics</span><span class="p">,</span>
+            <span class="n">array_lib</span><span class="o">=</span><span class="n">array_lib</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="n">dataset</span></div>

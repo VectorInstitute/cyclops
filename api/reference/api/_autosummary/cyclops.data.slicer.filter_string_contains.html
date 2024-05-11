@@ -334,9 +334,9 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>examples</strong> (<em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>) – A dictionary of features and values.</p></li>
+<li><p><strong>examples</strong> (<em>pyarrow.Table</em><em>, </em><em>datasets.formatting.formatting.LazyBatch</em>) – A batch of examples to filter.</p></li>
 <li><p><strong>column_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The column name on which to filter.</p></li>
-<li><p><strong>contains</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em>) – The substring to match. If a list is provided, return <cite>True</cite> for all
+<li><p><strong>contains</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em>) – The substring(s) to match. If a list is provided, return <cite>True</cite> for all
 examples where the value contains any of the substrings in the list.</p></li>
 <li><p><strong>negate</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em><em>, </em><em>default=False</em>) – If <cite>True</cite>, return <cite>True</cite> for all examples where the value does not contain
 the given substring.</p></li>
@@ -344,11 +344,11 @@ the given substring.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A boolean or a list of booleans containing <cite>True</cite> for all examples where
-the value of a column contains the given substring.</p>
+<dd class="field-even"><p>A list of booleans containing <cite>True</cite> for all examples where the value of
+a column contains the given substring.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Union[<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)">bool</a>, List[<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)">bool</a>]]</p>
+<dd class="field-odd"><p>List[<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)">bool</a>]</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#TypeError" title="(in Python v3.9)"><strong>TypeError</strong></a> – If the column does not contain string values or if the values in

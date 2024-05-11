@@ -334,7 +334,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>examples</strong> (<em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>) – A dictionary of features and values.</p></li>
+<li><p><strong>examples</strong> (<em>pyarrow.Table</em><em>, </em><em>datasets.formatting.formatting.LazyBatch</em>) – A batch of examples to filter.</p></li>
 <li><p><strong>column_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The column name on which to filter.</p></li>
 <li><p><strong>year</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>]</em><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>]</em><em>, </em><em>optional</em><em>, </em><em>default=None</em>) – The year to match. If string, it must be a valid year string (e.g. “2020”).
 If a list is provided, return <cite>True</cite> for all examples where the year matches
@@ -347,15 +347,15 @@ where the day matches any of the values in the list.</p></li>
 where the hour matches any of the values in the list.</p></li>
 <li><p><strong>negate</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em><em>, </em><em>default=False</em>) – If <cite>True</cite>, return <cite>True</cite> for all examples where the value does not match
 the given datetime components.</p></li>
-<li><p><strong>keep_nulls</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em><em>, </em><em>default=False</em>) – If <cite>True</cite>, return <cite>True</cite> for all examples that have a null/nan/NaT value.</p></li>
+<li><p><strong>keep_nulls</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em><em>, </em><em>default=False</em>) – If <cite>True</cite>, return <cite>True</cite> for all examples that have a null value.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A boolean or a list of booleans containing <cite>True</cite> for all examples where
-the value of a column matches the given datetime components.</p>
+<dd class="field-even"><p>A list of booleans containing <cite>True</cite> for all examples where the value of
+a column matches the given datetime components.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Union[<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)">bool</a>, List[<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)">bool</a>]]</p>
+<dd class="field-odd"><p>List[<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)">bool</a>]</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#TypeError" title="(in Python v3.9)"><strong>TypeError</strong></a> – If the column does not contain datetime values.</p>

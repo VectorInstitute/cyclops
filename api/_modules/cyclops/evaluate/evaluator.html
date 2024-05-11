@@ -329,23 +329,24 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">asdict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">from</span> <span class="nn">datasets</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">DatasetDict</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">load_dataset</span>
 <span class="kn">from</span> <span class="nn">datasets.splits</span> <span class="kn">import</span> <span class="n">Split</span>
 
 <span class="kn">from</span> <span class="nn">cyclops.data.slicer</span> <span class="kn">import</span> <span class="n">SliceSpec</span>
-<span class="kn">from</span> <span class="nn">cyclops.data.utils</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">check_required_columns</span><span class="p">,</span>
-    <span class="n">get_columns_as_numpy_array</span><span class="p">,</span>
-    <span class="n">set_decode</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">cyclops.data.utils</span> <span class="kn">import</span> <span class="n">set_decode</span>
 <span class="kn">from</span> <span class="nn">cyclops.evaluate.fairness.config</span> <span class="kn">import</span> <span class="n">FairnessConfig</span>
 <span class="kn">from</span> <span class="nn">cyclops.evaluate.fairness.evaluator</span> <span class="kn">import</span> <span class="n">evaluate_fairness</span>
 <span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.experimental.metric</span> <span class="kn">import</span> <span class="n">Metric</span>
 <span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.experimental.metric_dict</span> <span class="kn">import</span> <span class="n">MetricDict</span>
 <span class="kn">from</span> <span class="nn">cyclops.evaluate.metrics.experimental.utils.types</span> <span class="kn">import</span> <span class="n">Array</span>
-<span class="kn">from</span> <span class="nn">cyclops.evaluate.utils</span> <span class="kn">import</span> <span class="n">_format_column_names</span><span class="p">,</span> <span class="n">choose_split</span>
+<span class="kn">from</span> <span class="nn">cyclops.evaluate.utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_format_column_names</span><span class="p">,</span>
+    <span class="n">check_required_columns</span><span class="p">,</span>
+    <span class="n">choose_split</span><span class="p">,</span>
+    <span class="n">get_columns_as_array</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">cyclops.utils.log</span> <span class="kn">import</span> <span class="n">setup_logging</span>
 
 
@@ -368,6 +369,7 @@
     <span class="n">fairness_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">FairnessConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">override_fairness_metrics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">load_dataset_kwargs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">array_lib</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;numpy&quot;</span><span class="p">,</span> <span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="s2">&quot;cupy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;numpy&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate one or more models on a dataset using one or more metrics.</span>
 
@@ -425,6 +427,9 @@
 <span class="sd">    load_dataset_kwargs : Dict[str, Any], optional</span>
 <span class="sd">        Keyword arguments to pass to `datasets.load_dataset`. Only used if</span>
 <span class="sd">        `dataset` is a string.</span>
+<span class="sd">    array_lib : {&quot;numpy&quot;, &quot;torch&quot;, &quot;cupy&quot;}, default=&quot;numpy&quot;</span>
+<span class="sd">        The array library to use for the metric computation. The metric results</span>
+<span class="sd">        will be returned in the format of `array_lib`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -459,6 +464,7 @@
         <span class="n">ignore_columns</span><span class="o">=</span><span class="n">ignore_columns</span><span class="p">,</span>
         <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
         <span class="n">raise_on_empty_slice</span><span class="o">=</span><span class="n">raise_on_empty_slice</span><span class="p">,</span>
+        <span class="n">array_lib</span><span class="o">=</span><span class="n">array_lib</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
@@ -561,6 +567,7 @@
     <span class="n">ignore_columns</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">batch_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">DEFAULT_MAX_BATCH_SIZE</span><span class="p">,</span>
     <span class="n">raise_on_empty_slice</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">array_lib</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;numpy&quot;</span><span class="p">,</span> <span class="s2">&quot;torch&quot;</span><span class="p">,</span> <span class="s2">&quot;cupy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;numpy&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute metrics for a dataset.&quot;&quot;&quot;</span>
     <span class="n">target_columns</span> <span class="o">=</span> <span class="n">_format_column_names</span><span class="p">(</span><span class="n">target_columns</span><span class="p">)</span>
@@ -569,11 +576,7 @@
     <span class="c1"># temporarily stop decoding features to save memory</span>
     <span class="n">set_decode</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="n">target_columns</span> <span class="o">+</span> <span class="n">prediction_columns</span><span class="p">)</span>
 
-    <span class="k">with</span> <span class="n">dataset</span><span class="o">.</span><span class="n">formatted_as</span><span class="p">(</span>
-        <span class="s2">&quot;numpy&quot;</span><span class="p">,</span>
-        <span class="n">columns</span><span class="o">=</span><span class="n">target_columns</span> <span class="o">+</span> <span class="n">prediction_columns</span><span class="p">,</span>
-        <span class="n">output_all_columns</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">with</span> <span class="n">dataset</span><span class="o">.</span><span class="n">formatted_as</span><span class="p">(</span><span class="s2">&quot;arrow&quot;</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">target_columns</span> <span class="o">+</span> <span class="n">prediction_columns</span><span class="p">):</span>
         <span class="n">results</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">slice_name</span><span class="p">,</span> <span class="n">slice_fn</span> <span class="ow">in</span> <span class="n">slice_spec</span><span class="o">.</span><span class="n">slices</span><span class="p">():</span>
             <span class="n">sliced_dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">remove_columns</span><span class="p">(</span><span class="n">ignore_columns</span> <span class="ow">or</span> <span class="p">[])</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
@@ -604,24 +607,26 @@
                 <span class="k">elif</span> <span class="p">(</span>
                     <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">batch_size</span> <span class="o">&lt;</span> <span class="mi">0</span>
                 <span class="p">):</span>  <span class="c1"># dataset.iter does not support getting all batches at once</span>
-                    <span class="n">targets</span> <span class="o">=</span> <span class="n">get_columns_as_numpy_array</span><span class="p">(</span>
+                    <span class="n">targets</span> <span class="o">=</span> <span class="n">get_columns_as_array</span><span class="p">(</span>
                         <span class="n">dataset</span><span class="o">=</span><span class="n">sliced_dataset</span><span class="p">,</span>
                         <span class="n">columns</span><span class="o">=</span><span class="n">target_columns</span><span class="p">,</span>
+                        <span class="n">array_lib</span><span class="o">=</span><span class="n">array_lib</span><span class="p">,</span>
                     <span class="p">)</span>
-                    <span class="n">predictions</span> <span class="o">=</span> <span class="n">get_columns_as_numpy_array</span><span class="p">(</span>
+                    <span class="n">predictions</span> <span class="o">=</span> <span class="n">get_columns_as_array</span><span class="p">(</span>
                         <span class="n">dataset</span><span class="o">=</span><span class="n">sliced_dataset</span><span class="p">,</span>
                         <span class="n">columns</span><span class="o">=</span><span class="n">prediction_column</span><span class="p">,</span>
+                        <span class="n">array_lib</span><span class="o">=</span><span class="n">array_lib</span><span class="p">,</span>
                     <span class="p">)</span>
                     <span class="n">metric_output</span> <span class="o">=</span> <span class="n">metrics</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="n">predictions</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">sliced_dataset</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">):</span>
-                        <span class="n">targets</span> <span class="o">=</span> <span class="n">get_columns_as_numpy_array</span><span class="p">(</span>
-                            <span class="n">dataset</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span>
-                            <span class="n">columns</span><span class="o">=</span><span class="n">target_columns</span><span class="p">,</span>
+                        <span class="n">targets</span> <span class="o">=</span> <span class="n">get_columns_as_array</span><span class="p">(</span>
+                            <span class="n">dataset</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">target_columns</span><span class="p">,</span> <span class="n">array_lib</span><span class="o">=</span><span class="n">array_lib</span>
                         <span class="p">)</span>
-                        <span class="n">predictions</span> <span class="o">=</span> <span class="n">get_columns_as_numpy_array</span><span class="p">(</span>
+                        <span class="n">predictions</span> <span class="o">=</span> <span class="n">get_columns_as_array</span><span class="p">(</span>
                             <span class="n">dataset</span><span class="o">=</span><span class="n">batch</span><span class="p">,</span>
                             <span class="n">columns</span><span class="o">=</span><span class="n">prediction_column</span><span class="p">,</span>
+                            <span class="n">array_lib</span><span class="o">=</span><span class="n">array_lib</span><span class="p">,</span>
                         <span class="p">)</span>
 
                         <span class="c1"># update the metric state</span>

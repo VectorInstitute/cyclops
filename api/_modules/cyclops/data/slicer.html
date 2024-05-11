@@ -335,8 +335,11 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">pyarrow</span> <span class="k">as</span> <span class="nn">pa</span>
+<span class="kn">import</span> <span class="nn">pyarrow.compute</span> <span class="k">as</span> <span class="nn">pc</span>
+<span class="kn">from</span> <span class="nn">datasets.formatting.formatting</span> <span class="kn">import</span> <span class="n">LazyBatch</span>
 <span class="kn">from</span> <span class="nn">dateutil.parser</span> <span class="kn">import</span> <span class="n">parse</span>
-<span class="kn">from</span> <span class="nn">pandas.api.types</span> <span class="kn">import</span> <span class="n">is_datetime64_any_dtype</span><span class="p">,</span> <span class="n">is_numeric_dtype</span>
+<span class="kn">from</span> <span class="nn">pyarrow</span> <span class="kn">import</span> <span class="n">ArrowInvalid</span>
 
 
 <div class="viewcode-block" id="SliceSpec">
@@ -503,7 +506,7 @@
     <span class="n">include_overall</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">column_names</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="n">_registry</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+    <span class="n">_registry</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span>
         <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -544,7 +547,7 @@
 <a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html#cyclops.data.slicer.SliceSpec.get_slices">[docs]</a>
     <span class="k">def</span> <span class="nf">get_slices</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the slice function registry.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry</span></div>
 
@@ -615,7 +618,7 @@
     <span class="k">def</span> <span class="nf">_parse_single_spec_dict</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">slice_spec</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the registration key and slice function for a single slice spec.&quot;&quot;&quot;</span>
         <span class="n">column_name</span><span class="p">,</span> <span class="n">spec</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">slice_spec</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
 
@@ -772,56 +775,60 @@
 <span class="c1"># filter functions</span>
 <div class="viewcode-block" id="overall">
 <a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.data.slicer.overall.html#cyclops.data.slicer.overall">[docs]</a>
-<span class="k">def</span> <span class="nf">overall</span><span class="p">(</span><span class="n">examples</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]:</span>
+<span class="k">def</span> <span class="nf">overall</span><span class="p">(</span><span class="n">examples</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="p">,</span> <span class="n">LazyBatch</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True for all examples.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    examples : Dict[str, Any]</span>
-<span class="sd">        A dictionary of features and values.</span>
+<span class="sd">    examples : pyarrow.Table, datasets.formatting.formatting.LazyBatch</span>
+<span class="sd">        A batch of examples.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Union[bool, List[bool]]</span>
-<span class="sd">        A boolean or a list of booleans containing `True` for all examples.</span>
+<span class="sd">    List[bool]</span>
+<span class="sd">        A list of booleans containing `True` for all examples.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">result</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span>
-        <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">examples</span><span class="o">.</span><span class="n">values</span><span class="p">())),</span>
-        <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">result</span></div>
+    <span class="n">_check_examples</span><span class="p">(</span><span class="n">examples</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="kc">True</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">examples</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">examples</span><span class="p">,</span> <span class="n">LazyBatch</span><span class="p">)</span>
+        <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">examples</span><span class="p">)</span>
+    <span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="filter_non_null">
 <a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.data.slicer.filter_non_null.html#cyclops.data.slicer.filter_non_null">[docs]</a>
 <span class="k">def</span> <span class="nf">filter_non_null</span><span class="p">(</span>
-    <span class="n">examples</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">examples</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="p">,</span> <span class="n">LazyBatch</span><span class="p">],</span>
     <span class="n">column_names</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
     <span class="n">negate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True for all examples where the feature/column is not null.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    examples : Dict[str, Any]</span>
-<span class="sd">        A dictionary of features and values.</span>
+<span class="sd">    examples : pyarrow.Table, datasets.formatting.formatting.LazyBatch</span>
+<span class="sd">        A batch of examples to filter.</span>
 <span class="sd">    column_names : Union[str, List[str]]</span>
 <span class="sd">        The column name(s) on which to filter.</span>
 <span class="sd">    negate : bool, optional, default=False</span>
 <span class="sd">        If `True`, negate the filter, i.e. return `True` for all examples where</span>
-<span class="sd">        the value is null/nan.</span>
+<span class="sd">        the value is null.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Union[bool, List[bool]]</span>
-<span class="sd">        A boolean or a list of booleans containing `True` for all examples where</span>
-<span class="sd">        the value is not null/nan.</span>
+<span class="sd">    List[bool]</span>
+<span class="sd">        A list of booleans containing `True` for all examples where the value is</span>
+<span class="sd">        not null.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Floating-point NaN values will not be considered as null.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_examples</span><span class="p">(</span><span class="n">examples</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
         <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_names</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
         <span class="ow">or</span> <span class="p">(</span>
@@ -837,32 +844,32 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">column_names</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">column_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">column_names</span><span class="p">]</span>
 
-    <span class="n">result</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">notnull</span><span class="p">(</span><span class="n">examples</span><span class="p">[</span><span class="n">column_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">pc</span><span class="o">.</span><span class="n">is_null</span><span class="p">(</span><span class="n">examples</span><span class="p">[</span><span class="n">column_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]]))</span>
     <span class="k">for</span> <span class="n">column_name</span> <span class="ow">in</span> <span class="n">column_names</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
-        <span class="n">result</span> <span class="o">&amp;=</span> <span class="n">pd</span><span class="o">.</span><span class="n">notnull</span><span class="p">(</span><span class="n">examples</span><span class="p">[</span><span class="n">column_name</span><span class="p">])</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">and_not</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">pc</span><span class="o">.</span><span class="n">is_null</span><span class="p">(</span><span class="n">examples</span><span class="p">[</span><span class="n">column_name</span><span class="p">]))</span>
 
     <span class="k">if</span> <span class="n">negate</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="o">~</span><span class="n">result</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>  <span class="c1"># type: ignore</span></div>
+    <span class="k">return</span> <span class="n">mask</span><span class="o">.</span><span class="n">to_pylist</span><span class="p">()</span>  <span class="c1"># type: ignore</span></div>
 
 
 
 <div class="viewcode-block" id="filter_value">
 <a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.data.slicer.filter_value.html#cyclops.data.slicer.filter_value">[docs]</a>
 <span class="k">def</span> <span class="nf">filter_value</span><span class="p">(</span>
-    <span class="n">examples</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">examples</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="p">,</span> <span class="n">LazyBatch</span><span class="p">],</span>
     <span class="n">column_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span>
     <span class="n">negate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">keep_nulls</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True for all examples where the feature/column has the given value.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    examples : Dict[str, Any]</span>
-<span class="sd">        A dictionary of features and values.</span>
+<span class="sd">    examples : pyarrow.Table, datasets.formatting.formatting.LazyBatch</span>
+<span class="sd">        A batch of examples to filter.</span>
 <span class="sd">    column_name : str</span>
 <span class="sd">        The column name on which to filter.</span>
 <span class="sd">    value : Union[Any, List[Any]]</span>
@@ -875,38 +882,43 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Union[bool, List[bool]]</span>
-<span class="sd">        A boolean or a list of booleans containing `True` for all examples where</span>
-<span class="sd">        the feature has the given value or values.</span>
+<span class="sd">    List[bool]</span>
+<span class="sd">        A list of booleans containing `True` for all examples where the feature</span>
+<span class="sd">        has the given value or values.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_examples</span><span class="p">(</span><span class="n">examples</span><span class="p">)</span>
     <span class="n">value_is_datetime</span> <span class="o">=</span> <span class="n">is_datetime</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>  <span class="c1"># only checks timestrings</span>
 
-    <span class="n">value</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
-        <span class="n">value</span><span class="p">,</span>
-        <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;datetime64[ns]&quot;</span> <span class="k">if</span> <span class="n">value_is_datetime</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
+    <span class="n">value_arr</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Array</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
-    <span class="n">example_values</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
-        <span class="n">examples</span><span class="p">[</span><span class="n">column_name</span><span class="p">],</span>
-        <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;datetime64[ns]&quot;</span> <span class="k">if</span> <span class="n">value_is_datetime</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">value_is_datetime</span><span class="p">:</span>
+        <span class="n">value_arr</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">value_arr</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">timestamp</span><span class="p">(</span><span class="s2">&quot;ns&quot;</span><span class="p">))</span>
 
-    <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">example_values</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="n">negate</span><span class="p">)</span>
+    <span class="n">example_values</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">pc</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">examples</span><span class="p">[</span><span class="n">column_name</span><span class="p">],</span> <span class="n">pa</span><span class="o">.</span><span class="n">timestamp</span><span class="p">(</span><span class="s2">&quot;ns&quot;</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">value_is_datetime</span>
+        <span class="k">else</span> <span class="n">examples</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span>
+    <span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">keep_nulls</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">|=</span> <span class="n">pd</span><span class="o">.</span><span class="n">isnull</span><span class="p">(</span><span class="n">example_values</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">&amp;=</span> <span class="n">pd</span><span class="o">.</span><span class="n">notnull</span><span class="p">(</span><span class="n">example_values</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">is_in</span><span class="p">(</span><span class="n">example_values</span><span class="p">,</span> <span class="n">value_arr</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>  <span class="c1"># type: ignore</span></div>
+    <span class="k">if</span> <span class="n">negate</span><span class="p">:</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
+
+    <span class="n">nulls</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">is_null</span><span class="p">(</span><span class="n">example_values</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">or_</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">nulls</span><span class="p">)</span> <span class="k">if</span> <span class="n">keep_nulls</span> <span class="k">else</span> <span class="n">pc</span><span class="o">.</span><span class="n">and_not</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">nulls</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mask</span><span class="o">.</span><span class="n">to_pylist</span><span class="p">()</span>  <span class="c1"># type: ignore</span></div>
 
 
 
 <div class="viewcode-block" id="filter_range">
 <a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.data.slicer.filter_range.html#cyclops.data.slicer.filter_range">[docs]</a>
 <span class="k">def</span> <span class="nf">filter_range</span><span class="p">(</span>
-    <span class="n">examples</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">examples</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="p">,</span> <span class="n">LazyBatch</span><span class="p">],</span>
     <span class="n">column_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">min_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
     <span class="n">max_value</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
@@ -914,13 +926,13 @@
     <span class="n">max_inclusive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="n">negate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">keep_nulls</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True for all examples where the value is in the given range.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    examples : Dict[str, Any]</span>
-<span class="sd">        A dictionary of features and values.</span>
+<span class="sd">    examples : pyarrow.Table, datasets.formatting.formatting.LazyBatch</span>
+<span class="sd">        A batch of examples to filter.</span>
 <span class="sd">    column_name : str</span>
 <span class="sd">        The column name on which to filter.</span>
 <span class="sd">    min_value : float, optional, default=-np.inf</span>
@@ -939,9 +951,9 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Union[bool, List[bool]]</span>
-<span class="sd">        A boolean or a list of booleans containing `True` for all examples in the</span>
-<span class="sd">        column where the value is in the given range.</span>
+<span class="sd">    List[bool]</span>
+<span class="sd">        A list of booleans containing `True` for all examples in the column where</span>
+<span class="sd">        the value is in the given range.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -952,6 +964,7 @@
 <span class="sd">        If the column does not contain numeric or datetime values.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_examples</span><span class="p">(</span><span class="n">examples</span><span class="p">)</span>
     <span class="c1"># handle datetime values</span>
     <span class="n">min_value</span><span class="p">,</span> <span class="n">max_value</span><span class="p">,</span> <span class="n">value_is_datetime</span> <span class="o">=</span> <span class="n">_maybe_convert_to_datetime</span><span class="p">(</span>
         <span class="n">min_value</span><span class="p">,</span>
@@ -969,42 +982,49 @@
             <span class="s2">&quot;`max_inclusive` is False. This would result in an empty range.&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="n">example_values</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
-        <span class="n">examples</span><span class="p">[</span><span class="n">column_name</span><span class="p">],</span>
-        <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;datetime64[ns]&quot;</span> <span class="k">if</span> <span class="n">value_is_datetime</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="n">example_values</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">examples</span><span class="p">[</span><span class="n">column_name</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">value_is_datetime</span><span class="p">:</span>
+        <span class="n">example_values</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">example_values</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">timestamp</span><span class="p">(</span><span class="s2">&quot;ns&quot;</span><span class="p">))</span>
+        <span class="n">min_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">min_value</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">example_values</span><span class="p">))</span>  <span class="c1"># type: ignore[assignment]</span>
+        <span class="n">max_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">max_value</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">example_values</span><span class="p">))</span>  <span class="c1"># type: ignore[assignment]</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>  <span class="c1"># column does not contain number or datetime values</span>
-        <span class="n">is_numeric_dtype</span><span class="p">(</span><span class="n">example_values</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="ow">or</span> <span class="n">is_datetime64_any_dtype</span><span class="p">(</span><span class="n">example_values</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">pa</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_integer</span><span class="p">(</span><span class="n">example_values</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="n">pa</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_floating</span><span class="p">(</span><span class="n">example_values</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="n">pa</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_timestamp</span><span class="p">(</span><span class="n">example_values</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
     <span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
             <span class="s2">&quot;Expected feature to be numeric or datetime, but got &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">example_values</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">example_values</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="n">result</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="p">((</span><span class="n">example_values</span> <span class="o">&gt;</span> <span class="n">min_value</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">example_values</span> <span class="o">&lt;</span> <span class="n">max_value</span><span class="p">))</span>
-        <span class="o">|</span> <span class="p">((</span><span class="n">example_values</span> <span class="o">==</span> <span class="n">min_value</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">min_inclusive</span><span class="p">)</span>
-        <span class="o">|</span> <span class="p">((</span><span class="n">example_values</span> <span class="o">==</span> <span class="n">max_value</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">max_inclusive</span><span class="p">)</span>
+    <span class="n">ge</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">pc</span><span class="o">.</span><span class="n">greater_equal</span><span class="p">(</span><span class="n">example_values</span><span class="p">,</span> <span class="n">min_value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">min_inclusive</span>
+        <span class="k">else</span> <span class="n">pc</span><span class="o">.</span><span class="n">greater</span><span class="p">(</span><span class="n">example_values</span><span class="p">,</span> <span class="n">min_value</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">le</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">pc</span><span class="o">.</span><span class="n">less_equal</span><span class="p">(</span><span class="n">example_values</span><span class="p">,</span> <span class="n">max_value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_inclusive</span>
+        <span class="k">else</span> <span class="n">pc</span><span class="o">.</span><span class="n">less</span><span class="p">(</span><span class="n">example_values</span><span class="p">,</span> <span class="n">max_value</span><span class="p">)</span>
     <span class="p">)</span>
 
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span><span class="n">ge</span><span class="p">,</span> <span class="n">le</span><span class="p">)</span><span class="o">.</span><span class="n">fill_null</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">negate</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="o">~</span><span class="n">result</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">keep_nulls</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">|=</span> <span class="n">pd</span><span class="o">.</span><span class="n">isnull</span><span class="p">(</span><span class="n">example_values</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">&amp;=</span> <span class="n">pd</span><span class="o">.</span><span class="n">notnull</span><span class="p">(</span><span class="n">example_values</span><span class="p">)</span>
+    <span class="n">nulls</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">is_null</span><span class="p">(</span><span class="n">example_values</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">or_</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">nulls</span><span class="p">)</span> <span class="k">if</span> <span class="n">keep_nulls</span> <span class="k">else</span> <span class="n">pc</span><span class="o">.</span><span class="n">and_not</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">nulls</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>  <span class="c1"># type: ignore</span></div>
+    <span class="k">return</span> <span class="n">mask</span><span class="o">.</span><span class="n">to_pylist</span><span class="p">()</span>  <span class="c1"># type: ignore</span></div>
 
 
 
 <div class="viewcode-block" id="filter_datetime">
 <a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.data.slicer.filter_datetime.html#cyclops.data.slicer.filter_datetime">[docs]</a>
 <span class="k">def</span> <span class="nf">filter_datetime</span><span class="p">(</span>
-    <span class="n">examples</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">examples</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="p">,</span> <span class="n">LazyBatch</span><span class="p">],</span>
     <span class="n">column_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">year</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">month</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1012,13 +1032,13 @@
     <span class="n">hour</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">negate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">keep_nulls</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True for all examples where the datetime value matches the given datetime.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    examples : Dict[str, Any]</span>
-<span class="sd">        A dictionary of features and values.</span>
+<span class="sd">    examples : pyarrow.Table, datasets.formatting.formatting.LazyBatch</span>
+<span class="sd">        A batch of examples to filter.</span>
 <span class="sd">    column_name : str</span>
 <span class="sd">        The column name on which to filter.</span>
 <span class="sd">    year : int, str, List[int], List[str], optional, default=None</span>
@@ -1038,13 +1058,13 @@
 <span class="sd">        If `True`, return `True` for all examples where the value does not match</span>
 <span class="sd">        the given datetime components.</span>
 <span class="sd">    keep_nulls : bool, optional, default=False</span>
-<span class="sd">        If `True`, return `True` for all examples that have a null/nan/NaT value.</span>
+<span class="sd">        If `True`, return `True` for all examples that have a null value.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Union[bool, List[bool]]</span>
-<span class="sd">        A boolean or a list of booleans containing `True` for all examples where</span>
-<span class="sd">        the value of a column matches the given datetime components.</span>
+<span class="sd">    List[bool]</span>
+<span class="sd">        A list of booleans containing `True` for all examples where the value of</span>
+<span class="sd">        a column matches the given datetime components.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -1052,76 +1072,75 @@
 <span class="sd">        If the column does not contain datetime values.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># make sure the column has datetime type</span>
-    <span class="n">example_values</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">examples</span><span class="p">[</span><span class="n">column_name</span><span class="p">])</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="n">_check_examples</span><span class="p">(</span><span class="n">examples</span><span class="p">)</span>
+    <span class="n">example_values</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">examples</span><span class="p">[</span><span class="n">column_name</span><span class="p">])</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">example_values</span> <span class="o">=</span> <span class="n">example_values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;datetime64&quot;</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="n">example_values</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">example_values</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">timestamp</span><span class="p">(</span><span class="s2">&quot;ns&quot;</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">ArrowInvalid</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
             <span class="s2">&quot;Expected datetime feature, but got feature of type &quot;</span>
             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">example_values</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
         <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
 
-    <span class="c1"># convert the datetime values to year, month, day, hour</span>
-    <span class="n">years</span><span class="p">,</span> <span class="n">months</span><span class="p">,</span> <span class="n">days</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="n">example_values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;M8[</span><span class="si">{</span><span class="n">unit</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">unit</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="s2">&quot;M&quot;</span><span class="p">,</span> <span class="s2">&quot;D&quot;</span><span class="p">]</span>
-    <span class="p">]</span>
+    <span class="k">def</span> <span class="nf">_apply_mask</span><span class="p">(</span>
+        <span class="n">values</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Int64Array</span><span class="p">,</span>
+        <span class="n">value_set</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">mask</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">BooleanArray</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pa</span><span class="o">.</span><span class="n">BooleanArray</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value_set</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">)):</span>
+            <span class="n">value_set</span> <span class="o">=</span> <span class="p">[</span><span class="n">value_set</span><span class="p">]</span>  <span class="c1"># type: ignore[assignment]</span>
 
-    <span class="c1"># get all the values that match the given datetime</span>
-    <span class="c1"># acknowledgement: https://stackoverflow.com/a/56260054</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">example_values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pc</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span>
+            <span class="n">mask</span><span class="p">,</span>
+            <span class="n">pc</span><span class="o">.</span><span class="n">is_in</span><span class="p">(</span>
+                <span class="n">values</span><span class="p">,</span>
+                <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">value_set</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span> <span class="nb">type</span><span class="o">=</span><span class="n">pa</span><span class="o">.</span><span class="n">int64</span><span class="p">()),</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="kc">True</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">example_values</span><span class="p">),</span> <span class="nb">type</span><span class="o">=</span><span class="n">pa</span><span class="o">.</span><span class="n">bool_</span><span class="p">())</span>
     <span class="k">if</span> <span class="n">year</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">&amp;=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span>
-            <span class="n">element</span><span class="o">=</span><span class="n">years</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1970</span><span class="p">,</span>
-            <span class="n">test_elements</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
-        <span class="p">)</span>
+        <span class="n">years</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">year</span><span class="p">(</span><span class="n">example_values</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">_apply_mask</span><span class="p">(</span><span class="n">years</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">month</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">&amp;=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span>
-            <span class="n">element</span><span class="o">=</span><span class="p">((</span><span class="n">months</span> <span class="o">-</span> <span class="n">years</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>
-            <span class="n">test_elements</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">month</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
-        <span class="p">)</span>
+        <span class="n">months</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">month</span><span class="p">(</span><span class="n">example_values</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">_apply_mask</span><span class="p">(</span><span class="n">months</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">day</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">&amp;=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span>
-            <span class="n">element</span><span class="o">=</span><span class="p">((</span><span class="n">days</span> <span class="o">-</span> <span class="n">months</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>
-            <span class="n">test_elements</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">day</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
-        <span class="p">)</span>
+        <span class="n">days</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">year</span><span class="p">(</span><span class="n">example_values</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">_apply_mask</span><span class="p">(</span><span class="n">days</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">hour</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">&amp;=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span>
-            <span class="n">element</span><span class="o">=</span><span class="p">(</span><span class="n">example_values</span> <span class="o">-</span> <span class="n">days</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;m8[h]&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span>
-            <span class="n">test_elements</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">hour</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">),</span>
-        <span class="p">)</span>
+        <span class="n">hours</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">hour</span><span class="p">(</span><span class="n">example_values</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">_apply_mask</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="n">hour</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">negate</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="o">~</span><span class="n">result</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">keep_nulls</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">|=</span> <span class="n">pd</span><span class="o">.</span><span class="n">isnull</span><span class="p">(</span><span class="n">example_values</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">&amp;=</span> <span class="n">pd</span><span class="o">.</span><span class="n">notnull</span><span class="p">(</span><span class="n">example_values</span><span class="p">)</span>
+    <span class="n">nulls</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">is_null</span><span class="p">(</span><span class="n">example_values</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">or_</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">nulls</span><span class="p">)</span> <span class="k">if</span> <span class="n">keep_nulls</span> <span class="k">else</span> <span class="n">pc</span><span class="o">.</span><span class="n">and_not</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">nulls</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>  <span class="c1"># type: ignore</span></div>
+    <span class="k">return</span> <span class="n">mask</span><span class="o">.</span><span class="n">to_pylist</span><span class="p">()</span>  <span class="c1"># type: ignore</span></div>
 
 
 
 <div class="viewcode-block" id="filter_string_contains">
 <a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.data.slicer.filter_string_contains.html#cyclops.data.slicer.filter_string_contains">[docs]</a>
 <span class="k">def</span> <span class="nf">filter_string_contains</span><span class="p">(</span>
-    <span class="n">examples</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+    <span class="n">examples</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="p">,</span> <span class="n">LazyBatch</span><span class="p">],</span>
     <span class="n">column_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">contains</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
     <span class="n">negate</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
     <span class="n">keep_nulls</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]:</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True for all examples where the value contains the given substring.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    examples : Dict[str, Any]</span>
-<span class="sd">        A dictionary of features and values.</span>
+<span class="sd">    examples : pyarrow.Table, datasets.formatting.formatting.LazyBatch</span>
+<span class="sd">        A batch of examples to filter.</span>
 <span class="sd">    column_name : str</span>
 <span class="sd">        The column name on which to filter.</span>
 <span class="sd">    contains : str, List[str]</span>
-<span class="sd">        The substring to match. If a list is provided, return `True` for all</span>
+<span class="sd">        The substring(s) to match. If a list is provided, return `True` for all</span>
 <span class="sd">        examples where the value contains any of the substrings in the list.</span>
 <span class="sd">    negate : bool, optional, default=False</span>
 <span class="sd">        If `True`, return `True` for all examples where the value does not contain</span>
@@ -1131,9 +1150,9 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Union[bool, List[bool]]</span>
-<span class="sd">        A boolean or a list of booleans containing `True` for all examples where</span>
-<span class="sd">        the value of a column contains the given substring.</span>
+<span class="sd">    List[bool]</span>
+<span class="sd">        A list of booleans containing `True` for all examples where the value of</span>
+<span class="sd">        a column contains the given substring.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -1142,27 +1161,17 @@
 <span class="sd">        `contains` are not strings.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_check_examples</span><span class="p">(</span><span class="n">examples</span><span class="p">)</span>
     <span class="c1"># make sure the column has string type</span>
-    <span class="n">example_values</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">examples</span><span class="p">[</span><span class="n">column_name</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">example_values</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="s2">&quot;object&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
-        <span class="n">example_values</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-        <span class="n">pd</span><span class="o">.</span><span class="n">StringDtype</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="n">example_values</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">examples</span><span class="p">[</span><span class="n">column_name</span><span class="p">])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pa</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_string</span><span class="p">(</span><span class="n">example_values</span><span class="o">.</span><span class="n">type</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="s2">&quot;Expected string feature, but got feature of type &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">example_values</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">example_values</span><span class="o">.</span><span class="n">type</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
         <span class="p">)</span>
-    <span class="k">if</span> <span class="n">example_values</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;object&quot;</span><span class="p">:</span>  <span class="c1"># object type could be string</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">_</span> <span class="o">=</span> <span class="n">example_values</span><span class="o">.</span><span class="n">str</span>
-        <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="s2">&quot;Expected string feature, but got feature of type &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">example_values</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
-            <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
 
     <span class="c1"># get all the values that contain the given substring</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">example_values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="kc">False</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">example_values</span><span class="p">),</span> <span class="nb">type</span><span class="o">=</span><span class="n">pa</span><span class="o">.</span><span class="n">bool_</span><span class="p">())</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">contains</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">contains</span> <span class="o">=</span> <span class="p">[</span><span class="n">contains</span><span class="p">]</span>
 
@@ -1172,55 +1181,62 @@
                 <span class="sa">f</span><span class="s2">&quot;Expected string value for `contains`, but got value of type &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">substring</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="n">result</span> <span class="o">|=</span> <span class="n">example_values</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="n">substring</span><span class="p">,</span> <span class="n">case</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span>
-            <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">or_</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">pc</span><span class="o">.</span><span class="n">match_substring</span><span class="p">(</span><span class="n">example_values</span><span class="p">,</span> <span class="n">substring</span><span class="p">))</span>
 
     <span class="k">if</span> <span class="n">negate</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="o">~</span><span class="n">result</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">mask</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">keep_nulls</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">|=</span> <span class="n">pd</span><span class="o">.</span><span class="n">isnull</span><span class="p">(</span><span class="n">example_values</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">&amp;=</span> <span class="n">pd</span><span class="o">.</span><span class="n">notnull</span><span class="p">(</span><span class="n">example_values</span><span class="p">)</span>
+    <span class="n">nulls</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">is_null</span><span class="p">(</span><span class="n">example_values</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">pc</span><span class="o">.</span><span class="n">or_</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">nulls</span><span class="p">)</span> <span class="k">if</span> <span class="n">keep_nulls</span> <span class="k">else</span> <span class="n">pc</span><span class="o">.</span><span class="n">and_not</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">nulls</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">result</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>  <span class="c1"># type: ignore</span></div>
+    <span class="k">return</span> <span class="n">mask</span><span class="o">.</span><span class="n">to_pylist</span><span class="p">()</span>  <span class="c1"># type: ignore</span></div>
 
 
 
 <div class="viewcode-block" id="compound_filter">
 <a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.data.slicer.compound_filter.html#cyclops.data.slicer.compound_filter">[docs]</a>
 <span class="k">def</span> <span class="nf">compound_filter</span><span class="p">(</span>
-    <span class="n">examples</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
-    <span class="n">slice_functions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]]],</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]:</span>
+    <span class="n">examples</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="p">,</span> <span class="n">LazyBatch</span><span class="p">],</span>
+    <span class="n">slice_functions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Combine the result of multiple slices using bitwise AND.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    examples : Dict[str, Any]</span>
+<span class="sd">    examples : pyarrow.Table, datasets.formatting.formatting.LazyBatch</span>
 <span class="sd">        A dictionary mapping column names to values.</span>
-<span class="sd">    slice_functions : List[Callable]</span>
+<span class="sd">    slice_functions : List[Callable[..., List[bool]]]</span>
 <span class="sd">        A list of functions to apply to the examples. The signature of each</span>
-<span class="sd">        function should be: `slice_function(examples, **kwargs)`.</span>
-<span class="sd">        The result of each function should be a boolean or a list of booleans.</span>
+<span class="sd">        function should be: `slice_function(examples, **kwargs)`. The result of</span>
+<span class="sd">        each function should be a list of booleans.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    Union[bool, List[bool]]</span>
-<span class="sd">        A boolean or a list of booleans containing `True` for all examples where</span>
-<span class="sd">        each slice function returns `True`.</span>
+<span class="sd">    List[bool]</span>
+<span class="sd">        A list of booleans containing `True` for all examples where each slice</span>
+<span class="sd">        function returns `True`.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">result</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">bool</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bitwise_and</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span>
+    <span class="n">_check_examples</span><span class="p">(</span><span class="n">examples</span><span class="p">)</span>
+    <span class="n">mask</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bitwise_and</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span>
         <span class="p">[</span><span class="n">slice_function</span><span class="p">(</span><span class="n">examples</span><span class="p">)</span> <span class="k">for</span> <span class="n">slice_function</span> <span class="ow">in</span> <span class="n">slice_functions</span><span class="p">],</span>
     <span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">result</span></div>
+    <span class="k">return</span> <span class="n">mask</span></div>
 
 
 
 <span class="c1"># utility functions</span>
+<span class="k">def</span> <span class="nf">_check_examples</span><span class="p">(</span><span class="n">examples</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="p">,</span> <span class="n">LazyBatch</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check the type of `examples.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">examples</span><span class="p">,</span> <span class="p">(</span><span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="p">,</span> <span class="n">LazyBatch</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">&quot;Expected `examples` to be an instance of pyarrow.table or &quot;</span>
+            <span class="s2">&quot;datasets.formatting.formatting.LazyBatch but got &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">examples</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+
 <div class="viewcode-block" id="is_datetime">
 <a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.data.slicer.is_datetime.html#cyclops.data.slicer.is_datetime">[docs]</a>
 <span class="k">def</span> <span class="nf">is_datetime</span><span class="p">(</span>

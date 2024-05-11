@@ -334,7 +334,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>examples</strong> (<em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>) – A dictionary of features and values.</p></li>
+<li><p><strong>examples</strong> (<em>pyarrow.Table</em><em>, </em><em>datasets.formatting.formatting.LazyBatch</em>) – A batch of examples to filter.</p></li>
 <li><p><strong>column_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The column name on which to filter.</p></li>
 <li><p><strong>min_value</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em><em>, </em><em>default=-np.inf</em>) – The minimum value of the range.</p></li>
 <li><p><strong>max_value</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em><em>, </em><em>default=np.inf</em>) – The maximum value of the range.</p></li>
@@ -346,11 +346,11 @@ not in the given range.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A boolean or a list of booleans containing <cite>True</cite> for all examples in the
-column where the value is in the given range.</p>
+<dd class="field-even"><p>A list of booleans containing <cite>True</cite> for all examples in the column where
+the value is in the given range.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Union[<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)">bool</a>, List[<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)">bool</a>]]</p>
+<dd class="field-odd"><p>List[<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)">bool</a>]</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
