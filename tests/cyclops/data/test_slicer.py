@@ -325,13 +325,15 @@ def test_filter_string_contains(
 
     result = np.zeros_like(col, dtype=bool)
     for substring in contains:
-        result |= col.str.contains(substring, case=False).to_numpy(dtype=bool)
+        result |= col.str.match(substring, case=True).to_numpy(dtype=bool)
 
     if negate:
         result = ~result
 
     if keep_nulls:
         result |= pd.isnull(col)
+        # remove NAs
+        result &= ~pd.isna(col)
     else:
         result &= pd.notnull(col)
 
