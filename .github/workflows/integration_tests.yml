@@ -61,7 +61,7 @@ jobs:
           mpirun -n 2 python -m pytest --only-mpi
           pytest -m integration_test --cov-report term --cov-report xml:./coverage.xml --cov=cyclops -n auto --dist loadscope
       - name: Upload coverage to Codecov
-        uses: Wandalen/wretry.action@v1.4.4
+        uses: Wandalen/wretry.action@v3.5.0
         with:
           action: codecov/codecov-action@v4.3.1
           with: |
