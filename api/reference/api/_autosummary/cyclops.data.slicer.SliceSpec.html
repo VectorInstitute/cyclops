@@ -501,21 +501,23 @@ used to validate the column names in the slice specifications.</p></li>
 <span class="go">overall</span>
 </pre></div>
 </div>
-<p># a different way to create intersections/compound slices
-&gt;&gt;&gt; slice_spec = SliceSpec(
-…     spec_list=[
-…         {“feature_1”: {“keep_nulls”: False}},
-…         {“feature_2”: {“keep_nulls”: False}},
-…     ],
-…     include_overall=False,
-…     intersections=2,
-… )
-&gt;&gt;&gt; for slice_name, slice_func in slice_spec.slices():
-…     print(slice_name)
-…     # do something with slice_func here (e.g. dataset.filter(slice_func))
-feature_1:non_null
-feature_2:non_null
-feature_1:non_null&amp;feature_2:non_null</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># a different way to create intersections/compound slices</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">slice_spec</span> <span class="o">=</span> <span class="n">SliceSpec</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">spec_list</span><span class="o">=</span><span class="p">[</span>
+<span class="gp">... </span>        <span class="p">{</span><span class="s2">&quot;feature_1&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;keep_nulls&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}},</span>
+<span class="gp">... </span>        <span class="p">{</span><span class="s2">&quot;feature_2&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;keep_nulls&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}},</span>
+<span class="gp">... </span>    <span class="p">],</span>
+<span class="gp">... </span>    <span class="n">include_overall</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">intersections</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">slice_name</span><span class="p">,</span> <span class="n">slice_func</span> <span class="ow">in</span> <span class="n">slice_spec</span><span class="o">.</span><span class="n">slices</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">slice_name</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="c1"># do something with slice_func here (e.g. dataset.filter(slice_func))</span>
+<span class="go">feature_1:non_null</span>
+<span class="go">feature_2:non_null</span>
+<span class="go">feature_1:non_null&amp;feature_2:non_null</span>
+</pre></div>
+</div>
 <p class="rubric">Methods</p>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
