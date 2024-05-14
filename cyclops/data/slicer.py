@@ -148,7 +148,7 @@ class SliceSpec:
     feature_1:value_1&feature_2:[2020-01-01 - inf]&feature_3:year=['2000', '2010', '2020']
     overall
 
-    # a different way to create intersections/compound slices
+    >>> # a different way to create intersections/compound slices
     >>> slice_spec = SliceSpec(
     ...     spec_list=[
     ...         {"feature_1": {"keep_nulls": False}},
