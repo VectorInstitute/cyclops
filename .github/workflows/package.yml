@@ -26,7 +26,7 @@ jobs:
   base-package-install-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v4.1.5
       - name: Install pip
         run: python3 -m pip install --upgrade pip
       - uses: actions/setup-python@v5.1.0
