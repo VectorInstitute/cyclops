@@ -39,7 +39,7 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
 
 
-def evaluate_fairness(
+def evaluate_fairness(  # noqa: PLR0912
     metrics: Union[str, Callable[..., Any], Metric, MetricDict],
     dataset: Dataset,
     groups: Union[str, List[str]],
