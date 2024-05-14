@@ -494,7 +494,7 @@ class SKModel:
 
         return self
 
-    def fit(
+    def fit(  # noqa: PLR0912
         self,
         X: Union[ArrayLike, Dataset, DatasetDict],
         y: Optional[ArrayLike] = None,
