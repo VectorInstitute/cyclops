@@ -152,7 +152,9 @@ def evaluate(
         fairness_config.batch_size = batch_size
         fairness_config.remove_columns = ignore_columns
 
-        fairness_results = evaluate_fairness(**asdict(fairness_config))
+        fairness_results = evaluate_fairness(
+            **asdict(fairness_config), array_lib=array_lib
+        )
         results["fairness"] = fairness_results
 
     return results
@@ -304,7 +306,7 @@ def _compute_metrics(
                         metrics.update(targets, predictions)
 
                     metric_output = metrics.compute()
-                    metrics.reset()
+                metrics.reset()
 
                 model_name: str = "model_for_%s" % prediction_column
                 results.setdefault(model_name, {})

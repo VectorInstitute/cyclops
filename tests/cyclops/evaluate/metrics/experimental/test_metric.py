@@ -331,7 +331,7 @@ def test_reset_compute():
         anp.asarray(42, dtype=anp.float32),
     )
     metric.reset()
-    assert metric.state_vars == {"x": anp.asarray(0, dtype=anp.float32)}
+    assert metric.state_vars == {}
 
 
 def test_error_on_compute_before_update():
@@ -397,7 +397,7 @@ def test_call():
     assert metric._computed is None
 
     metric.reset()
-    assert metric.state_vars == {"x": anp.asarray(0, dtype=anp.float32)}
+    assert metric.state_vars == {}
     assert metric._computed is None
 
 

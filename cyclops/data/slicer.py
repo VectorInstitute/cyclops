@@ -3,6 +3,7 @@
 import copy
 import datetime
 import itertools
+import json
 from dataclasses import dataclass, field
 from functools import partial
 from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
@@ -247,6 +248,19 @@ class SliceSpec:
                 f"Got {self.intersections} instead.",
             )
         self.spec_list.extend(intersect_list)
+
+        # remove duplicates
+        seen = set()
+        result = []
+
+        for spec in self.spec_list:
+            spec_str = json.dumps(spec, sort_keys=True)
+            if spec_str not in seen:
+                seen.add(spec_str)
+                result.append(spec)
+
+        seen.clear()
+        self.spec_list = result
 
     def _parse_and_register_slice_specs(
         self,

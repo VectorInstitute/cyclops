@@ -431,6 +431,7 @@ class Metric(ABC):
                     "object or a list of array API objects. But got "
                     f"`{type(default_value)} instead.",
                 )
+        self._defaults = {}
 
         self._update_count = 0
         self._computed = None
