@@ -361,7 +361,7 @@ class MetricDict(UserDict[str, Union[Metric, TorchMetric]]):
             for metric_names in self._metric_groups.values():
                 base_metric = self.data[metric_names[0]]
                 for metric_name in metric_names[1:]:
-                    for state in self.data[metric_name]._defaults:
+                    for state in base_metric._defaults:
                         base_metric_state = getattr(base_metric, state)
                         setattr(
                             self.data[metric_name],

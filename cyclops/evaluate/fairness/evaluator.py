@@ -728,6 +728,9 @@ def _compute_metrics(  # noqa: C901, PLR0912
         The batch size to use for the computation.
     metric_name : Optional[str]
         The name of the metric to compute.
+    array_lib : {"torch", "numpy, "cupy"}, default="numpy"
+        The array library to use for the metric computation. The metric results
+        will be returned in the format of `array_lib`.
 
     Returns
     -------
