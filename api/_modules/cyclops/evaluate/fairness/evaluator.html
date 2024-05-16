@@ -1057,6 +1057,9 @@
 <span class="sd">        The batch size to use for the computation.</span>
 <span class="sd">    metric_name : Optional[str]</span>
 <span class="sd">        The name of the metric to compute.</span>
+<span class="sd">    array_lib : {&quot;torch&quot;, &quot;numpy, &quot;cupy&quot;}, default=&quot;numpy&quot;</span>
+<span class="sd">        The array library to use for the metric computation. The metric results</span>
+<span class="sd">        will be returned in the format of `array_lib`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>

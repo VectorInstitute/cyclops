@@ -1069,16 +1069,6 @@
    ]
   },
   {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "172a1654",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "results"
-   ]
-  },
-  {
    "cell_type": "markdown",
    "id": "7d2d1d75-f7d8-44d3-a782-2aba9a4fbac0",
    "metadata": {
