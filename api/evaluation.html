@@ -168,7 +168,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -319,7 +319,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -330,16 +330,17 @@
 <p>The Evaluation API equips you with a rich toolbox to assess your models across key
 dimensions. Dive into detailed performance metrics, unveil potential fairness
 concerns, and gain granular insights through data slicing.</p>
-<p>Key capabilities:</p>
+<section id="key-capabilities">
+<h2>Key capabilities<a class="headerlink" href="#key-capabilities" title="Link to this heading">#</a></h2>
 <blockquote>
 <div><ul class="simple">
-<li><p>Performance: Employ a robust selection of common metrics to evaluate your
+<li><p><strong>Performance</strong>: Employ a robust selection of common metrics to evaluate your
 model’s effectiveness and identify areas for improvement.</p></li>
-<li><p>Fairness: Uncover and analyze potential biases within your model to ensure
-responsible and equitable outcomes.</p></li>
-<li><p>Data slicing: Isolate the model’s behavior on specific subsets of your
+<li><p><strong>Data slicing</strong>: Isolate the model’s behavior on specific subsets of your
 data, revealing performance nuances across demographics, features, or other
 important characteristics.</p></li>
+<li><p><strong>Fairness</strong>: Uncover and analyze potential biases within your model to ensure
+responsible and equitable outcomes.</p></li>
 </ul>
 <img alt="https://github.com/VectorInstitute/cyclops/assets/8986523/416170db-1265-42a3-a3c1-d34558b72b65" src="https://github.com/VectorInstitute/cyclops/assets/8986523/416170db-1265-42a3-a3c1-d34558b72b65" />
 </div></blockquote>
@@ -351,12 +352,14 @@ important characteristics.</p></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/metrics.html#Individual-Metrics">Individual Metrics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/metrics.html#Using-MetricDict">Using <code class="docutils literal notranslate"><span class="pre">MetricDict</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/metrics.html#Data-Slicing">Data Slicing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/metrics.html#Intersectional-slicing">Intersectional slicing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/metrics.html#Preparing-Result">Preparing Result</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/metrics.html#Fairness-Evaluator">Fairness Evaluator</a></li>
 </ul>
 </li>
 </ul>
 </div>
+</section>
 </section>
 
         </article>
@@ -431,8 +434,27 @@ important characteristics.</p></li>
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Evaluation</a><ul>
+<li><a class="reference internal" href="#key-capabilities">Key capabilities</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
