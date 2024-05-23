@@ -473,7 +473,7 @@ def _numeric_categorical_mapping(
     for i, unique_val in enumerate(unique):
         map_dict[unique_val] = i
 
-    series = series.replace(map_dict)
+    series = series.map(map_dict)
 
     inv_map = {v: k for k, v in map_dict.items()}
     meta = {FEATURE_MAPPING_ATTR: inv_map}
