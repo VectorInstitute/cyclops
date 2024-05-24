@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.1.5
+        uses: actions/checkout@v4.1.6
 
       - name: Log in to Docker Hub
         uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20
@@ -32,7 +32,7 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@2ee3d3070bb41b40bf7305d15233321e12c1dc5c
+        uses: docker/metadata-action@f7b4ed12385588c3f9bc252f0a2b520d83b52d48
         with:
           images: vectorinstitute/cyclops
 
