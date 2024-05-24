@@ -7,6 +7,7 @@ import logging
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
+import pandas as pd
 
 from cyclops.data.df.normalize import VectorizedNormalizer
 from cyclops.data.df.split import split_idx
@@ -191,7 +192,11 @@ class Vectorized:
         if not all(isinstance(name, str) for name in axis_names):
             raise ValueError("Axis names must be strings.")
         for i, index in enumerate(indexes):
-            if not isinstance(index, list) and not isinstance(index, np.ndarray):
+            if (
+                not isinstance(index, list)
+                and not pd.api.types.is_string_dtype(index)
+                and not isinstance(index, np.ndarray)
+            ):
                 raise ValueError("Indexes must be a list of list or numpy.ndarray.")
 
             index_ = np.array(index)
