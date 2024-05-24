@@ -1,5 +1,7 @@
 """Functions for computing the confusion matrix for classification tasks."""
+
 # mypy: disable-error-code="no-any-return"
+import warnings
 from types import ModuleType
 from typing import Literal, Optional, Tuple, Union
 
@@ -31,7 +33,7 @@ def _normalize_confusion_matrix(
 ) -> Array:
     """Normalize the confusion matrix."""
     if normalize in ["true", "pred", "all"]:
-        confmat = xp.astype(confmat, xp.float32)
+        confmat = xp.astype(confmat, xp.float32, copy=False)
 
     if normalize == "pred":
         return safe_divide(confmat, xp.sum(confmat, axis=-2, keepdims=True))
@@ -39,6 +41,16 @@ def _normalize_confusion_matrix(
         return safe_divide(confmat, xp.sum(confmat, axis=-1, keepdims=True))
     if normalize == "all":
         return safe_divide(confmat, xp.sum(confmat, axis=(-1, -2), keepdims=True))
+
+    nan_elements = int(0 or apc.size(confmat[xp.isnan(confmat)]))
+    if nan_elements:
+        confmat[xp.isnan(confmat)] = 0
+        warnings.warn(
+            f"Encountered {nan_elements} NaN elements in the confusion matrix. "
+            "These elements were replaced with 0.",
+            category=RuntimeWarning,
+            stacklevel=1,
+        )
 
     return confmat
 
@@ -236,7 +248,9 @@ def binary_confusion_matrix(
     Examples
     --------
     >>> import numpy.array_api as anp
-    >>> from cyclops.evaluate.metrics.experimental.functional import binary_confusion_matrix
+    >>> from cyclops.evaluate.metrics.experimental.functional import (
+    ...     binary_confusion_matrix,
+    ... )
     >>> target = anp.asarray([0, 1, 0, 1, 0, 1])
     >>> preds = anp.asarray([0, 0, 1, 1, 0, 1])
     >>> binary_confusion_matrix(target, preds)
@@ -727,7 +741,9 @@ def multilabel_confusion_matrix(
     Examples
     --------
     >>> import numpy.array_api as anp
-    >>> from cyclops.evaluate.metrics.experimental.functional import multilabel_confusion_matrix
+    >>> from cyclops.evaluate.metrics.experimental.functional import (
+    ...     multilabel_confusion_matrix,
+    ... )
     >>> target = anp.asarray([[0, 1, 0], [1, 0, 1]])
     >>> preds = anp.asarray([[0, 0, 1], [1, 0, 1]])
     >>> multilabel_confusion_matrix(target, preds, num_labels=3)

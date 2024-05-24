@@ -1,4 +1,5 @@
 """Confusion matrix."""
+
 from types import ModuleType
 from typing import Any, Optional, Tuple, Union
 
@@ -119,8 +120,12 @@ class BinaryConfusionMatrix(
     Array([[2, 1],
            [1, 2]], dtype=int64)
     >>> target = anp.asarray([[[0, 1], [1, 0], [0, 1]], [[1, 1], [0, 0], [1, 0]]])
-    >>> preds = anp.asarray([[[0.59, 0.91], [0.91, 0.99], [0.63, 0.04]],
-    ...                     [[0.38, 0.04], [0.86, 0.780], [0.45, 0.37]]])
+    >>> preds = anp.asarray(
+    ...     [
+    ...         [[0.59, 0.91], [0.91, 0.99], [0.63, 0.04]],
+    ...         [[0.38, 0.04], [0.86, 0.780], [0.45, 0.37]],
+    ...     ]
+    ... )
 
     """
 
@@ -205,10 +210,14 @@ class MulticlassConfusionMatrix(Metric, registry_key="multiclass_confusion_matri
            [0, 1, 0],
            [0, 0, 1]], dtype=int64)
     >>> target = anp.asarray([2, 1, 0, 0])
-    >>> preds = anp.asarray([[0.16, 0.26, 0.58],
-    ...                     [0.22, 0.61, 0.17],
-    ...                     [0.71, 0.09, 0.20],
-    ...                     [0.05, 0.82, 0.13]])
+    >>> preds = anp.asarray(
+    ...     [
+    ...         [0.16, 0.26, 0.58],
+    ...         [0.22, 0.61, 0.17],
+    ...         [0.71, 0.09, 0.20],
+    ...         [0.05, 0.82, 0.13],
+    ...     ]
+    ... )
     >>> metric = MulticlassConfusionMatrix(num_classes=3)
     >>> metric(target, preds)
     Array([[1, 1, 0],

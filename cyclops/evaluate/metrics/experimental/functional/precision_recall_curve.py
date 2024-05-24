@@ -1,6 +1,7 @@
 """Functions for computing the precision and recall for different unique thresholds."""
+
 from types import ModuleType
-from typing import Any, List, Literal, Optional, Sequence, Tuple, Union
+from typing import Any, List, Literal, NamedTuple, Optional, Sequence, Tuple, Union
 
 import array_api_compat as apc
 import numpy as np
@@ -26,6 +27,14 @@ from cyclops.evaluate.metrics.experimental.utils.validation import (
     _check_same_shape,
     is_floating_point,
 )
+
+
+class PRCurve(NamedTuple):
+    """Named tuple with Precision-Recall curve (Precision, Recall and thresholds)."""
+
+    precision: Union[Array, List[Array]]
+    recall: Union[Array, List[Array]]
+    thresholds: Union[Array, List[Array]]
 
 
 def _validate_thresholds(thresholds: Optional[Union[int, List[float], Array]]) -> None:
@@ -262,7 +271,7 @@ def _binary_clf_curve(
         # the presence of floating point errors
         fps = _array_indexing(_cumsum((1 - target) * weight, axis=0), threshold_idxs)
     else:
-        fps = 1 + xp.astype(threshold_idxs, xp.float32) - tps
+        fps = 1 + xp.astype(threshold_idxs, xp.float32, copy=False) - tps
 
     return fps, tps, _array_indexing(preds, threshold_idxs)
 
@@ -352,14 +361,13 @@ def binary_precision_recall_curve(
 
     Returns
     -------
-    precision : Array
-        The precision values for all unique thresholds. The shape of the array is
+    PRCurve
+        A named tuple that contains the following elements:
+        - `precision` values for all unique thresholds. The shape of the array is
         `(num_thresholds + 1,)`.
-    recall : Array
-        The recall values for all unique thresholds. The shape of the array is
+        - `recall` values for all unique thresholds. The shape of the array is
         `(num_thresholds + 1,)`.
-    thresholds : Array
-        The thresholds used for computing the precision and recall values, in
+        - `thresholds` used for computing the precision and recall values, in
         ascending order. The shape of the array is `(num_thresholds,)`.
 
     Raises
@@ -399,13 +407,15 @@ def binary_precision_recall_curve(
     Examples
     --------
     >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...     binary_precision_recall_curve
+    ...     binary_precision_recall_curve,
     ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([0, 1, 0, 1, 0, 1])
     >>> preds = anp.asarray([0.11, 0.22, 0.84, 0.73, 0.33, 0.92])
     >>> precision, recall, thresholds = binary_precision_recall_curve(
-    ...     target, preds, thresholds=None,
+    ...     target,
+    ...     preds,
+    ...     thresholds=None,
     ... )
     >>> precision
     Array([0.5      , 0.6      , 0.5      , 0.6666667,
@@ -416,7 +426,9 @@ def binary_precision_recall_curve(
     >>> thresholds
     Array([0.11, 0.22, 0.33, 0.73, 0.84, 0.92], dtype=float64)
     >>> precision, recall, thresholds = binary_precision_recall_curve(
-    ...     target, preds, thresholds=5,
+    ...     target,
+    ...     preds,
+    ...     thresholds=5,
     ... )
     >>> precision
     Array([0.5      , 0.5      , 0.6666667, 0.5      ,
@@ -684,7 +696,7 @@ def multiclass_precision_recall_curve(
     thresholds: Optional[Union[int, List[float], Array]] = None,
     average: Optional[Literal["macro", "micro", "none"]] = None,
     ignore_index: Optional[Union[int, Tuple[int]]] = None,
-) -> Union[Tuple[Array, Array, Array], Tuple[List[Array], List[Array], List[Array]]]:
+) -> PRCurve:
     """Compute the precision and recall for all unique thresholds.
 
     Parameters
@@ -726,18 +738,17 @@ def multiclass_precision_recall_curve(
 
     Returns
     -------
-    precision : Array or List[Array]
-        The precision values for all unique thresholds. If `thresholds` is `"none"`
+    PRCurve
+        A named tuple that contains the following elements:
+        - `precision` values for all unique thresholds. If `thresholds` is `"none"`
         or `None`, a list for each class is returned with 1-D Arrays of shape
         `(num_thresholds + 1,)`. Otherwise, a 2-D Array of shape
         `(num_thresholds + 1, num_classes)` is returned.
-    recall : Array or List[Array]
-        The recall values for all unique thresholds. If `thresholds` is `"none"`
+        - `recall` values for all unique thresholds. If `thresholds` is `"none"`
         or `None`, a list for each class is returned with 1-D Arrays of shape
         `(num_thresholds + 1,)`. Otherwise, a 2-D Array of shape
         `(num_thresholds + 1, num_classes)` is returned.
-    thresholds : Array or List[Array]
-        The thresholds used for computing the precision and recall values, in
+        - `thresholds` used for computing the precision and recall values, in
         ascending order. If `thresholds` is `"none"` or `None`, a list for each
         class is returned with 1-D Arrays of shape `(num_thresholds,)`. Otherwise,
         a 1-D Array of shape `(num_thresholds,)` is returned.
@@ -786,19 +797,25 @@ def multiclass_precision_recall_curve(
     Examples
     --------
     >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...     multiclass_precision_recall_curve
+    ...     multiclass_precision_recall_curve,
     ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([0, 1, 2, 0, 1, 2])
     >>> preds = anp.asarray(
-    ...     [[0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44],
-    ...     [0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44]])
+    ...     [
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...     ]
+    ... )
     >>> precision, recall, thresholds = multiclass_precision_recall_curve(
-    ...     target, preds, num_classes=3, thresholds=None,
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     thresholds=None,
     ... )
     >>> precision
     [Array([0.33333334, 0.        , 0.        , 1.        ], dtype=float32),
@@ -809,7 +826,10 @@ def multiclass_precision_recall_curve(
     >>> thresholds
     [Array([0.11, 0.33, 0.84], dtype=float64), Array([0.22, 0.73, 0.92], dtype=float64), Array([0.12, 0.44, 0.67], dtype=float64)]
     >>> precision, recall, thresholds = multiclass_precision_recall_curve(
-    ...     target, preds, num_classes=3, thresholds=5,
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     thresholds=5,
     ... )
     >>> precision
     Array([[0.33333334, 0.        , 0.        , 0.        ,
@@ -855,12 +875,13 @@ def multiclass_precision_recall_curve(
         average,
         xp=xp,
     )
-    return _multiclass_precision_recall_curve_compute(
+    precision, recall, thresholds_ = _multiclass_precision_recall_curve_compute(
         state,
         num_classes,
         thresholds=thresholds,
         average=average,
     )
+    return PRCurve(precision, recall, thresholds_)
 
 
 def _multilabel_precision_recall_curve_validate_args(
@@ -1022,7 +1043,7 @@ def multilabel_precision_recall_curve(
     num_labels: int,
     thresholds: Optional[Union[int, List[float], Array]] = None,
     ignore_index: Optional[int] = None,
-) -> Union[Tuple[Array, Array, Array], Tuple[List[Array], List[Array], List[Array]]]:
+) -> PRCurve:
     """Compute the precision and recall for all unique thresholds.
 
     Parameters
@@ -1054,21 +1075,20 @@ def multilabel_precision_recall_curve(
 
     Returns
     -------
-    precision : Array or List[Array]
-        The precision values for all unique thresholds. If `thresholds` is `None`,
-        a list for each label is returned with 1-D Arrays of shape
+    PRCurve
+        A named tuple that contains the following elements:
+        - `precision` values for all unique thresholds. If `thresholds` is `"none"`
+        or `None`, a list for each class is returned with 1-D Arrays of shape
         `(num_thresholds + 1,)`. Otherwise, a 2-D Array of shape
-        `(num_thresholds + 1, num_labels)` is returned.
-    recall : Array or List[Array]
-        The recall values for all unique thresholds. If `thresholds` is `None`,
-        a list for each label is returned with 1-D Arrays of shape
+        `(num_thresholds + 1, num_classes)` is returned.
+        - `recall` values for all unique thresholds. If `thresholds` is `"none"`
+        or `None`, a list for each class is returned with 1-D Arrays of shape
         `(num_thresholds + 1,)`. Otherwise, a 2-D Array of shape
-        `(num_thresholds + 1, num_labels)` is returned.
-    thresholds : Array or List[Array]
-        The thresholds used for computing the precision and recall values, in
-        ascending order. If `thresholds` is `None`, a list for each label is
-        returned with 1-D Arrays of shape `(num_thresholds,)`. Otherwise, a 1-D
-        Array of shape `(num_thresholds,)` is returned.
+        `(num_thresholds + 1, num_classes)` is returned.
+        - `thresholds` used for computing the precision and recall values, in
+        ascending order. If `thresholds` is `"none"` or `None`, a list for each
+        class is returned with 1-D Arrays of shape `(num_thresholds,)`. Otherwise,
+        a 1-D Array of shape `(num_thresholds,)` is returned.
 
     Raises
     ------
@@ -1111,7 +1131,7 @@ def multilabel_precision_recall_curve(
     Examples
     --------
     >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...     multilabel_precision_recall_curve
+    ...     multilabel_precision_recall_curve,
     ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([[0, 1, 0], [1, 1, 0], [0, 0, 1]])
@@ -1119,7 +1139,10 @@ def multilabel_precision_recall_curve(
     ...     [[0.11, 0.22, 0.67], [0.84, 0.73, 0.12], [0.33, 0.92, 0.44]],
     ... )
     >>> precision, recall, thresholds = multilabel_precision_recall_curve(
-    ...     target, preds, num_labels=3, thresholds=None,
+    ...     target,
+    ...     preds,
+    ...     num_labels=3,
+    ...     thresholds=None,
     ... )
     >>> precision
     [Array([0.33333334, 0.5       , 1.        , 1.        ], dtype=float32),
@@ -1130,7 +1153,10 @@ def multilabel_precision_recall_curve(
     >>> thresholds
     [Array([0.11, 0.33, 0.84], dtype=float64), Array([0.22, 0.73, 0.92], dtype=float64), Array([0.12, 0.44, 0.67], dtype=float64)]
     >>> precision, recall, thresholds = multilabel_precision_recall_curve(
-    ...     target, preds, num_labels=3, thresholds=5,
+    ...     target,
+    ...     preds,
+    ...     num_labels=3,
+    ...     thresholds=5,
     ... )
     >>> precision
     Array([[0.33333334, 0.5       , 1.        , 1.        ,
@@ -1174,9 +1200,10 @@ def multilabel_precision_recall_curve(
         thresholds,
         xp=xp,
     )
-    return _multilabel_precision_recall_curve_compute(
+    precision, recall, thresholds_ = _multilabel_precision_recall_curve_compute(
         state,
         num_labels,
         thresholds,
         ignore_index,
     )
+    return PRCurve(precision, recall, thresholds_)

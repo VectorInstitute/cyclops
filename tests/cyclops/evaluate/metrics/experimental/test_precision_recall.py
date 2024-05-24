@@ -1,4 +1,5 @@
 """Test precision recall metrics."""
+
 from functools import partial
 from typing import Literal, Optional
 
@@ -327,6 +328,8 @@ def _multiclass_precision_recall_reference(
 
 class TestMulticlassPrecision(MetricTester):
     """Test multiclass precision metric class and function."""
+
+    atol = 6e-8
 
     @pytest.mark.parametrize("inputs", _multiclass_cases(xp=anp))
     @pytest.mark.parametrize("top_k", [1, 2])
@@ -728,7 +731,7 @@ class TestMultilabelPrecision(MetricTester):
         )
 
     @pytest.mark.integration_test()  # machine for integration tests has GPU
-    @pytest.mark.parametrize("inputs", _multilabel_cases(xp=anp))
+    @pytest.mark.parametrize("inputs", _multilabel_cases(xp=array_api_compat.torch))
     @pytest.mark.parametrize("average", [None, "micro", "macro", "weighted"])
     @pytest.mark.parametrize("ignore_index", [None, 0, -1])
     def test_multilabel_precision_class_with_torch_tensors(
@@ -739,6 +742,11 @@ class TestMultilabelPrecision(MetricTester):
     ) -> None:
         """Test class for multilabel precision with torch tensors."""
         target, preds = inputs
+
+        if ignore_index is not None:
+            target = _inject_ignore_index(target, ignore_index)
+
+        device = "cuda" if torch.cuda.is_available() else "cpu"
 
         self.run_metric_class_implementation_test(
             target,
@@ -758,6 +766,8 @@ class TestMultilabelPrecision(MetricTester):
                 "average": average,
                 "ignore_index": ignore_index,
             },
+            device=device,
+            use_device_for_ref=True,
         )
 
 

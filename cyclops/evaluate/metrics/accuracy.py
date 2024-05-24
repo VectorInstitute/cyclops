@@ -108,8 +108,10 @@ class MulticlassAccuracy(MulticlassStatScores, registry_key="multiclass_accuracy
     array([1.        , 0.        , 0.66666667])
     >>> metric.reset_state()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
@@ -184,8 +186,7 @@ class MultilabelAccuracy(MultilabelStatScores, registry_key="multilabel_accuracy
     array([1., 1., 0.])
     >>> metric.reset_state()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
@@ -291,8 +292,10 @@ class Accuracy(Metric, registry_key="accuracy", force_register=True):
     array([1.        , 0.        , 0.66666667])
     >>> metric.reset_state()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
@@ -307,8 +310,7 @@ class Accuracy(Metric, registry_key="accuracy", force_register=True):
     array([1., 1., 0.])
     >>> metric.reset_state()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()

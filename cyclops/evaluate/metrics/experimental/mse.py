@@ -1,4 +1,7 @@
 """Mean Squared Error metric."""
+
+from typing import Any
+
 from cyclops.evaluate.metrics.experimental.functional.mse import (
     _mean_squared_error_compute,
     _mean_squared_error_update,
@@ -17,13 +20,15 @@ class MeanSquaredError(Metric):
         to `False`, returns the root mean squared error.
     num_outputs : int, optional, default=1
         Number of outputs in multioutput setting.
+    **kwargs : Any
+        Additional keyword arguments to pass to the `Metric` base class.
 
     Examples
     --------
     >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental import MeanSquaredError
-    >>> target = anp.asarray([0.009, 1.05, 2., 3.])
-    >>> preds = anp.asarray([0., 1., 2., 2.])
+    >>> target = anp.asarray([0.009, 1.05, 2.0, 3.0])
+    >>> preds = anp.asarray([0.0, 1.0, 2.0, 2.0])
     >>> metric = MeanSquaredError()
     >>> metric(target, preds)
     Array(0.25064525, dtype=float32)
@@ -31,8 +36,8 @@ class MeanSquaredError(Metric):
     >>> metric(target, preds)
     Array(0.50064486, dtype=float32)
     >>> metric = MeanSquaredError(num_outputs=2)
-    >>> target = anp.asarray([[0.009, 1.05], [2., 3.]])
-    >>> preds = anp.asarray([[0., 1.], [2., 2.]])
+    >>> target = anp.asarray([[0.009, 1.05], [2.0, 3.0]])
+    >>> preds = anp.asarray([[0.0, 1.0], [2.0, 2.0]])
     >>> metric(target, preds)
     Array([4.0500e-05, 5.0125e-01], dtype=float32)
     >>> metric = MeanSquaredError(squared=False, num_outputs=2)
@@ -43,8 +48,13 @@ class MeanSquaredError(Metric):
 
     name: str = "Mean Squared Error"
 
-    def __init__(self, squared: bool = True, num_outputs: int = 1) -> None:
-        super().__init__()
+    def __init__(
+        self,
+        squared: bool = True,
+        num_outputs: int = 1,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(**kwargs)
         if not isinstance(squared, bool):
             raise TypeError(f"Expected `squared` to be a boolean. Got {type(squared)}")
         if not isinstance(num_outputs, int) and num_outputs > 0:

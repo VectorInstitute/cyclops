@@ -1,4 +1,5 @@
 """Utility functions for performing operations on array-API-compatible objects."""
+
 # mypy: disable-error-code="no-any-return"
 from collections import OrderedDict, defaultdict
 from types import ModuleType
@@ -17,7 +18,7 @@ from typing import (
 
 import array_api_compat as apc
 import numpy as np
-from array_api_compat.common._helpers import _is_numpy_array, _is_torch_array
+from array_api_compat.common._helpers import is_numpy_array, is_torch_array
 
 from cyclops.evaluate.metrics.experimental.utils.types import Array
 from cyclops.evaluate.metrics.experimental.utils.validation import (
@@ -166,6 +167,7 @@ def bincount(
     bincount = xp.astype(
         array == xp.arange(size, device=device)[:, None],
         weights.dtype if weights is not None else xp.int32,
+        copy=False,
     )
     return xp.sum(bincount * (weights if weights is not None else 1), axis=1)
 
@@ -244,7 +246,7 @@ def dim_zero_max(x: Array) -> Array:
 def dim_zero_mean(x: Array) -> Array:
     """Average along the zero dimension."""
     xp = apc.array_namespace(x)
-    x = x if is_floating_point(x) else xp.astype(x, xp.float32)
+    x = x if is_floating_point(x) else xp.astype(x, xp.float32, copy=False)
     return xp.mean(x, axis=0)
 
 
@@ -512,12 +514,14 @@ def safe_divide(
     xp = apc.array_namespace(numerator, denominator)
 
     numerator = (
-        numerator if is_floating_point(numerator) else xp.astype(numerator, xp.float32)
+        numerator
+        if is_floating_point(numerator)
+        else xp.astype(numerator, xp.float32, copy=False)
     )
     denominator = (
         denominator
         if is_floating_point(denominator)
-        else xp.astype(denominator, xp.float32)
+        else xp.astype(denominator, xp.float32, copy=False)
     )
 
     return xp.where(
@@ -553,7 +557,9 @@ def sigmoid(array: Array) -> Array:
     if apc.size(array) == 0:
         return xp.asarray([], dtype=xp.float32, device=apc.device(array))
 
-    array = array if is_floating_point(array) else xp.astype(array, xp.float32)
+    array = (
+        array if is_floating_point(array) else xp.astype(array, xp.float32, copy=False)
+    )
 
     exp_array = xp.exp(array)
     return xp.where(
@@ -674,7 +680,7 @@ def _adjust_weight_apply_average(
         if not is_multilabel:
             weights[tp + fp + fn == 0] = 0.0
 
-    weights = xp.astype(weights, xp.float32)
+    weights = xp.astype(weights, xp.float32, copy=False)
     return xp.sum(  # type: ignore[no-any-return]
         safe_divide(
             weights * score,
@@ -739,7 +745,7 @@ def _auc_compute(
         else:
             direction = 1.0
 
-    return xp.astype(_trapz(y, x, axis=axis) * direction, xp.float32)
+    return xp.astype(_trapz(y, x, axis=axis) * direction, xp.float32, copy=False)
 
 
 def _cumsum(x: Array, axis: Optional[int] = None, dtype: Optional[Any] = None) -> Array:
@@ -850,8 +856,8 @@ def _diff(
     if n < 0:
         raise ValueError("order must be non-negative but got " + repr(n))
 
-    nd = a.ndim
-    if nd == 0:
+    ndim = a.ndim
+    if ndim == 0:
         raise ValueError("diff requires input that is at least one dimensional")
 
     combined = []
@@ -874,8 +880,8 @@ def _diff(
     if len(combined) > 1:
         a = xp.concat(combined, axis)
 
-    slice1 = [slice(None)] * nd
-    slice2 = [slice(None)] * nd
+    slice1 = [slice(None)] * ndim
+    slice2 = [slice(None)] * ndim
     slice1[axis] = slice(1, None)
     slice2[axis] = slice(None, -1)
     slice1 = tuple(slice1)  # type: ignore[assignment]
@@ -909,7 +915,7 @@ def _interp(x: Array, xcoords: Array, ycoords: Array) -> Array:
     if hasattr(xp, "interp"):
         return xp.interp(x, xcoords, ycoords)
 
-    if _is_torch_array(x):
+    if is_torch_array(x):
         weight = (x - xcoords[0]) / (xcoords[-1] - xcoords[0])
         return xp.lerp(ycoords[0], ycoords[-1], weight)
 
@@ -929,7 +935,10 @@ def _interp(x: Array, xcoords: Array, ycoords: Array) -> Array:
 
     # create slices to work for any ndim of x and xcoords
     indices = (
-        xp.sum(xp.astype(x[..., None] >= xcoords[None, ...], xp.int32), axis=1) - 1
+        xp.sum(
+            xp.astype(x[..., None] >= xcoords[None, ...], xp.int32, copy=False), axis=1
+        )
+        - 1
     )
     _min_val = xp.asarray(0, dtype=xp.int32, device=apc.device(x))
     _max_val = xp.asarray(
@@ -1021,9 +1030,9 @@ def _select_topk(  # noqa: PLR0912
 
     zeros = xp.zeros_like(scores, dtype=xp.int32)
 
-    if _is_torch_array(scores):
+    if is_torch_array(scores):
         return zeros.scatter(axis, topk_indices, 1)
-    if _is_numpy_array(scores):
+    if is_numpy_array(scores):
         xp.put_along_axis(zeros, topk_indices, 1, axis)
         return zeros
 
@@ -1181,9 +1190,9 @@ def _trapz(
         else:
             d = _diff(x, axis=axis)  # type: ignore[assignment]
 
-    nd = y.ndim
-    slice1 = [slice(None)] * nd
-    slice2 = [slice(None)] * nd
+    ndim = y.ndim
+    slice1 = [slice(None)] * ndim
+    slice2 = [slice(None)] * ndim
     slice1[axis] = slice(1, None)
     slice2[axis] = slice(None, -1)
     product = d * (y[tuple(slice1)] + y[tuple(slice2)]) / 2.0

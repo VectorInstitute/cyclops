@@ -1,13 +1,18 @@
 """Classification plotter."""
 
 from collections import defaultdict
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
+from sklearn.calibration import calibration_curve
 
+from cyclops.evaluate.metrics.experimental.functional import PRCurve as PRCurveExp
+from cyclops.evaluate.metrics.experimental.functional import ROCCurve as ROCCurveExp
+from cyclops.evaluate.metrics.functional import PRCurve, ROCCurve
 from cyclops.report.plot.base import Plotter
 from cyclops.report.plot.utils import (
     bar_plot,
@@ -90,13 +95,260 @@ class ClassificationPlotter(Plotter):
             class_names = [f"Class_{i+1}" for i in range(self.class_num)]
         self.class_names = class_names
 
+    def calibration(
+        self,
+        data: pd.DataFrame,
+        y_true_col: str,
+        y_prob_col: str,
+        group_col: Optional[str] = None,
+        title: Optional[str] = "Calibration Plot",
+        layout: Optional[go.Layout] = None,
+        n_bins: Optional[int] = 10,
+        n_bins_hist: Optional[int] = 100,
+        **plot_kwargs: Any,
+    ) -> go.Figure:
+        """Plot calibration curve for binary classification.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+            Dataframe containing true labels and predicted probabilities
+        y_true_col : str
+            Column name for true labels
+        y_prob_col : str
+            Column name for predicted probabilities
+        group_col : str, optional
+            Column name for grouping the data, by default None
+        title: str, optional
+            Plot title, by default "Calibration Plot"
+        layout : go.Layout, optional
+            Customized figure layout, by default None
+        n_bins : int, optional
+            Number of bins for calibration curve, by default 10
+        n_bins_hist : int, optional
+            Number of bins for histogram, by default 100
+        **plot_kwargs : dict
+            Additional keyword arguments
+
+        Returns
+        -------
+        go.Figure
+            Plotly figure object
+
+        """
+        if self.task_type != "binary":
+            raise ValueError(
+                "Calibration plot is only available for binary classification"
+            )
+        # Create subplots: 1 plot for calibration curve, 1 plot for histogram
+        fig = make_subplots(
+            rows=2,
+            cols=1,
+            shared_xaxes=True,
+            vertical_spacing=0.02,
+            row_heights=[0.8, 0.2],
+        )
+        if group_col:
+            # Plot a calibration curve for each level of the grouping variable
+            unique_groups = data[group_col].unique()
+            for group in unique_groups:
+                group_df = data[data[group_col] == group]
+                prob_true, prob_pred = calibration_curve(
+                    group_df[y_true_col], group_df[y_prob_col], n_bins=n_bins
+                )
+                fig.add_trace(
+                    go.Scatter(
+                        x=prob_pred, y=prob_true, mode="markers+lines", name=f"{group}"
+                    ),
+                    row=1,
+                    col=1,
+                )
+        else:
+            # Plot a single calibration curve
+            prob_true, prob_pred = calibration_curve(
+                data[y_true_col], data[y_prob_col], n_bins=n_bins
+            )
+            fig.add_trace(
+                go.Scatter(
+                    x=prob_pred, y=prob_true, mode="markers+lines", name="Model"
+                ),
+                row=1,
+                col=1,
+            )
+        # Add perfectly calibrated line to the calibration curve
+        fig.add_trace(
+            go.Scatter(
+                x=[0, 1],
+                y=[0, 1],
+                mode="lines",
+                name="Perfectly calibrated",
+                line={"dash": "dot"},
+            ),
+            row=1,
+            col=1,
+        )
+        # Plot histogram if no grouping variable is provided
+        fig.add_trace(
+            go.Histogram(
+                x=data[y_prob_col],
+                nbinsx=n_bins_hist,
+                name="Probabilities",
+                showlegend=False,
+            ),
+            row=2,
+            col=1,
+        )
+        # Update layout
+        legend_title = group_col if group_col else None
+        fig.update_layout(
+            height=800,
+            title=title,
+            yaxis_title="Fraction of Positives",
+            legend_title=legend_title,
+        )
+        fig.update_xaxes(title_text="Mean Predicted Probability", row=2, col=1)
+        fig.update_yaxes(title_text="Count", row=2, col=1)
+
+        if layout is not None:
+            fig.update_layout(layout)
+
+        return fig
+
+    def threshperf(
+        self,
+        roc_curve: ROCCurve,
+        ppv: npt.NDArray[np.float_],
+        npv: npt.NDArray[np.float_],
+        pred_probs: npt.NDArray[np.float_],
+        title: Optional[str] = "Diagnostic Performance Metrics by Thresholds",
+        layout: Optional[go.Layout] = None,
+        **plot_kwargs: Any,
+    ) -> go.Figure:
+        """Plot diagnostic performance with histogram of predicted probabilities.
+
+        The plot uses Plotly with a clean aesthetic. Gridlines are kept,
+        but background color is removed. Y-axis ticks and labels are shown.
+        The legend is added at the bottom. Tooltips show values with 3 decimal places.
+        X-axis labels are only shown on the bottom subplot. The histogram's bin size
+        is reduced and it has no borders.
+
+        Parameters
+        ----------
+        roc_curve: ROCCurve
+            ROC curve with TPR, FPR and thresholds.
+        ppv: npt.NDArray[np.float_]
+            Positive predictive value.
+        npv: npt.NDArray[np.float_]
+            Negative predictive value.
+        pred_probs: npt.NDArray[np.float_]
+            Predicted probabilities for the positive class (1).
+
+        Returns
+        -------
+        go.Figure
+            A Plotly figure containing the diagnostic performance plots and histogram.
+
+        """
+        if self.task_type != "binary":
+            raise ValueError("threshperf is only available for binary classification")
+        assert (
+            len(roc_curve.tpr)
+            == len(roc_curve.fpr)
+            == len(roc_curve.thresholds)
+            == len(ppv)
+            == len(npv)
+        ), "Length mismatch between ROC curve, PPV, NPV. All curves need to be computed using the same thresholds"
+        # Define hover template to show three decimal places
+        hover_template = "Threshold: %{x:.3f}<br>Metric Value: %{y:.3f}<extra></extra>"
+        # Create a subplot for each metric
+        fig = make_subplots(rows=5, cols=1, shared_xaxes=True, vertical_spacing=0.02)
+        # Sensitivity plot (True Positive Rate)
+        fig.add_trace(
+            go.Scatter(
+                x=roc_curve.thresholds,
+                y=roc_curve.tpr,
+                mode="lines",
+                name="Sensitivity",
+                hovertemplate=hover_template,
+            ),
+            row=1,
+            col=1,
+        )
+        # Specificity plot (1 - False Positive Rate)
+        fig.add_trace(
+            go.Scatter(
+                x=roc_curve.thresholds,
+                y=1 - roc_curve.fpr,
+                mode="lines",
+                name="1 - Specificity",
+                hovertemplate=hover_template,
+            ),
+            row=2,
+            col=1,
+        )
+        # PPV plot (Positive Predictive Value)
+        fig.add_trace(
+            go.Scatter(
+                x=roc_curve.thresholds,
+                y=ppv,
+                mode="lines",
+                name="PPV",
+                hovertemplate=hover_template,
+            ),
+            row=3,
+            col=1,
+        )
+        # NPV plot (Negative Predictive Value)
+        fig.add_trace(
+            go.Scatter(
+                x=roc_curve.thresholds,
+                y=npv,
+                mode="lines",
+                name="NPV",
+                hovertemplate=hover_template,
+            ),
+            row=4,
+            col=1,
+        )
+        # Add histogram of predicted probabilities
+        fig.add_trace(
+            go.Histogram(x=pred_probs, nbinsx=80, name="Predicted Probabilities"),
+            row=5,
+            col=1,
+        )
+        # Update layout
+        fig.update_layout(
+            height=1200,
+            width=1024,
+            title_text=title,
+            legend={
+                "orientation": "h",
+                "yanchor": "bottom",
+                "y": -0.2,
+                "xanchor": "center",
+                "x": 0.5,
+            },
+        )
+        # Remove subplot titles
+        for i in fig["layout"]["annotations"]:
+            i["text"] = ""
+        # Remove the plot background color, keep gridlines, show y-axis ticks and labels
+        fig.update_xaxes(showgrid=True)
+        fig.update_yaxes(showgrid=True, showticklabels=True)
+        # Only show the x-axis line and labels on the bottommost plot
+        fig.update_xaxes(showline=True, linewidth=1, linecolor="black", mirror=True)
+        fig.update_xaxes(showticklabels=True, row=4, col=1)
+        fig.update_yaxes(showline=True, linewidth=1, linecolor="black", mirror=True)
+        fig.update_xaxes(showline=False, row=5, col=1, showticklabels=False)
+        fig.update_yaxes(showline=False, row=5, col=1)
+        if layout is not None:
+            fig.update_layout(layout)
+
+        return fig
+
     def roc_curve(
         self,
-        roc_curve: Tuple[
-            npt.NDArray[np.float_],
-            npt.NDArray[np.float_],
-            npt.NDArray[np.float_],
-        ],
+        roc_curve: Union[ROCCurve, ROCCurveExp],
         auroc: Optional[Union[float, List[float], npt.NDArray[np.float_]]] = None,
         title: Optional[str] = "ROC Curve",
         layout: Optional[go.Layout] = None,
@@ -106,8 +358,8 @@ class ClassificationPlotter(Plotter):
 
         Parameters
         ----------
-        roc_curve : Tuple[np.ndarray, np.ndarray, np.ndarray]
-            Tuple of (fprs, tprs, thresholds)
+        roc_curve : ROCCurve
+            Named tuple of (fprs, tprs, thresholds)
         auroc : Union[float, list, np.ndarray], optional
             AUROCs, by default None
         title: str, optional
@@ -123,15 +375,15 @@ class ClassificationPlotter(Plotter):
             The figure object.
 
         """
-        fprs = roc_curve[0]
-        tprs = roc_curve[1]
+        fprs = roc_curve.fpr
+        tprs = roc_curve.tpr
 
         trace = []
         if self.task_type == "binary":
             if auroc is not None:
                 assert isinstance(
                     auroc,
-                    float,
+                    (float, np.floating),
                 ), "AUROCs must be a float for binary tasks"
                 name = f"Model (AUC = {auroc:.2f})"
             else:
@@ -191,7 +443,7 @@ class ClassificationPlotter(Plotter):
 
     def roc_curve_comparison(
         self,
-        roc_curves: Dict[str, Tuple[npt.NDArray[np.float_], ...]],
+        roc_curves: Dict[str, Union[ROCCurve, ROCCurveExp]],
         aurocs: Optional[
             Dict[str, Union[float, List[float], npt.NDArray[np.float_]]]
         ] = None,
@@ -205,7 +457,7 @@ class ClassificationPlotter(Plotter):
         ----------
         roc_curves : Dict[str, Tuple]
             Dictionary of roc curves, with keys being the name of the subpopulation
-            or group and values being the roc curve tuple (fprs, tprs, thresholds)
+            or group and values being the roc curve namedtuples (fprs, tprs, thresholds)
         aurocs : Dict[str, Union[float, list, np.ndarray]], optional
             AUROCs for each subpopulation or group specified by name, by default None
         title: str, optional
@@ -227,13 +479,13 @@ class ClassificationPlotter(Plotter):
                 if aurocs and slice_name in aurocs:
                     assert isinstance(
                         aurocs[slice_name],
-                        float,
+                        (float, np.floating),
                     ), "AUROCs must be a float for binary tasks"
                     name = f"{slice_name} (AUC = {aurocs[slice_name]:.2f})"
                 else:
                     name = slice_name
-                fprs = slice_curve[0]
-                tprs = slice_curve[1]
+                fprs = slice_curve.fpr
+                tprs = slice_curve.tpr
                 trace.append(
                     line_plot(
                         x=fprs,
@@ -296,11 +548,7 @@ class ClassificationPlotter(Plotter):
 
     def precision_recall_curve(
         self,
-        precision_recall_curve: Tuple[
-            npt.NDArray[np.float_],
-            npt.NDArray[np.float_],
-            npt.NDArray[np.float_],
-        ],
+        precision_recall_curve: Union[PRCurve, PRCurveExp],
         title: Optional[str] = "Precision-Recall Curve",
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
@@ -309,8 +557,8 @@ class ClassificationPlotter(Plotter):
 
         Parameters
         ----------
-        precision_recall_curve : Tuple[np.ndarray, np.ndarray, np.ndarray]
-            Tuple of (recalls, precisions, thresholds)
+        precision_recall_curve : PRcurve
+            Named tuple of (recalls, precisions, thresholds)
         title : str, optional
             Plot title, by default "Precision-Recall Curve"
         layout : go.Layout, optional
@@ -324,8 +572,8 @@ class ClassificationPlotter(Plotter):
             The figure object.
 
         """
-        recalls = precision_recall_curve[1]
-        precisions = precision_recall_curve[0]
+        recalls = precision_recall_curve.recall
+        precisions = precision_recall_curve.precision
 
         if self.task_type == "binary":
             trace = line_plot(
@@ -364,7 +612,7 @@ class ClassificationPlotter(Plotter):
 
     def precision_recall_curve_comparison(
         self,
-        precision_recall_curves: Dict[str, Tuple[npt.NDArray[np.float_], ...]],
+        precision_recall_curves: Dict[str, Union[PRCurve, PRCurveExp]],
         auprcs: Optional[
             Dict[str, Union[float, List[float], npt.NDArray[np.float_]]]
         ] = None,
@@ -378,7 +626,7 @@ class ClassificationPlotter(Plotter):
         ----------
         precision_recall_curves : Dict[str, Tuple]
             Dictionary of precision-recall curves, where the key is \
-                the group or subpopulation name and the value is a tuple \
+                the group or subpopulation name and the value is a namedtuple \
                 of (recalls, precisions, thresholds)
         auprcs : Dict[str, Union[float, list, np.ndarray]], optional
             AUPRCs for each subpopulation or group specified by name, by default None
@@ -401,15 +649,15 @@ class ClassificationPlotter(Plotter):
                 if auprcs and slice_name in auprcs:
                     assert isinstance(
                         auprcs[slice_name],
-                        float,
+                        (float, np.floating),
                     ), "AUPRCs must be a float for binary tasks"
                     name = f"{slice_name} (AUC = {auprcs[slice_name]:.2f})"
                 else:
                     name = f"{slice_name}"
                 trace.append(
                     line_plot(
-                        x=slice_curve[1],
-                        y=slice_curve[0],
+                        x=slice_curve.recall,
+                        y=slice_curve.precision,
                         trace_name=name,
                         **plot_kwargs,
                     ),
@@ -417,7 +665,9 @@ class ClassificationPlotter(Plotter):
         else:
             for slice_name, slice_curve in precision_recall_curves.items():
                 assert (
-                    len(slice_curve[0]) == len(slice_curve[1]) == self.class_num
+                    len(slice_curve.precision)
+                    == len(slice_curve.recall)
+                    == self.class_num
                 ), f"Recalls and precisions must be of length class_num for \
                     multiclass/multilabel tasks in slice {slice_name}"
                 for i in range(self.class_num):
@@ -432,8 +682,8 @@ class ClassificationPlotter(Plotter):
                         name = f"{slice_name}: {self.class_names[i]}"
                     trace.append(
                         line_plot(
-                            x=slice_curve[1][i],
-                            y=slice_curve[0][i],
+                            x=slice_curve.recall[i],
+                            y=slice_curve.precision[i],
                             trace_name=name,
                             **plot_kwargs,
                         ),
@@ -483,8 +733,10 @@ class ClassificationPlotter(Plotter):
         """
         if self.task_type == "binary":
             assert all(
-                not isinstance(value, (list, np.ndarray)) for value in metrics.values()
-            ), ("Metrics must not be of type list or np.ndarray for" "binary tasks")
+                not isinstance(value, list)
+                and not (isinstance(value, np.ndarray) and value.ndim > 0)
+                for value in metrics.values()
+            ), "Metrics must not be of type list or np.ndarray for binary tasks"
             trace = bar_plot(
                 x=list(metrics.keys()),  # type: ignore[arg-type]
                 y=list(metrics.values()),  # type: ignore[arg-type]
@@ -523,7 +775,7 @@ class ClassificationPlotter(Plotter):
 
     def metrics_trends(  # noqa: PLR0912
         self,
-        metrics_trends: Dict[str, Union[List[float], npt.NDArray[Any]]],
+        metrics_trends: Dict[str, List[Dict[str, Any]]],
         title: Optional[str] = "Metrics Trends",
         layout: Optional[go.Layout] = None,
         **plot_kwargs: Any,
@@ -535,7 +787,7 @@ class ClassificationPlotter(Plotter):
 
         Parameters
         ----------
-        metrics_trends : Dict[str, Union[list, np.ndarray]]
+        metrics_trends : Dict[str, List[Dict[str, Any]]]
             Dictionary of metric trends, where the key is the date/time step \
                 and the value is a list of dictionaries with keys metric type, \
                 metric value, and slice name
@@ -705,7 +957,8 @@ class ClassificationPlotter(Plotter):
             for slice_name, metrics in slice_metrics.items():
                 metric_names = list(metrics.keys())
                 assert all(
-                    not isinstance(value, (list, np.ndarray))
+                    not isinstance(value, list)
+                    and not (isinstance(value, np.ndarray) and value.ndim > 0)
                     for value in metrics.values()
                 ), (
                     "Generic metrics must not be of type list or np.ndarray for"
@@ -725,7 +978,9 @@ class ClassificationPlotter(Plotter):
                 radial_data: List[float] = []
                 theta_data: List[float] = []
                 for metric_name, metric_values in metrics.items():
-                    if isinstance(metric_values, (list, np.ndarray)):
+                    if isinstance(metric_values, list) or (
+                        isinstance(metric_values, np.ndarray) and metric_values.ndim > 0
+                    ):
                         assert (
                             len(metric_values) == self.class_num
                         ), "Metric values must be of length class_num for \
@@ -736,7 +991,7 @@ class ClassificationPlotter(Plotter):
                             for i in range(self.class_num)
                         ]
                         theta_data.extend(theta)  # type: ignore[arg-type]
-                    elif isinstance(metric_values, float):
+                    elif isinstance(metric_values, (float, np.floating)):
                         radial_data.append(metric_values)
                         theta_data.append(metric_name)  # type: ignore[arg-type]
                     else:
@@ -807,10 +1062,11 @@ class ClassificationPlotter(Plotter):
                 metric_names = list(metrics.keys())
                 metric_values = list(metrics.values())
                 assert all(
-                    not isinstance(value, (list, np.ndarray))
+                    not isinstance(value, list)
+                    and not (isinstance(value, np.ndarray) and value.ndim > 0)
                     for value in metrics.values()
                 ), (
-                    "Generic metrics must not be of type list or np.ndarray for"
+                    "Generic metrics must not be of type list or np.ndarray for "
                     "binary tasks"
                 )
                 trace.append(
@@ -856,10 +1112,13 @@ class ClassificationPlotter(Plotter):
                 metric_names = list(metrics.keys())
                 for num in range(self.class_num):
                     for metric_name in metric_names:
-                        if isinstance(metrics[metric_name], (list, np.ndarray)):
-                            metric_values = metrics[metric_name][num]  # type: ignore
+                        if isinstance(metrics[metric_name], list) or (
+                            isinstance(metrics[metric_name], np.ndarray)
+                            and metrics[metric_name].ndim > 0
+                        ):
+                            metric_values = [metrics[metric_name][num]]  # type: ignore
                         else:
-                            metric_values = metrics[metric_name]  # type: ignore
+                            metric_values = [metrics[metric_name]]  # type: ignore
                     fig.append_trace(
                         bar_plot(
                             x=metric_names,  # type: ignore[arg-type]
@@ -926,7 +1185,8 @@ class ClassificationPlotter(Plotter):
                 metric_names = list(metrics.keys())
                 metric_values = list(metrics.values())
                 assert all(
-                    not isinstance(value, (list, np.ndarray))
+                    not isinstance(value, list)
+                    and not (isinstance(value, np.ndarray) and value.ndim > 0)
                     for value in metrics.values()
                 ), (
                     "Generic metrics must not be of type list or np.ndarray for"
@@ -962,10 +1222,10 @@ class ClassificationPlotter(Plotter):
                 y_title="Score",
             )
 
-            if len(self.template.layout.colorway) >= self.class_num:
-                colors = self.template.layout.colorway[: self.class_num]
+            if len(self.template.layout.colorway) >= len(slice_metrics):
+                colors = self.template.layout.colorway[: len(slice_metrics)]
             else:
-                difference = self.class_num - len(self.template.layout.colorway)
+                difference = len(slice_metrics) - len(self.template.layout.colorway)
                 colors = (
                     self.template.layout.colorway
                     + self.template.layout.colorway[:difference]
@@ -993,7 +1253,7 @@ class ClassificationPlotter(Plotter):
             fig.update_layout(layout)
         return fig
 
-    def plot_confusion_matrix(
+    def confusion_matrix(
         self,
         confusion_matrix: np.typing.NDArray[Any],
     ) -> go.Figure:

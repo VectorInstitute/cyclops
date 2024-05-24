@@ -1,4 +1,5 @@
 """Functional interface for the mean absolute percentage error metric."""
+
 from typing import Tuple, Union
 
 import array_api_compat as apc
@@ -112,10 +113,10 @@ def mean_absolute_percentage_error(target: Array, preds: Array) -> Array:
     --------
     >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...     mean_absolute_percentage_error
+    ...     mean_absolute_percentage_error,
     ... )
-    >>> target = anp.asarray([1., 10., 1e6])
-    >>> preds = anp.asarray([0.9, 15., 1.2e6])
+    >>> target = anp.asarray([1.0, 10.0, 1e6])
+    >>> preds = anp.asarray([0.9, 15.0, 1.2e6])
     >>> mean_absolute_percentage_error(target, preds)
     Array(0.26666668, dtype=float32)
 

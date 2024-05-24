@@ -1,4 +1,5 @@
 """Classes for computing the F-score for classification tasks."""
+
 from typing import Any, Literal, Optional, Tuple, Union
 
 from cyclops.evaluate.metrics.experimental._stat_scores import (
@@ -28,7 +29,7 @@ class BinaryFBetaScore(_AbstractBinaryStatScores, registry_key="binary_fbeta_sco
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -106,6 +107,8 @@ class MulticlassFBetaScore(
         Specifies a target class that is ignored when computing the F-beta score.
         Ignoring a target class means that the corresponding predictions do not
         contribute to the F-beta score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -118,8 +121,10 @@ class MulticlassFBetaScore(
     Array(0.6, dtype=float32)
     >>> metric.reset()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -203,6 +208,8 @@ class MultilabelFBetaScore(
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the F-beta score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -215,8 +222,7 @@ class MultilabelFBetaScore(
     Array(0.6666667, dtype=float32)
     >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -277,7 +283,7 @@ class BinaryF1Score(BinaryFBetaScore, registry_key="binary_f1_score"):
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -341,6 +347,8 @@ class MulticlassF1Score(MulticlassFBetaScore, registry_key="multiclass_f1_score"
         Specifies a target class that is ignored when computing the F1 score.
         Ignoring a target class means that the corresponding predictions do not
         contribute to the F1 score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -353,8 +361,10 @@ class MulticlassF1Score(MulticlassFBetaScore, registry_key="multiclass_f1_score"
     Array(0.6, dtype=float32)
     >>> metric.reset()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -413,6 +423,8 @@ class MultilabelF1Score(
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the F1 score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -425,8 +437,7 @@ class MultilabelF1Score(
     Array(0.6666667, dtype=float32)
     >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()

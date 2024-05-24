@@ -1,4 +1,5 @@
 """Classes for computing the negative predictive value for classification tasks."""
+
 from cyclops.evaluate.metrics.experimental._stat_scores import (
     _AbstractBinaryStatScores,
     _AbstractMulticlassStatScores,
@@ -20,7 +21,7 @@ class BinaryNPV(_AbstractBinaryStatScores, registry_key="binary_npv"):
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -82,6 +83,8 @@ class MulticlassNPV(
         Specifies a target class that is ignored when computing the negative
         predictive value. Ignoring a target class means that the corresponding
         predictions do not contribute to the negative predictive value.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -94,8 +97,10 @@ class MulticlassNPV(
     Array(0.8, dtype=float32)
     >>> metric.reset()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -151,6 +156,8 @@ class MultilabelNPV(
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the negative predictive value.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -163,8 +170,7 @@ class MultilabelNPV(
     Array(0.6666667, dtype=float32)
     >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()

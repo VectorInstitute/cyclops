@@ -310,11 +310,13 @@ def multiclass_auroc(
     --------
     >>> from cyclops.evaluate.metrics.functional import multiclass_auroc
     >>> target = [1, 0, 2, 0]
-    >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05],
-    ...         [0.05, 0.05, 0.9], [0.9, 0.05, 0.05]]
-    >>> multiclass_auroc(target, preds, num_classes=3, thresholds=5,
-    ...     average=None
-    ... )
+    >>> preds = [
+    ...     [0.9, 0.05, 0.05],
+    ...     [0.05, 0.9, 0.05],
+    ...     [0.05, 0.05, 0.9],
+    ...     [0.9, 0.05, 0.05],
+    ... ]
+    >>> multiclass_auroc(target, preds, num_classes=3, thresholds=5, average=None)
     array([0.5       , 0.33333333, 1.        ])
 
     """
@@ -453,8 +455,7 @@ def multilabel_auroc(
     >>> from cyclops.evaluate.metrics.functional import multilabel_auroc
     >>> target = [[0, 1, 0], [0, 1, 1], [1, 0, 1]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.9], [0.8, 0.2, 0.3]]
-    >>> multilabel_auroc(target, preds, num_labels=3, thresholds=5,
-    ...     average=None)
+    >>> multilabel_auroc(target, preds, num_labels=3, thresholds=5, average=None)
     array([1.  , 0.75, 0.25])
 
     """
@@ -551,8 +552,14 @@ def auroc(
     >>> # (multiclass)
     >>> from cyclops.evaluate.metrics.functional import auroc
     >>> target = [0, 1, 2, 0, 1, 2]
-    >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2],
-    ...          [0.1, 0.6, 0.3], [0.05, 0.95, 0], [0.5, 0.3, 0.2]]
+    >>> preds = [
+    ...     [0.1, 0.6, 0.3],
+    ...     [0.05, 0.95, 0],
+    ...     [0.5, 0.3, 0.2],
+    ...     [0.1, 0.6, 0.3],
+    ...     [0.05, 0.95, 0],
+    ...     [0.5, 0.3, 0.2],
+    ... ]
     >>> auroc(target, preds, task="multiclass", num_classes=3, average=None)
     array([0.5, 1. , 0.5])
 

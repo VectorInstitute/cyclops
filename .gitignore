@@ -8,6 +8,7 @@ htmlcov
 venv
 .ipynb_checkpoints
 *.pt
+*.onnx
 *.csv
 mlruns
 .profile
@@ -26,7 +27,7 @@ dist/
 outputs/
 multirun/
 _autosummary
-*cyclops_reports*
+*cyclops_report*
 *dummy_reports*
 .mypy_cache
 *code-workspace*

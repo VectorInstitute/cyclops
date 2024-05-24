@@ -1,4 +1,5 @@
 """Test optional import utilities."""
+
 from math import sqrt
 
 import pytest

@@ -6,6 +6,7 @@ import pickle
 from typing import Any, Generator, List, Optional
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
 from cyclops.utils.log import setup_logging
@@ -144,7 +145,7 @@ def save_dataframe(
     file_format: str
         File format of the file to save.
     log: bool
-        Whether to log the occurence.
+        Whether to log the occurrence.
 
     Returns
     -------
@@ -164,7 +165,7 @@ def save_dataframe(
         data.to_csv(save_path)
     else:
         raise ValueError(
-            "Invalid file formated provided. Currently supporting 'parquet' and 'csv'.",
+            "Invalid file formatted provided. Currently supporting 'parquet' and 'csv'.",
         )
 
     return save_path
@@ -184,7 +185,7 @@ def load_dataframe(
     file_format: str
         File format of the file to load.
     log: bool
-        Whether to log the occurence.
+        Whether to log the occurrence.
 
     Returns
     -------
@@ -201,14 +202,14 @@ def load_dataframe(
         data = pd.read_csv(load_path, index_col=[0])
     else:
         raise ValueError(
-            "Invalid file formated provided. Currently supporting 'parquet' and 'csv'.",
+            "Invalid file formatted provided. Currently supporting 'parquet' and 'csv'.",
         )
 
     return data
 
 
 def save_array(
-    data: np.typing.ArrayLike,
+    data: npt.ArrayLike,
     save_path: str,
     file_format: str = "npy",
     log: bool = True,
@@ -224,7 +225,7 @@ def save_array(
     file_format: str
         File format of the file to save.
     log: bool
-        Whether to log the occurence.
+        Whether to log the occurrence.
 
     Returns
     -------
@@ -243,7 +244,7 @@ def save_array(
     if file_format == "npy":
         np.save(save_path, data)
     else:
-        raise ValueError("Invalid file formated provided. Currently supporting 'npy'.")
+        raise ValueError("Invalid file formatted provided. Currently supporting 'npy'.")
 
     return save_path
 
@@ -262,7 +263,7 @@ def load_array(
     file_format: str
         File format of the file to load.
     log: bool
-        Whether to log the occurence.
+        Whether to log the occurrence.
 
     Returns
     -------
@@ -278,7 +279,7 @@ def load_array(
     if file_format == "npy":
         data = np.load(load_path)
     else:
-        raise ValueError("Invalid file formated provided. Currently supporting 'npy'.")
+        raise ValueError("Invalid file formatted provided. Currently supporting 'npy'.")
 
     if not isinstance(data, np.ndarray):
         raise ValueError("Loaded data is not an array.")
@@ -300,7 +301,7 @@ def save_pickle(
     save_path: str
         Path where the file will be saved.
     log: bool
-        Whether to log the occurence.
+        Whether to log the occurrence.
 
     Returns
     -------
@@ -330,7 +331,7 @@ def load_pickle(
     load_path: str
         Path where the file to load.
     log: bool
-        Whether to log the occurence.
+        Whether to log the occurrence.
 
     Returns
     -------
@@ -384,7 +385,7 @@ def yield_dataframes(
         If specified, skip the first n files when yielding the files.
         This is especially useful in lieu of the execution being interrupted.
     log: bool
-        Whether to log the occurence.
+        Whether to log the occurrence.
 
     Yields
     ------
@@ -424,7 +425,7 @@ def yield_pickled_files(
         If specified, skip the first n files when yielding the files.
         This is especially useful in lieu of the execution being interrupted.
     log: bool
-        Whether to log the occurence.
+        Whether to log the occurrence.
 
     Yields
     ------

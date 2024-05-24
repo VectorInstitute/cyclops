@@ -1,0 +1,49 @@
+footer span.commit code,
+.rst-content pre.literal-block,
+.rst-content div[class^='highlight'] pre,
+.rst-content .linenodiv pre,
+.rst-content tt,
+.rst-content code,
+.rst-content pre,
+.rst-content kbd,
+.rst-content samp {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem;
+}
+footer {
+  color: var(--text-color);
+}
+footer .footer-small-text {
+  font-weight: 300;
+  font-size: 0.9rem;
+}
+footer .copyright {
+  font-weight: 300;
+  font-size: 0.8rem;
+}
+footer div.logo {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  margin: 0px;
+  padding: 10px 0px 0px 0px;
+}
+footer a.logo {
+  /* Using flex here (to vertically align the child img) causes aspect-ratio issues */
+  flex-basis: 120px;
+  margin: 10px auto 10px auto;
+  text-align: center;
+}
+footer a.logo:hover {
+  text-decoration: none;
+}
+footer span.logo {
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+}
+footer img.logo {
+  display: inline-block;
+  vertical-align: middle;
+  height: auto;
+}

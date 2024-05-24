@@ -1,4 +1,5 @@
 """Classes for computing specificity scores for classification tasks."""
+
 from cyclops.evaluate.metrics.experimental._stat_scores import (
     _AbstractBinaryStatScores,
     _AbstractMulticlassStatScores,
@@ -20,7 +21,7 @@ class BinarySpecificity(_AbstractBinaryStatScores, registry_key="binary_specific
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -81,6 +82,8 @@ class MulticlassSpecificity(
         Specifies a target class that is ignored when computing the specificity score.
         Ignoring a target class means that the corresponding predictions do not
         contribute to the specificity score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -93,8 +96,10 @@ class MulticlassSpecificity(
     Array(0.8, dtype=float32)
     >>> metric.reset()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -150,6 +155,8 @@ class MultilabelSpecificity(
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the specificity score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -162,8 +169,7 @@ class MultilabelSpecificity(
     Array(0.6666667, dtype=float32)
     >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -196,7 +202,7 @@ class BinaryTNR(BinarySpecificity, registry_key="binary_tnr"):
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -249,6 +255,8 @@ class MulticlassTNR(MulticlassSpecificity, registry_key="multiclass_tnr"):
         Specifies a target class that is ignored when computing the true negative rate.
         Ignoring a target class means that the corresponding predictions do not
         contribute to the true negative rate.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -261,8 +269,10 @@ class MulticlassTNR(MulticlassSpecificity, registry_key="multiclass_tnr"):
     Array(0.8, dtype=float32)
     >>> metric.reset()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -303,6 +313,8 @@ class MultilabelTNR(MultilabelSpecificity, registry_key="multilabel_tnr"):
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the true negative rate.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -315,8 +327,7 @@ class MultilabelTNR(MultilabelSpecificity, registry_key="multilabel_tnr"):
     Array(0.6666667, dtype=float32)
     >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()

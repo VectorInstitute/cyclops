@@ -9,7 +9,7 @@ import pandas as pd
 from sklearn.base import TransformerMixin
 
 from cyclops.data.clean import dropna_rows
-from cyclops.data.constants import ALL, FIRST, LAST, MEAN, MEDIAN
+from cyclops.data.constants import ALL, FIRST, LAST
 from cyclops.data.df.vectorized import Vectorized
 from cyclops.data.impute import AggregatedImputer, numpy_2d_ffill
 from cyclops.data.utils import has_columns, is_timestamp_series
@@ -23,7 +23,6 @@ LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="INFO", logger=LOGGER)
 
 
-AGGFUNCS = {MEAN: np.mean, MEDIAN: np.median}
 RESTRICT_TIMESTAMP = "restrict_timestamp"
 WINDOW_START_TIMESTAMP = "window_start_timestamp"
 WINDOW_STOP_TIMESTAMP = "window_stop_timestamp"
@@ -65,6 +64,22 @@ class Aggregator(TransformerMixin):  # type: ignore
         An imputer to perform aggregation.
     num_timesteps: int or None
         The number of timesteps in the aggregation window.
+
+    Notes
+    -----
+    aggfuncs is a dictionary of aggregation functions mapped from column to
+    aggregation type. Each value is either function or string, e.g.,
+    {col_name: MEAN}. If a function, it should accept a series and return a
+    single value. If a string, it should be one of the following:
+
+    - ``mean``
+    - ``median``
+    - ``std``
+    - ``var``
+    - ``min``
+    - ``max``
+    - ``count``
+    - ``sum``
 
     """
 
@@ -127,15 +142,8 @@ class Aggregator(TransformerMixin):  # type: ignore
             The processed aggregation function dictionary.
 
         """
-        for col, aggfunc in aggfuncs.items():
-            if isinstance(aggfunc, str):
-                if aggfunc not in AGGFUNCS:
-                    raise ValueError(
-                        f"""Aggfunc string {aggfunc} not supported.
-                        Supporting: {','.join(AGGFUNCS)}""",
-                    )
-                aggfuncs[col] = AGGFUNCS[aggfunc]  # type: ignore
-            elif callable(aggfunc):
+        for _, aggfunc in aggfuncs.items():
+            if isinstance(aggfunc, str) or callable(aggfunc):
                 pass
             else:
                 raise ValueError("Aggfunc must be a string or callable.")
@@ -370,7 +378,7 @@ class Aggregator(TransformerMixin):  # type: ignore
         return window_start_time.join(window_stop_time)
 
     def _compute_timestep(self, group: pd.DataFrame) -> pd.DataFrame:
-        """Compute which timestep, or bin, each occurence falls into.
+        """Compute which timestep, or bin, each occurrence falls into.
 
         Parameters
         ----------
@@ -477,7 +485,7 @@ class Aggregator(TransformerMixin):  # type: ignore
             grouped = data_with_timesteps.groupby(self.agg_by + [TIMESTEP], sort=False)
             aggregated = grouped.agg(self.aggfuncs)
         else:
-            # INEFFICIENT - Perform with a custom function to allow addded functionality
+            # INEFFICIENT - Perform with a custom function to allow added functionality
             grouped = data_with_timesteps.groupby(self.agg_by, sort=False)
             aggregated = grouped.apply(self._compute_aggregation)
         if not include_timestep_start:
@@ -710,7 +718,7 @@ def timestamp_ffill_agg(
 ) -> np.typing.ArrayLike:
     """Perform single-value aggregation with fill forward functionality given timesteps.
 
-    If a timestep is negative, it is treated as occuring before the regular window and
+    If a timestep is negative, it is treated as occurring before the regular window and
     is "filled forward" through all the timesteps.
 
     If a timestep is between 0 and num_timesteps, it is bucketed accordingly and then

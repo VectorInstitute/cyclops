@@ -1180,7 +1180,7 @@ class PTModel(ModelWrapper):
                 by default None
         only_predictions : bool, optional
             Whether to return only the predictions rather than the dataset \
-                with predictions when the input is a Hugging Face Datset, \
+                with predictions when the input is a Hugging Face Dataset, \
                 by default False
         splits_mapping: Optional[dict], optional
             Mapping from 'train', 'validation' and 'test' to dataset splits names, \
@@ -1303,15 +1303,11 @@ class PTModel(ModelWrapper):
 
         include_optimizer = kwargs.get("include_optimizer", True)
         if include_optimizer:
-            state_dict[
-                "optimizer"
-            ] = self.optimizer_.state_dict()  # type: ignore[attr-defined]
+            state_dict["optimizer"] = self.optimizer_.state_dict()  # type: ignore[attr-defined]
 
         include_lr_scheduler = kwargs.get("include_lr_scheduler", True)
         if include_lr_scheduler:
-            state_dict[
-                "lr_scheduler"
-            ] = self.lr_scheduler_.state_dict()  # type: ignore[attr-defined]
+            state_dict["lr_scheduler"] = self.lr_scheduler_.state_dict()  # type: ignore[attr-defined]
 
         epoch = kwargs.get("epoch", None)
         if epoch is not None:
@@ -1326,7 +1322,7 @@ class PTModel(ModelWrapper):
             state_dict["epoch"] = epoch
 
             # prepare the latest model path
-            # if a specific filename is provided, append 'latest' to it and preseve
+            # if a specific filename is provided, append 'latest' to it and preserve
             # the extension. Otherwise, use 'latest.pt' as the filename.
             latest_model_path = join(dir_path, "latest.pt")
             if not use_default_filepath:

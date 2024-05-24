@@ -1,4 +1,5 @@
 """Functional interface for the mean absolute error metric."""
+
 from typing import Tuple, Union
 
 import array_api_compat as apc
@@ -17,8 +18,14 @@ def _mean_absolute_error_update(target: Array, preds: Array) -> Tuple[Array, int
     _check_same_shape(target, preds)
     xp = apc.array_namespace(target, preds)
 
-    target = target if is_floating_point(target) else xp.astype(target, xp.float32)
-    preds = preds if is_floating_point(preds) else xp.astype(preds, xp.float32)
+    target = (
+        target
+        if is_floating_point(target)
+        else xp.astype(target, xp.float32, copy=False)
+    )
+    preds = (
+        preds if is_floating_point(preds) else xp.astype(preds, xp.float32, copy=False)
+    )
 
     sum_abs_error = xp.sum(xp.abs(preds - target), dtype=xp.float32)
     num_obs = int(apc.size(target) or 0)
@@ -78,8 +85,8 @@ def mean_absolute_error(target: Array, preds: Array) -> Array:
     --------
     >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental.functional import mean_absolute_error
-    >>> target = anp.asarray([0.009, 1.05, 2., 3.])
-    >>> preds = anp.asarray([0., 1., 2., 2.])
+    >>> target = anp.asarray([0.009, 1.05, 2.0, 3.0])
+    >>> preds = anp.asarray([0.0, 1.0, 2.0, 2.0])
     >>> mean_absolute_error(target, preds)
     Array(0.26475, dtype=float32)
 

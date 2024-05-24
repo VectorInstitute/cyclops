@@ -1,6 +1,7 @@
 """Functions for computing the receiver operating characteristic (ROC) curve."""
+
 import logging
-from typing import Any, List, Literal, Optional, Tuple, Union
+from typing import Any, List, Literal, NamedTuple, Optional, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -21,6 +22,14 @@ from cyclops.utils.log import setup_logging
 
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
+
+
+class ROCCurve(NamedTuple):
+    """Named tuple to store ROC curve (FPR, TPR and thresholds)."""
+
+    fpr: Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]]
+    tpr: Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]]
+    thresholds: Union[npt.NDArray[np.float_], List[npt.NDArray[np.float_]]]
 
 
 def _roc_compute_from_confmat(
@@ -144,7 +153,7 @@ def binary_roc_curve(
     preds: npt.ArrayLike,
     thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
     pos_label: int = 1,
-) -> Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]]:
+) -> ROCCurve:
     """Compute the ROC curve for binary classification tasks.
 
     Parameters
@@ -166,12 +175,9 @@ def binary_roc_curve(
 
     Returns
     -------
-    fpr : numpy.ndarray
-        False positive rate.
-    tpr : numpy.ndarray
-        True positive rate.
-    thresholds : numpy.ndarray
-        Thresholds used to compute fpr and tpr.
+    ROCCurve
+        A named tuple containing the false positive rate, true positive rate,
+        and thresholds used to compute the ROC curve.
 
     Examples
     --------
@@ -197,8 +203,9 @@ def binary_roc_curve(
     thresholds = _format_thresholds(thresholds)
 
     state = _binary_precision_recall_curve_update(target, preds, thresholds)
+    fpr, tpr, thresholds = _binary_roc_compute(state, thresholds, pos_label)
 
-    return _binary_roc_compute(state, thresholds=thresholds, pos_label=pos_label)
+    return ROCCurve(fpr, tpr, thresholds)
 
 
 def _multiclass_roc_compute(
@@ -272,14 +279,7 @@ def multiclass_roc_curve(
     preds: npt.ArrayLike,
     num_classes: int,
     thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
-) -> Union[
-    Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
-    Tuple[
-        List[npt.NDArray[np.float_]],
-        List[npt.NDArray[np.float_]],
-        List[npt.NDArray[np.float_]],
-    ],
-]:
+) -> ROCCurve:
     """Compute the ROC curve for multiclass classification tasks.
 
     Parameters
@@ -301,26 +301,24 @@ def multiclass_roc_curve(
 
     Returns
     -------
-    fpr : numpy.ndarray or list of numpy.ndarray
-        False positive rate. If ``threshold`` is not None, ``fpr`` is a 1d numpy
-        array. Otherwise, ``fpr`` is a list of 1d numpy arrays, one for each
-        class.
-    tpr : numpy.ndarray or list of numpy.ndarray
-        True positive rate. If ``threshold`` is not None, ``tpr`` is a 1d numpy
-        array. Otherwise, ``tpr`` is a list of 1d numpy arrays, one for each class.
-    thresholds : numpy.ndarray or list of numpy.ndarray
-        Thresholds used to compute fpr and tpr. ``threshold`` is not None,
-        thresholds is a 1d numpy array. Otherwise, thresholds is a list of
-        1d numpy arrays, one for each class.
+    ROCCurve
+        A named tuple containing the false positive rate, true positive rate,
+        and thresholds used to compute the ROC curve. If ``threshold`` is not None,
+        ``fpr``, ``tpr`` and ``thresholds`` are 1d numpy arrays, else they are lists
+        of 1d numpy arrays, one for each label.
 
     Examples
     --------
     >>> from cyclops.evaluate.metrics.functional import multiclass_roc_curve
     >>> target = [1, 0, 2, 0]
-    >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.9, 0.05],
-    ...         [0.05, 0.05, 0.9], [0.9, 0.05, 0.05]]
-    >>> fpr, tpr, thresholds = multiclass_roc_curve(target, preds,
-    ...     num_classes=3, thresholds=5
+    >>> preds = [
+    ...     [0.9, 0.05, 0.05],
+    ...     [0.05, 0.9, 0.05],
+    ...     [0.05, 0.05, 0.9],
+    ...     [0.9, 0.05, 0.05],
+    ... ]
+    >>> fpr, tpr, thresholds = multiclass_roc_curve(
+    ...     target, preds, num_classes=3, thresholds=5
     ... )
     >>> fpr
     array([[0.        , 0.5       , 0.5       , 0.5       , 1.        ],
@@ -348,8 +346,9 @@ def multiclass_roc_curve(
         num_classes=num_classes,
         thresholds=thresholds,
     )
+    fpr_, tpr_, thresholds_ = _multiclass_roc_compute(state, num_classes, thresholds)
 
-    return _multiclass_roc_compute(state, num_classes, thresholds)
+    return ROCCurve(fpr=fpr_, tpr=tpr_, thresholds=thresholds_)
 
 
 def _multilabel_roc_compute(
@@ -423,14 +422,7 @@ def multilabel_roc_curve(
     preds: npt.ArrayLike,
     num_labels: int,
     thresholds: Optional[Union[int, List[float], npt.NDArray[np.float_]]] = None,
-) -> Union[
-    Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
-    Tuple[
-        List[npt.NDArray[np.float_]],
-        List[npt.NDArray[np.float_]],
-        List[npt.NDArray[np.float_]],
-    ],
-]:
+) -> ROCCurve:
     """Compute the ROC curve for multilabel classification tasks.
 
     Parameters
@@ -452,25 +444,19 @@ def multilabel_roc_curve(
 
     Returns
     -------
-    fpr : numpy.ndarray or list of numpy.ndarray
-        False positive rate. If ``threshold`` is not None, ``fpr`` is a 1d numpy
-        array. Otherwise, ``fpr`` is a list of 1d numpy arrays, one for each
-        label.
-    tpr : numpy.ndarray or list of numpy.ndarray
-        True positive rate. If ``threshold`` is not None, ``tpr`` is a 1d numpy
-        array. Otherwise, ``tpr`` is a list of 1d numpy arrays, one for each label.
-    thresholds : numpy.ndarray or list of numpy.ndarray
-        Thresholds used to compute fpr and tpr. ``threshold`` is not None,
-        thresholds is a 1d numpy array. Otherwise, thresholds is a list of
-        1d numpy arrays, one for each label.
+    ROCCurve
+        A named tuple containing the false positive rate, true positive rate,
+        and thresholds used to compute the ROC curve. If ``threshold`` is not None,
+        ``fpr``, ``tpr`` and ``thresholds`` are 1d numpy arrays, else they are lists
+        of 1d numpy arrays, one for each label.
 
     Examples
     --------
     >>> from cyclops.evaluate.metrics.functional import multilabel_roc_curve
     >>> target = [[0, 1, 0], [0, 1, 1], [1, 0, 1]]
     >>> preds = [[0.1, 0.9, 0.8], [0.05, 0.1, 0.9], [0.8, 0.2, 0.3]]
-    >>> fpr, tpr, thresholds = multilabel_roc_curve(target, preds, num_labels=3,
-    ...     thresholds=5
+    >>> fpr, tpr, thresholds = multilabel_roc_curve(
+    ...     target, preds, num_labels=3, thresholds=5
     ... )
     >>> fpr
     array([[0., 0., 0., 0., 1.],
@@ -498,8 +484,9 @@ def multilabel_roc_curve(
         num_labels=num_labels,
         thresholds=thresholds,
     )
+    fpr_, tpr_, thresholds_ = _multilabel_roc_compute(state, num_labels, thresholds)
 
-    return _multilabel_roc_compute(state, num_labels, thresholds)
+    return ROCCurve(fpr=fpr_, tpr=tpr_, thresholds=thresholds_)
 
 
 def roc_curve(
@@ -510,14 +497,7 @@ def roc_curve(
     pos_label: int = 1,
     num_classes: Optional[int] = None,
     num_labels: Optional[int] = None,
-) -> Union[
-    Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
-    Tuple[
-        List[npt.NDArray[np.float_]],
-        List[npt.NDArray[np.float_]],
-        List[npt.NDArray[np.float_]],
-    ],
-]:
+) -> ROCCurve:
     """Compute the ROC curve for different tasks/input types.
 
     Parameters
@@ -554,22 +534,11 @@ def roc_curve(
 
     Returns
     -------
-    fpr : numpy.ndarray or list of numpy.ndarray
-        False positive rate. If ``task`` is 'binary' or ``threshold`` is not None,
-        ``fpr`` is a 1d numpy array. If ``task`` is 'multiclass' or 'multilabel',
-        and ``threshold`` is None, then ``fpr`` is a list of 1d numpy
-        arrays, one for each class or label.
-    tpr : numpy.ndarray or list of numpy.ndarray
-        True positive rate. If ``task`` is 'binary' or ``threshold`` is not None,
-        ``tpr`` is a 1d numpy array. If ``task`` is 'multiclass' or 'multilabel',
-        and ``threshold`` is None, then ``tpr`` is a list of 1d numpy
-        arrays, one for each class or label.
-    thresholds : numpy.ndarray or list of numpy.ndarray
-        Thresholds used to compute fpr and tpr. If ``task`` is 'binary' or
-        ``threshold`` is not None, ``thresholds`` is a 1d numpy array. If
-        ``task`` is 'multiclass' or 'multilabel', and ``threshold`` is None,
-        then ``thresholds`` is a list of 1d numpy arrays, one for each class
-        or label.
+    ROCCurve
+        A named tuple containing the false positive rate, true positive rate,
+        and thresholds used to compute the ROC curve. If ``threshold`` is not None,
+        ``fpr``, ``tpr`` and ``thresholds`` are 1d numpy arrays, else they are lists
+        of 1d numpy arrays, one for each label.
 
     Raises
     ------
@@ -586,7 +555,7 @@ def roc_curve(
     >>> from cyclops.evaluate.metrics.functional import roc_curve
     >>> target = [0, 0, 1, 1]
     >>> preds = [0.1, 0.4, 0.35, 0.8]
-    >>> fpr, tpr, thresholds = roc_curve(target, preds, task='binary')
+    >>> fpr, tpr, thresholds = roc_curve(target, preds, task="binary")
     >>> fpr
     array([0. , 0. , 0.5, 0.5, 1. ])
     >>> tpr
@@ -598,8 +567,8 @@ def roc_curve(
     >>> from cyclops.evaluate.metrics.functional import roc_curve
     >>> target = [0, 1, 2]
     >>> preds = [[0.9, 0.05, 0.05], [0.05, 0.89, 0.06], [0.02, 0.03, 0.95]]
-    >>> fpr, tpr, thresholds = roc_curve(target, preds, task='multiclass',
-    ...     num_classes=3
+    >>> fpr, tpr, thresholds = roc_curve(
+    ...     target, preds, task="multiclass", num_classes=3
     ... )
     >>> fpr
     [array([0. , 0. , 0.5, 1. ]), array([0. , 0. , 0.5, 1. ]), array([0. , 0. , 0.5, 1. ])]
@@ -612,9 +581,7 @@ def roc_curve(
     >>> from cyclops.evaluate.metrics.functional import roc_curve
     >>> target = [[1, 1], [0, 1], [1, 0]]
     >>> preds = [[0.9, 0.8], [0.2, 0.7], [0.8, 0.3]]
-    >>> fpr, tpr, thresholds = roc_curve(target, preds, task='multilabel',
-    ...     num_labels=2
-    ... )
+    >>> fpr, tpr, thresholds = roc_curve(target, preds, task="multilabel", num_labels=2)
     >>> fpr
     [array([0. , 0.5, 1. , 1. ]), array([0., 0., 0., 1.])]
     >>> tpr

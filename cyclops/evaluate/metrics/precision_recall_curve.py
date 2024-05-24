@@ -1,11 +1,12 @@
 """Classes for computing precision-recall curves."""
 
-from typing import Any, List, Literal, Optional, Tuple, Type, Union
+from typing import Any, List, Literal, Optional, Type, Union
 
 import numpy as np
 import numpy.typing as npt
 
 from cyclops.evaluate.metrics.functional.precision_recall_curve import (  # type: ignore # noqa: E501
+    PRCurve,
     _binary_precision_recall_curve_compute,
     _binary_precision_recall_curve_format,
     _binary_precision_recall_curve_update,
@@ -42,14 +43,14 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
     >>> preds = [0.1, 0.4, 0.35, 0.8]
     >>> metric = BinaryPrecisionRecallCurve(thresholds=3)
     >>> metric(target, preds)
-    (array([0.5, 1. , 0. ]), array([1. , 0.5, 0. ]), array([0. , 0.5, 1. ]))
+    PRCurve(precision=array([0.5, 1. , 0. ]), recall=array([1. , 0.5, 0. ]), thresholds=array([0. , 0.5, 1. ]))
     >>> metric.reset_state()
     >>> target = [[0, 1, 0, 1], [1, 1, 0, 0]]
     >>> preds = [[0.1, 0.4, 0.35, 0.8], [0.6, 0.3, 0.1, 0.7]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
-    (array([0.5       , 0.66666667, 0.        ]), array([1. , 0.5, 0. ]), array([0. , 0.5, 1. ]))
+    PRCurve(precision=array([0.5       , 0.66666667, 0.        ]), recall=array([1. , 0.5, 0. ]), thresholds=array([0. , 0.5, 1. ]))
 
     """
 
@@ -101,7 +102,7 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
 
     def compute(
         self,
-    ) -> Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]]:
+    ) -> PRCurve:
         """Compute the precision-recall curve from the state."""
         if self.thresholds is None:
             state = (
@@ -111,11 +112,12 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
         else:
             state = self.confmat  # type: ignore[attr-defined]
 
-        return _binary_precision_recall_curve_compute(
+        precision, recall, thresholds = _binary_precision_recall_curve_compute(
             state=state,
             thresholds=self.thresholds,
             pos_label=self.pos_label,
         )
+        return PRCurve(precision, recall, thresholds)
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set the attribute ``name`` to ``value``.
@@ -178,29 +180,28 @@ class MulticlassPrecisionRecallCurve(
     --------
     >>> from cyclops.evaluate.metrics import MulticlassPrecisionRecallCurve
     >>> target = [0, 1, 2, 0]
-    >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0.],
-    ...          [0.5, 0.3, 0.2], [0.2, 0.5, 0.3]]
+    >>> preds = [[0.1, 0.6, 0.3], [0.05, 0.95, 0.0], [0.5, 0.3, 0.2], [0.2, 0.5, 0.3]]
     >>> metric = MulticlassPrecisionRecallCurve(num_classes=3, thresholds=3)
     >>> metric(target, preds)
-    (array([[0.5       , 0.        , 0.        , 1.        ],
+    PRCurve(precision=array([[0.5       , 0.        , 0.        , 1.        ],
            [0.25      , 0.33333333, 0.        , 1.        ],
-           [0.25      , 0.        , 0.        , 1.        ]]), array([[1., 0., 0., 0.],
+           [0.25      , 0.        , 0.        , 1.        ]]), recall=array([[1., 0., 0., 0.],
            [1., 1., 0., 0.],
-           [1., 0., 0., 0.]]), array([0. , 0.5, 1. ]))
+           [1., 0., 0., 0.]]), thresholds=array([0. , 0.5, 1. ]))
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 0], [1, 2, 0, 1]]
     >>> preds = [
-    ...     [[0.1, 0.6, 0.3], [0.05, 0.95, 0.], [0.5, 0.3, 0.2], [0.2, 0.5, 0.3]],
+    ...     [[0.1, 0.6, 0.3], [0.05, 0.95, 0.0], [0.5, 0.3, 0.2], [0.2, 0.5, 0.3]],
     ...     [[0.3, 0.2, 0.5], [0.1, 0.7, 0.2], [0.6, 0.1, 0.3], [0.1, 0.8, 0.1]],
     ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
-    (array([[0.375, 0.5  , 0.   , 1.   ],
+    PRCurve(precision=array([[0.375, 0.5  , 0.   , 1.   ],
            [0.375, 0.4  , 0.   , 1.   ],
-           [0.25 , 0.   , 0.   , 1.   ]]), array([[1.        , 0.33333333, 0.        , 0.        ],
+           [0.25 , 0.   , 0.   , 1.   ]]), recall=array([[1.        , 0.33333333, 0.        , 0.        ],
            [1.        , 0.66666667, 0.        , 0.        ],
-           [1.        , 0.        , 0.        , 0.        ]]), array([0. , 0.5, 1. ]))
+           [1.        , 0.        , 0.        , 0.        ]]), thresholds=array([0. , 0.5, 1. ]))
 
     """
 
@@ -254,14 +255,7 @@ class MulticlassPrecisionRecallCurve(
 
     def compute(
         self,
-    ) -> Union[
-        Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
-        Tuple[
-            List[npt.NDArray[np.float_]],
-            List[npt.NDArray[np.float_]],
-            List[npt.NDArray[np.float_]],
-        ],
-    ]:
+    ) -> PRCurve:
         """Compute the precision-recall curve from the state."""
         if self.thresholds is None:
             state = (
@@ -271,11 +265,12 @@ class MulticlassPrecisionRecallCurve(
         else:
             state = self.confmat  # type: ignore[attr-defined]
 
-        return _multiclass_precision_recall_curve_compute(
+        precision, recall, thresholds = _multiclass_precision_recall_curve_compute(
             state=state,
             thresholds=self.thresholds,  # type: ignore[arg-type]
             num_classes=self.num_classes,
         )
+        return PRCurve(precision, recall, thresholds)
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set the attribute ``name`` to ``value``.
@@ -341,18 +336,18 @@ class MultilabelPrecisionRecallCurve(
     >>> preds = [[0.1, 0.9], [0.8, 0.2]]
     >>> metric = MultilabelPrecisionRecallCurve(num_labels=2, thresholds=3)
     >>> metric(target, preds)
-    (array([[0.5, 1. , 0. , 1. ],
-           [0.5, 1. , 0. , 1. ]]), array([[1., 1., 0., 0.],
-           [1., 1., 0., 0.]]), array([0. , 0.5, 1. ]))
+    PRCurve(precision=array([[0.5, 1. , 0. , 1. ],
+           [0.5, 1. , 0. , 1. ]]), recall=array([[1., 1., 0., 0.],
+           [1., 1., 0., 0.]]), thresholds=array([0. , 0.5, 1. ]))
     >>> metric.reset_state()
     >>> target = [[[0, 1], [1, 0]], [[1, 0], [0, 1]]]
     >>> preds = [[[0.1, 0.9], [0.8, 0.2]], [[0.2, 0.8], [0.7, 0.3]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
-    (array([[0.5, 0.5, 0. , 1. ],
-           [0.5, 0.5, 0. , 1. ]]), array([[1. , 0.5, 0. , 0. ],
-           [1. , 0.5, 0. , 0. ]]), array([0. , 0.5, 1. ]))
+    PRCurve(precision=array([[0.5, 0.5, 0. , 1. ],
+           [0.5, 0.5, 0. , 1. ]]), recall=array([[1. , 0.5, 0. , 0. ],
+           [1. , 0.5, 0. , 0. ]]), thresholds=array([0. , 0.5, 1. ]))
 
     """
 
@@ -406,14 +401,7 @@ class MultilabelPrecisionRecallCurve(
 
     def compute(
         self,
-    ) -> Union[
-        Tuple[npt.NDArray[np.float_], npt.NDArray[np.float_], npt.NDArray[np.float_]],
-        Tuple[
-            List[npt.NDArray[np.float_]],
-            List[npt.NDArray[np.float_]],
-            List[npt.NDArray[np.float_]],
-        ],
-    ]:
+    ) -> PRCurve:
         """Compute the precision-recall curve from the state."""
         if self.thresholds is None:
             state = (
@@ -423,11 +411,12 @@ class MultilabelPrecisionRecallCurve(
         else:
             state = self.confmat  # type: ignore[attr-defined]
 
-        return _multilabel_precision_recall_curve_compute(
+        precision, recall, thresholds = _multilabel_precision_recall_curve_compute(
             state,
             thresholds=self.thresholds,  # type: ignore[arg-type]
             num_labels=self.num_labels,
         )
+        return PRCurve(precision, recall, thresholds)
 
     def __setattr__(self, name: str, value: Any) -> None:
         """Set the attribute ``name`` to ``value``.
@@ -503,64 +492,60 @@ class PrecisionRecallCurve(
     >>> preds = [0.6, 0.2, 0.3, 0.8]
     >>> metric = PrecisionRecallCurve(task="binary", thresholds=None)
     >>> metric(target, preds)
-    (array([0.75      , 0.66666667, 0.5       , 0.        , 1.        ]), array([1.        , 0.66666667, 0.33333333, 0.        , 0.        ]), array([0.2, 0.3, 0.6, 0.8]))
+    PRCurve(precision=array([0.75      , 0.66666667, 0.5       , 0.        , 1.        ]), recall=array([1.        , 0.66666667, 0.33333333, 0.        , 0.        ]), thresholds=array([0.2, 0.3, 0.6, 0.8]))
     >>> metric.reset_state()
     >>> target = [[1, 0, 1, 1], [0, 0, 0, 1]]
     >>> preds = [[0.5, 0.4, 0.1, 0.3], [0.9, 0.6, 0.45, 0.8]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
-    (array([0.5       , 0.42857143, 0.33333333, 0.4       , 0.5       ,
-           0.33333333, 0.5       , 0.        , 1.        ]), array([1.  , 0.75, 0.5 , 0.5 , 0.5 , 0.25, 0.25, 0.  , 0.  ]), array([0.1 , 0.3 , 0.4 , 0.45, 0.5 , 0.6 , 0.8 , 0.9 ]))
+    PRCurve(precision=array([0.5       , 0.42857143, 0.33333333, 0.4       , 0.5       ,
+           0.33333333, 0.5       , 0.        , 1.        ]), recall=array([1.  , 0.75, 0.5 , 0.5 , 0.5 , 0.25, 0.25, 0.  , 0.  ]), thresholds=array([0.1 , 0.3 , 0.4 , 0.45, 0.5 , 0.6 , 0.8 , 0.9 ]))
 
     >>> # (multiclass)
     >>> from cyclops.evaluate.metrics import PrecisionRecallCurve
     >>> target = [0, 1, 2, 2]
-    >>> preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1],
-    ...         [0.2, 0.2, 0.6], [0.2, 0.2, 0.6]]
-    >>> metric = PrecisionRecallCurve(task="multiclass", num_classes=3,
-    ...     thresholds=3)
+    >>> preds = [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6], [0.2, 0.2, 0.6]]
+    >>> metric = PrecisionRecallCurve(task="multiclass", num_classes=3, thresholds=3)
     >>> metric(target, preds)
-    (array([[0.25, 0.  , 0.  , 1.  ],
+    PRCurve(precision=array([[0.25, 0.  , 0.  , 1.  ],
            [0.25, 0.5 , 0.  , 1.  ],
-           [0.5 , 1.  , 0.  , 1.  ]]), array([[1., 0., 0., 0.],
+           [0.5 , 1.  , 0.  , 1.  ]]), recall=array([[1., 0., 0., 0.],
            [1., 1., 0., 0.],
-           [1., 1., 0., 0.]]), array([0. , 0.5, 1. ]))
+           [1., 1., 0., 0.]]), thresholds=array([0. , 0.5, 1. ]))
     >>> metric.reset_state()
     >>> target = [[0, 1, 2, 2], [1, 2, 0, 1]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1],
-    ...         [0.2, 0.2, 0.6], [0.2, 0.2, 0.6]],
-    ...         [[0.05, 0.95, 0], [0.1, 0.8, 0.1],
-    ...         [0.2, 0.2, 0.6], [0.2, 0.2, 0.6]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6], [0.2, 0.2, 0.6]],
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.2, 0.6], [0.2, 0.2, 0.6]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
-    (array([[0.25 , 0.   , 0.   , 1.   ],
+    PRCurve(precision=array([[0.25 , 0.   , 0.   , 1.   ],
            [0.375, 0.5  , 0.   , 1.   ],
-           [0.375, 0.5  , 0.   , 1.   ]]), array([[1.        , 0.        , 0.        , 0.        ],
+           [0.375, 0.5  , 0.   , 1.   ]]), recall=array([[1.        , 0.        , 0.        , 0.        ],
            [1.        , 0.66666667, 0.        , 0.        ],
-           [1.        , 0.66666667, 0.        , 0.        ]]), array([0. , 0.5, 1. ]))
+           [1.        , 0.66666667, 0.        , 0.        ]]), thresholds=array([0. , 0.5, 1. ]))
 
     >>> # (multilabel)
     >>> from cyclops.evaluate.metrics import PrecisionRecallCurve
     >>> target = [[0, 1], [1, 0]]
     >>> preds = [[0.1, 0.9], [0.8, 0.2]]
-    >>> metric = PrecisionRecallCurve(task="multilabel", num_labels=2,
-    ...     thresholds=3)
+    >>> metric = PrecisionRecallCurve(task="multilabel", num_labels=2, thresholds=3)
     >>> metric(target, preds)
-    (array([[0.5, 1. , 0. , 1. ],
-           [0.5, 1. , 0. , 1. ]]), array([[1., 1., 0., 0.],
-           [1., 1., 0., 0.]]), array([0. , 0.5, 1. ]))
+    PRCurve(precision=array([[0.5, 1. , 0. , 1. ],
+           [0.5, 1. , 0. , 1. ]]), recall=array([[1., 1., 0., 0.],
+           [1., 1., 0., 0.]]), thresholds=array([0. , 0.5, 1. ]))
     >>> metric.reset_state()
     >>> target = [[[0, 1], [1, 0]], [[1, 0], [0, 1]]]
-    >>> preds = [[[0.1, 0.9], [0.8, 0.2]],
-    ...         [[0.1, 0.9], [0.8, 0.2]]]
+    >>> preds = [[[0.1, 0.9], [0.8, 0.2]], [[0.1, 0.9], [0.8, 0.2]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update_state(t, p)
     >>> metric.compute()
-    (array([[0.5, 0.5, 0. , 1. ],
-           [0.5, 0.5, 0. , 1. ]]), array([[1. , 0.5, 0. , 0. ],
-           [1. , 0.5, 0. , 0. ]]), array([0. , 0.5, 1. ]))
+    PRCurve(precision=array([[0.5, 0.5, 0. , 1. ],
+           [0.5, 0.5, 0. , 1. ]]), recall=array([[1. , 0.5, 0. , 0. ],
+           [1. , 0.5, 0. , 0. ]]), thresholds=array([0. , 0.5, 1. ]))
 
     """
 

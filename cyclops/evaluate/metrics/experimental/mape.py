@@ -1,4 +1,7 @@
 """Mean Absolute Percentage Error (MAPE) metric."""
+
+from typing import Any
+
 from cyclops.evaluate.metrics.experimental.functional.mape import (
     _mean_absolute_percentage_error_compute,
     _mean_absolute_percentage_error_update,
@@ -15,13 +18,15 @@ class MeanAbsolutePercentageError(Metric):
     epsilon : float, optional, default=1.17e-06
         Specifies the lower bound for target values. Any target value below epsilon
         is set to epsilon (avoids division by zero errors).
+    **kwargs : Any
+        Keyword arguments to pass to the `Metric` base class.
 
     Examples
     --------
     >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental import MeanAbsolutePercentageError
-    >>> target = anp.asarray([0.009, 1.05, 2., 3.])
-    >>> preds = anp.asarray([0., 1., 2., 2.])
+    >>> target = anp.asarray([0.009, 1.05, 2.0, 3.0])
+    >>> preds = anp.asarray([0.0, 1.0, 2.0, 2.0])
     >>> metric = MeanAbsolutePercentageError()
     >>> metric(target, preds)
     Array(0.34523812, dtype=float32)
@@ -30,8 +35,8 @@ class MeanAbsolutePercentageError(Metric):
 
     name: str = "Mean Absolute Percentage Error"
 
-    def __init__(self, epsilon: float = 1.17e-6) -> None:
-        super().__init__()
+    def __init__(self, epsilon: float = 1.17e-6, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
         if not isinstance(epsilon, float):
             raise TypeError(f"Expected `epsilon` to be a float. Got {type(epsilon)}")
         self.epsilon = epsilon

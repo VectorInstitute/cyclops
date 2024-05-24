@@ -2,7 +2,7 @@
 
 import logging
 from functools import partial
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -14,8 +14,8 @@ from sklearn.pipeline import Pipeline
 from cyclops.data.slicer import SliceSpec
 from cyclops.evaluate.evaluator import evaluate
 from cyclops.evaluate.fairness.config import FairnessConfig
+from cyclops.evaluate.metrics.experimental.metric_dict import MetricDict
 from cyclops.evaluate.metrics.factory import create_metric
-from cyclops.evaluate.metrics.metric import MetricCollection
 from cyclops.models.catalog import (
     _img_model_keys,
     _model_names_mapping,
@@ -261,7 +261,7 @@ class BinaryTabularClassificationTask(BaseTask):
     def evaluate(
         self,
         dataset: Union[Dataset, DatasetDict],
-        metrics: Union[List[str], MetricCollection],
+        metrics: Union[List[str], MetricDict],
         model_names: Optional[Union[str, List[str]]] = None,
         transforms: Optional[ColumnTransformer] = None,
         prediction_column_prefix: str = "predictions",
@@ -271,6 +271,7 @@ class BinaryTabularClassificationTask(BaseTask):
         remove_columns: Optional[Union[str, List[str]]] = None,
         fairness_config: Optional[FairnessConfig] = None,
         override_fairness_metrics: bool = False,
+        array_lib: Literal["numpy", "torch", "cupy"] = "numpy",
     ) -> Tuple[Dict[str, Any], Dataset]:
         """Evaluate model(s) on a HuggingFace dataset.
 
@@ -278,7 +279,7 @@ class BinaryTabularClassificationTask(BaseTask):
         ----------
         dataset : Union[Dataset, DatasetDict]
             HuggingFace dataset.
-        metrics : Union[List[str], MetricCollection]
+        metrics : Union[List[str], MetricDict]
             Metrics to be evaluated.
         model_names : Union[str, List[str]], optional
             Model names to be evaluated, if not specified all fitted models \
@@ -305,6 +306,9 @@ class BinaryTabularClassificationTask(BaseTask):
         override_fairness_metrics : bool, optional
             If True, the `metrics` argument in fairness_config will be overridden by \
             the `metrics`, by default False
+        array_lib : {"numpy", "torch", "cupy"}, default="numpy"
+            The array library to use for the metric computation. The metric results
+            will be returned in the format of `array_lib`.
 
         Returns
         -------
@@ -315,9 +319,9 @@ class BinaryTabularClassificationTask(BaseTask):
         if splits_mapping is None:
             splits_mapping = {"test": "test"}
         if isinstance(metrics, list) and len(metrics):
-            metrics_collection = MetricCollection(
+            metrics_collection = MetricDict(
                 [
-                    create_metric(
+                    create_metric(  # type: ignore[misc]
                         m,
                         task=self.task_type,
                         num_labels=len(self.task_features),
@@ -325,7 +329,7 @@ class BinaryTabularClassificationTask(BaseTask):
                     for m in metrics
                 ],
             )
-        elif isinstance(metrics, MetricCollection):
+        elif isinstance(metrics, MetricDict):
             metrics_collection = metrics
         if isinstance(model_names, str):
             model_names = [model_names]
@@ -345,6 +349,22 @@ class BinaryTabularClassificationTask(BaseTask):
                 only_predictions=False,
                 splits_mapping=splits_mapping,
             )
+
+            # select the probability scores of the positive class since metrics
+            # expect a single column of probabilities
+            dataset = dataset.map(  # type: ignore[union-attr]
+                lambda examples: {
+                    f"{prediction_column_prefix}.{model_name}": np.array(  # noqa: B023
+                        examples,
+                    )[
+                        :,
+                        1,
+                    ].tolist(),
+                },
+                batched=True,
+                batch_size=batch_size,
+                input_columns=f"{prediction_column_prefix}.{model_name}",
+            )
         results = evaluate(
             dataset=dataset,
             metrics=metrics_collection,
@@ -358,6 +378,7 @@ class BinaryTabularClassificationTask(BaseTask):
             batch_size=batch_size,
             fairness_config=fairness_config,
             override_fairness_metrics=override_fairness_metrics,
+            array_lib=array_lib,
         )
         return results, dataset
 
@@ -448,7 +469,7 @@ class MultilabelImageClassificationTask(BaseTask):
     def evaluate(
         self,
         dataset: Union[Dataset, DatasetDict],
-        metrics: Union[List[str], MetricCollection],
+        metrics: Union[List[str], MetricDict],
         model_names: Optional[Union[str, List[str]]] = None,
         transforms: Optional[Compose] = None,
         prediction_column_prefix: str = "predictions",
@@ -458,6 +479,7 @@ class MultilabelImageClassificationTask(BaseTask):
         remove_columns: Optional[Union[str, List[str]]] = None,
         fairness_config: Optional[FairnessConfig] = None,
         override_fairness_metrics: bool = False,
+        array_lib: Literal["numpy", "torch", "cupy"] = "numpy",
     ) -> Tuple[Dict[str, Any], Dataset]:
         """Evaluate model(s) on a HuggingFace dataset.
 
@@ -465,7 +487,7 @@ class MultilabelImageClassificationTask(BaseTask):
         ----------
         dataset : Union[Dataset, DatasetDict]
             HuggingFace dataset.
-        metrics : Union[List[str], MetricCollection]
+        metrics : Union[List[str], MetricDict]
             Metrics to be evaluated.
         model_names : Union[str, List[str]], optional
             Model names to be evaluated, required if more than one model exists, \
@@ -490,6 +512,9 @@ class MultilabelImageClassificationTask(BaseTask):
         override_fairness_metrics : bool, optional
             If True, the `metrics` argument in fairness_config will be overridden by \
             the `metrics`, by default False
+        array_lib : {"numpy", "torch", "cupy"}, default="numpy"
+            The array library to use for the metric computation. The metric results
+            will be returned in the format of `array_lib`.
 
         Returns
         -------
@@ -515,9 +540,9 @@ class MultilabelImageClassificationTask(BaseTask):
 
             dataset = dataset.map(add_missing_labels)
         if isinstance(metrics, list) and len(metrics):
-            metrics_collection = MetricCollection(
+            metrics_collection = MetricDict(
                 [
-                    create_metric(
+                    create_metric(  # type: ignore[misc]
                         m,
                         task=self.task_type,
                         num_labels=len(self.task_target),
@@ -525,7 +550,7 @@ class MultilabelImageClassificationTask(BaseTask):
                     for m in metrics
                 ],
             )
-        elif isinstance(metrics, MetricCollection):
+        elif isinstance(metrics, MetricDict):
             metrics_collection = metrics
         if isinstance(model_names, str):
             model_names = [model_names]
@@ -553,6 +578,7 @@ class MultilabelImageClassificationTask(BaseTask):
             batch_size=batch_size,
             fairness_config=fairness_config,
             override_fairness_metrics=override_fairness_metrics,
+            array_lib=array_lib,
         )
 
         return results, dataset

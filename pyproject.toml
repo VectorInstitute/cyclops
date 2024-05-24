@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pycyclops"
-version = "0.2.2"
+version = "0.2.8"
 description = "Framework for healthcare ML implementation"
 authors = ["Vector AI Engineering <cyclops@vectorinstitute.ai>"]
 license = "Apache-2.0"
@@ -12,23 +12,24 @@ packages = [
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.9, <3.11"
+python = ">=3.9, <3.12"
 pandas = "^2.0"
 numpy = "^1.24.0"
-scikit-learn = "^1.2.2"
+scikit-learn = "^1.4.0"
 scipy = "^1.11.0"
+matplotlib = "^3.8.3"
 datasets = "^2.15.0"
 psutil = "^5.9.4"
 pyarrow = "^14.0.0"
 pydantic = "^1.10.11"
-Jinja2 = "^3.1.2"
+Jinja2 = "^3.1.3"
 spdx-tools = "^0.8.1"
 pybtex = "^0.24.0"
 kaleido = "0.2.1"
 scour = "^0.38.2"
 plotly = "^5.7.0"
-pillow = "^9.5.0"
-array-api-compat = "^1.4"
+pillow = "^10.0.0"
+array-api-compat = "1.6"
 hydra-core = "^1.2.0"
 
 # Optional dependencies
@@ -94,15 +95,17 @@ optional = true
 [tool.poetry.group.test.dependencies]
 pytest = "^7.1.1"
 pre-commit = "^2.17.0"
-black = "^22.1.0"
 pytest-cov = "^3.0.0"
 codecov = "^2.1.13"
 nbstripout = "^0.6.1"
 mypy = "^1.7.0"
-ruff = "^0.1.0"
+ruff = "^0.4.0"
 nbqa = { version = "^1.7.0", extras = ["toolchain"] }
+pip-audit = "^2.7.1"
 cycquery = "^0.1.2" # used for integration test
 torchmetrics = {version = "^1.2.0", extras = ["classification", "regression"]}
+pytest-mpi = "^0.6"
+pytest-xdist = {extras = ["psutil"], version = "^3.5.0"}
 
 [tool.poetry.group.docs]
 optional = true
@@ -110,16 +113,17 @@ optional = true
 [tool.poetry.group.docs.dependencies]
 numpydoc = "^1.2"
 sphinx = "^7.2.5"
-sphinx-rtd-theme = "^2.0.0rc2"
 sphinxcontrib-apidoc = "^0.4.0"
 sphinx-autodoc-typehints = "^1.24.0"
 myst-parser = "^2.0.0"
+sphinx-design = "^0.5.0"
 sphinx-copybutton = "^0.5.0"
 sphinx-autoapi = "^2.0.0"
-nbsphinx = "^0.8.11"
+nbsphinx = "^0.9.3"
 ipython = "^8.8.0"
 ipykernel = "^6.23.0"
 kaggle = "^1.5.13"
+furo = "^2024.01.29"
 
 [tool.poetry.group.dev]
 optional = true
@@ -127,7 +131,6 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 cycquery = "^0.1.0"
 seaborn = "^0.11.2"
-matplotlib = "^3.5.1"
 jupyter = "^1.0.0"
 jupyterlab = "^3.4.2"
 ipympl = "^0.9.3"
@@ -135,8 +138,19 @@ ipywidgets = "^8.0.6"
 torchmetrics = {version = "^1.2.0", extras = ["classification", "regression"]}
 cupy = "^12.2.0"
 mpi4py = {git = "https://github.com/mpi4py/mpi4py"}
-lightning = "^2.1.0"
-imbalanced-learn = "^0.11.0"
+imbalanced-learn = "^0.12.0"
+pyperf = "^2.6.3"
+
+[tool.poetry.group.deploy]
+optional = true
+
+[tool.poetry.group.deploy.dependencies]
+aiohttp = "^3.9.2"
+bentoml = { version = "1.2.5", extras = ["triton"] }
+torchxrayvision = "^1.2.1"
+kaggle = "^1.5.13"
+onnx = "^1.15.0"
+skl2onnx = "^1.16.0"
 
 [tool.poetry.extras]
 torch = ["torch"]
@@ -173,6 +187,17 @@ extra_checks = true
 
 [tool.ruff]
 include = ["*.py", "pyproject.toml", "*.ipynb"]
+line-length = 88
+exclude = [
+    "nbs",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.ruff.lint]
 select = [
     "A", # flake8-builtins
     "B", # flake8-bugbear
@@ -193,11 +218,6 @@ select = [
     "PL", # pylint
 ]
 fixable = ["A", "B", "COM", "C4", "RET", "SIM", "ICN", "Q", "RSE", "D", "E", "F", "I", "W", "N", "ERA", "PL"]
-line-length = 88
-exclude = [
-    "use_cases",
-    "nbs",
-]
 ignore = [
     "B905", # `zip()` without an explicit `strict=` parameter
     "E501", # line too long
@@ -205,22 +225,23 @@ ignore = [
     "D213", # Multi-line docstring summary should start at the second line
     "PLR2004", # Replace magic number with named constant
     "PLR0913", # Too many arguments
+    "COM812", # Missing trailing comma
 ]
 
 # Ignore import violations in all `__init__.py` files.
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402", "F401", "F403", "F811"]
 
-[tool.ruff.pep8-naming]
+[tool.ruff.lint.pep8-naming]
 ignore-names = ["X*", "setUp"]
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 lines-after-imports = 2
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "numpy"
 
-[tool.ruff.pycodestyle]
+[tool.ruff.lint.pycodestyle]
 max-doc-length = 88
 
 [tool.pytest.ini_options]

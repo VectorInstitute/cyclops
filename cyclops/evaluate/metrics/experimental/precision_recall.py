@@ -1,4 +1,5 @@
 """Classes for computing precision and recall scores for classification tasks."""
+
 from cyclops.evaluate.metrics.experimental._stat_scores import (
     _AbstractBinaryStatScores,
     _AbstractMulticlassStatScores,
@@ -20,7 +21,7 @@ class BinaryPrecision(_AbstractBinaryStatScores, registry_key="binary_precision"
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -59,7 +60,7 @@ class BinaryPPV(BinaryPrecision, registry_key="binary_ppv"):
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -114,6 +115,8 @@ class MulticlassPrecision(
         Specifies a target class that is ignored when computing the precision score.
         Ignoring a target class means that the corresponding predictions do not
         contribute to the precision score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -126,8 +129,10 @@ class MulticlassPrecision(
     Array(0.6, dtype=float32)
     >>> metric.reset()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -179,6 +184,8 @@ class MulticlassPPV(MulticlassPrecision, registry_key="multiclass_ppv"):
         Specifies a target class that is ignored when computing the positive predictive
         value. Ignoring a target class means that the corresponding predictions do not
         contribute to the positive predictive value.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -191,8 +198,10 @@ class MulticlassPPV(MulticlassPrecision, registry_key="multiclass_ppv"):
     Array(0.6, dtype=float32)
     >>> metric.reset()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -235,6 +244,8 @@ class MultilabelPrecision(
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the precision score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -247,8 +258,7 @@ class MultilabelPrecision(
     Array(0.6666667, dtype=float32)
     >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -301,6 +311,8 @@ class MultilabelPPV(MultilabelPrecision, registry_key="multilabel_ppv"):
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the positive predictive value.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -313,8 +325,7 @@ class MultilabelPPV(MultilabelPrecision, registry_key="multilabel_ppv"):
     Array(0.6666667, dtype=float32)
     >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -334,7 +345,7 @@ class BinaryRecall(_AbstractBinaryStatScores, registry_key="binary_recall"):
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -373,7 +384,7 @@ class BinarySensitivity(BinaryRecall, registry_key="binary_sensitivity"):
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -407,7 +418,7 @@ class BinaryTPR(BinaryRecall, registry_key="binary_tpr"):
         Threshold for converting probabilities into binary values.
     ignore_index : int, optional
         Values in the target array to ignore when computing the metric.
-    **kwargs
+    **kwargs : Any
         Additional keyword arguments common to all metrics.
 
     Examples
@@ -459,6 +470,8 @@ class MulticlassRecall(_AbstractMulticlassStatScores, registry_key="multiclass_r
         Specifies a target class that is ignored when computing the recall score.
         Ignoring a target class means that the corresponding predictions do not
         contribute to the recall score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -471,8 +484,10 @@ class MulticlassRecall(_AbstractMulticlassStatScores, registry_key="multiclass_r
     Array(0.6, dtype=float32)
     >>> metric.reset()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -523,6 +538,8 @@ class MulticlassSensitivity(MulticlassRecall, registry_key="multiclass_sensitivi
         Specifies a target class that is ignored when computing the sensitivity score.
         Ignoring a target class means that the corresponding predictions do not
         contribute to the sensitivity score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -535,8 +552,10 @@ class MulticlassSensitivity(MulticlassRecall, registry_key="multiclass_sensitivi
     Array(0.6, dtype=float32)
     >>> metric.reset()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -575,6 +594,8 @@ class MulticlassTPR(MulticlassRecall, registry_key="multiclass_tpr"):
         Specifies a target class that is ignored when computing the true positive rate.
         Ignoring a target class means that the corresponding predictions do not
         contribute to the true positive rate.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -587,8 +608,10 @@ class MulticlassTPR(MulticlassRecall, registry_key="multiclass_tpr"):
     Array(0.6, dtype=float32)
     >>> metric.reset()
     >>> target = [[0, 1, 2], [2, 1, 0]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]]]
+    >>> preds = [
+    ...     [[0.05, 0.95, 0], [0.1, 0.8, 0.1], [0.2, 0.6, 0.2]],
+    ...     [[0.1, 0.8, 0.1], [0.05, 0.95, 0], [0.2, 0.6, 0.2]],
+    ... ]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -628,6 +651,8 @@ class MultilabelRecall(_AbstractMultilabelStatScores, registry_key="multilabel_r
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the recall score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -640,8 +665,7 @@ class MultilabelRecall(_AbstractMultilabelStatScores, registry_key="multilabel_r
     Array(0.6666667, dtype=float32)
      >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -694,6 +718,8 @@ class MultilabelSensitivity(MultilabelRecall, registry_key="multilabel_sensitivi
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the sensitivity score.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -706,8 +732,7 @@ class MultilabelSensitivity(MultilabelRecall, registry_key="multilabel_sensitivi
     Array(0.6666667, dtype=float32)
      >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()
@@ -748,6 +773,8 @@ class MultilabelTPR(MultilabelRecall, registry_key="multilabel_tpr"):
     ignore_index : int, optional, default=None
         Specifies a value in the target array(s) that is ignored when computing
         the true positive rate.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -760,8 +787,7 @@ class MultilabelTPR(MultilabelRecall, registry_key="multilabel_tpr"):
     Array(0.6666667, dtype=float32)
      >>> metric.reset()
     >>> target = [[[0, 1, 1], [1, 0, 0]], [[1, 0, 0], [0, 1, 1]]]
-    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]],
-    ...          [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
+    >>> preds = [[[0.05, 0.95, 0], [0.1, 0.8, 0.1]], [[0.1, 0.8, 0.1], [0.05, 0.95, 0]]]
     >>> for t, p in zip(target, preds):
     ...     metric.update(anp.asarray(t), anp.asarray(p))
     >>> metric.compute()

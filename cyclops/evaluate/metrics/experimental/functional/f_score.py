@@ -1,4 +1,5 @@
 """Methods for computing the F-score for classification tasks."""
+
 from typing import Literal, Optional, Tuple, Union
 
 import array_api_compat as apc
@@ -56,9 +57,9 @@ def _binary_fbeta_compute(
     """Compute the F-beta score for binary classification tasks."""
     beta2 = beta**2
     xp = apc.array_namespace(fp, fn, tp)
-    tp = xp.astype(tp, xp.float32)
-    fp = xp.astype(fp, xp.float32)
-    fn = xp.astype(fn, xp.float32)
+    tp = xp.astype(tp, xp.float32, copy=False)
+    fp = xp.astype(fp, xp.float32, copy=False)
+    fn = xp.astype(fn, xp.float32, copy=False)
     return squeeze_all(
         safe_divide(
             numerator=(1 + beta2) * tp,
@@ -89,9 +90,9 @@ def _fbeta_compute(
             denominator=(1 + beta2) * tp + beta2 * fn + fp,
         )
 
-    tp = xp.astype(tp, xp.float32)
-    fp = xp.astype(fp, xp.float32)
-    fn = xp.astype(fn, xp.float32)
+    tp = xp.astype(tp, xp.float32, copy=False)
+    fp = xp.astype(fp, xp.float32, copy=False)
+    fn = xp.astype(fn, xp.float32, copy=False)
     score = safe_divide(
         numerator=(1 + beta2) * tp,
         denominator=(1 + beta2) * tp + beta2 * fn + fp,
@@ -315,7 +316,7 @@ def multiclass_fbeta_score(
     Examples
     --------
     >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...    multiclass_fbeta_score
+    ...     multiclass_fbeta_score,
     ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([2, 1, 0, 0])
@@ -334,16 +335,26 @@ def multiclass_fbeta_score(
     Array(0.8333333, dtype=float32)
     >>> multiclass_fbeta_score(target, preds, beta, num_classes=3, average=None)
     Array([0.5555556, 0.8333333, 1.       ], dtype=float32)
-    >>> multiclass_fbeta_score(target, preds, beta, num_classes=3, average='macro')
+    >>> multiclass_fbeta_score(target, preds, beta, num_classes=3, average="macro")
     Array(0.7962963, dtype=float32)
-    >>> multiclass_fbeta_score(target, preds, beta, num_classes=3, average='weighted')
+    >>> multiclass_fbeta_score(target, preds, beta, num_classes=3, average="weighted")
     Array(0.7361111, dtype=float32)
     >>> multiclass_fbeta_score(
-    ...    target, preds, beta, num_classes=3, average=None, ignore_index=0,
+    ...     target,
+    ...     preds,
+    ...     beta,
+    ...     num_classes=3,
+    ...     average=None,
+    ...     ignore_index=0,
     ... )
     Array([0., 1., 1.], dtype=float32)
     >>> multiclass_fbeta_score(
-    ...     target, preds, beta, num_classes=3, average=None, ignore_index=(1, 2),
+    ...     target,
+    ...     preds,
+    ...     beta,
+    ...     num_classes=3,
+    ...     average=None,
+    ...     ignore_index=(1, 2),
     ... )
     Array([0.5555556, 0.       , 0.       ], dtype=float32)
 
@@ -500,7 +511,7 @@ def multilabel_fbeta_score(
     Examples
     --------
     >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...    multilabel_fbeta_score
+    ...     multilabel_fbeta_score,
     ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([[0, 1, 0], [1, 0, 1]])
@@ -517,12 +528,12 @@ def multilabel_fbeta_score(
     Array(0.3472222, dtype=float32)
     >>> multilabel_fbeta_score(target, preds, beta, num_labels=4, average=None)
     Array([0.5555556, 0.       , 0.       , 0.8333333], dtype=float32)
-    >>> multilabel_fbeta_score(target, preds, beta, num_labels=4, average='micro')
+    >>> multilabel_fbeta_score(target, preds, beta, num_labels=4, average="micro")
     Array(0.41666666, dtype=float32)
-    >>> multilabel_fbeta_score(target, preds, beta, num_labels=4, average='weighted')
+    >>> multilabel_fbeta_score(target, preds, beta, num_labels=4, average="weighted")
     Array(0.3888889, dtype=float32)
     >>> multilabel_fbeta_score(
-    ...    target, preds, beta, num_labels=4, average=None, ignore_index=0
+    ...     target, preds, beta, num_labels=4, average=None, ignore_index=0
     ... )
     Array([0.5555556, 0.       , 0.       , 1.       ], dtype=float32)
 
@@ -746,14 +757,18 @@ def multiclass_f1_score(
     Array(0.6666667, dtype=float32)
     >>> multiclass_f1_score(target, preds, num_classes=3, average=None)
     Array([0.6666667, 0.6666667, 1.       ], dtype=float32)
-    >>> multiclass_f1_score(target, preds, num_classes=3, average='macro')
+    >>> multiclass_f1_score(target, preds, num_classes=3, average="macro")
     Array(0.7777778, dtype=float32)
-    >>> multiclass_f1_score(target, preds, num_classes=3, average='weighted')
+    >>> multiclass_f1_score(target, preds, num_classes=3, average="weighted")
     Array(0.75, dtype=float32)
     >>> multiclass_f1_score(target, preds, num_classes=3, average=None, ignore_index=0)
     Array([0., 1., 1.], dtype=float32)
     >>> multiclass_f1_score(
-    ...     target, preds, num_classes=3, average=None, ignore_index=(1, 2),
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     average=None,
+    ...     ignore_index=(1, 2),
     ... )
     Array([0.6666667, 0.       , 0.       ], dtype=float32)
     """
@@ -869,9 +884,9 @@ def multilabel_f1_score(
     Array(0.33333334, dtype=float32)
     >>> multilabel_f1_score(target, preds, num_labels=4, average=None)
     Array([0.6666667, 0.       , 0.       , 0.6666667], dtype=float32)
-    >>> multilabel_f1_score(target, preds, num_labels=4, average='micro')
+    >>> multilabel_f1_score(target, preds, num_labels=4, average="micro")
     Array(0.44444445, dtype=float32)
-    >>> multilabel_f1_score(target, preds, num_labels=4, average='weighted')
+    >>> multilabel_f1_score(target, preds, num_labels=4, average="weighted")
     Array(0.40000004, dtype=float32)
     >>> multilabel_f1_score(target, preds, num_labels=4, average=None, ignore_index=0)
     Array([0.6666667, 0.       , 0.       , 1.       ], dtype=float32)

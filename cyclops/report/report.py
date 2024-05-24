@@ -1,4 +1,4 @@
-"""Cyclops report module."""
+"""Cyclops model report module."""
 
 import base64
 import glob
@@ -51,7 +51,6 @@ from cyclops.report.utils import (
     get_slices,
     get_thresholds,
     get_timestamps,
-    get_trends,
     regex_replace,
     regex_search,
     str_to_snake_case,
@@ -62,8 +61,8 @@ from cyclops.report.utils import (
 )
 
 
-_TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates")
-_DEFAULT_TEMPLATE_FILENAME = "cyclops_generic_template.jinja"
+_TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), "templates", "model_report")
+_DEFAULT_TEMPLATE_FILENAME = "model_report.jinja"
 
 
 class ModelCardReport:
@@ -98,7 +97,7 @@ class ModelCardReport:
             The path to a JSON file containing model card data.
         output_dir : str, optional
             The directory to save the report to. If not provided, the report will
-            be saved in a directory called `cyclops_reports` in the current working
+            be saved in a directory called `cyclops_report` in the current working
             directory.
 
         Returns
@@ -246,7 +245,7 @@ class ModelCardReport:
         section_name = str_to_snake_case(section_name)
         section = self._model_card.get_section(section_name)
 
-        # append graphic to exisiting GraphicsCollection or create new one
+        # append graphic to existing GraphicsCollection or create new one
         if (
             "graphics" in section.__fields__
             and section.__fields__["graphics"].type_ is GraphicsCollection
@@ -274,7 +273,7 @@ class ModelCardReport:
         section_name = str_to_snake_case(section_name)
         section = self._model_card.get_section(section_name)
 
-        # append graphic to exisiting GraphicsCollection or create new one
+        # append graphic to existing GraphicsCollection or create new one
         if (
             "metric_cards" in section.__fields__
             and section.__fields__["metric_cards"].type_ is MetricCardCollection
@@ -667,9 +666,9 @@ class ModelCardReport:
 
         """
         # sensitive features must be in features
-        if features is None and sensitive_features is not None:
+        if features is not None and sensitive_features is not None:
             assert all(
-                feature in features for feature in sensitive_features  # type: ignore
+                feature in features for feature in sensitive_features
             ), "All sensitive features must be in the features list."
 
         # TODO: plot dataset distribution
@@ -1054,6 +1053,7 @@ class ModelCardReport:
         template_path: Optional[str] = None,
         interactive: bool = True,
         save_json: bool = True,
+        last_n_evals: Optional[int] = None,
         synthetic_timestamp: Optional[str] = None,
     ) -> str:
         """Export the model card report to an HTML file.
@@ -1070,6 +1070,9 @@ class ModelCardReport:
             Whether to create an interactive HTML report. The default is True.
         save_json : bool, optional
             Whether to save the model card as a JSON file. The default is True.
+        last_n_evals : int, optional
+            The number of most recent evaluations to include in the report and
+            calculate trends for. If not provided, all evaluations will be included.
         synthetic_timestamp : str, optional
             A synthetic timestamp to use for the report. This is useful for
             generating back-dated reports. The default is None, which uses the
@@ -1089,22 +1092,24 @@ class ModelCardReport:
 
         # write to file
         if synthetic_timestamp is not None:
-            today = synthetic_timestamp
             today_now = synthetic_timestamp
         else:
-            today = dt_date.today().strftime("%Y-%m-%d")
             today_now = dt_datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        current_report_metrics: List[List[PerformanceMetric]] = []
+        current_report_metrics: Union[
+            List[List[PerformanceMetric]], List[PerformanceMetric]
+        ] = []
         sweep_metrics(self._model_card, current_report_metrics)
-        current_report_metrics_set = current_report_metrics[0]
+        current_report_metrics_set = (
+            current_report_metrics[0]
+            if isinstance(current_report_metrics[0], list)
+            else [current_report_metrics[0]]
+        )
 
         report_paths = glob.glob(
             os.path.join(
                 self.output_dir,
-                "cyclops_reports",
-                "*",
-                "*",
+                "cyclops_report",
                 "*.json",
             ),
         )
@@ -1135,6 +1140,10 @@ class ModelCardReport:
                 metric_cards,
             )
 
+        if self._model_card.overview is not None:
+            last_n_evals = 0 if last_n_evals is None else last_n_evals
+            self._model_card.overview.last_n_evals = last_n_evals
+
         self._validate()
         template = self._get_jinja_template(template_path=template_path)
 
@@ -1143,7 +1152,6 @@ class ModelCardReport:
             "sweep_graphics": sweep_graphics,
             "get_slices": get_slices,
             "get_thresholds": get_thresholds,
-            "get_trends": get_trends,
             "get_passed": get_passed,
             "get_names": get_names,
             "get_histories": get_histories,
@@ -1154,12 +1162,9 @@ class ModelCardReport:
         plotlyjs = get_plotlyjs() if interactive else None
         content = template.render(model_card=self._model_card, plotlyjs=plotlyjs)
 
-        now = dt_datetime.now().strftime("%H-%M-%S")
         report_path = os.path.join(
             self.output_dir,
-            "cyclops_reports",
-            today,
-            now,
+            "cyclops_report",
             output_filename or "model_card.html",
         )
         self._write_file(report_path, content)

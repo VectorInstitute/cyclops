@@ -361,15 +361,15 @@ class Features:
         all_vals.sort()
         if not np.array_equal(unique, all_vals):
             raise ValueError("Invalid split values.")
-        datas = []
+        data = []
         for value_split in value_splits:
             data_copy = self.data.copy()
-            datas.append(data_copy[data_copy[on_col].isin(value_split)])
+            data.append(data_copy[data_copy[on_col].isin(value_split)])
         save_data = self.data
         self.data = None
         splits = [copy.deepcopy(self) for _ in range(len(value_splits))]
         for i, split in enumerate(splits):
-            split.data = datas[i]
+            split.data = data[i]
         self.data = save_data
 
         return tuple(splits)

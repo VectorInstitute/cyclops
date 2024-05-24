@@ -1,4 +1,5 @@
 """Metrics for arrays that conform to the Python array API standard."""
+
 from cyclops.evaluate.metrics.experimental.accuracy import (
     BinaryAccuracy,
     MulticlassAccuracy,
@@ -8,6 +9,11 @@ from cyclops.evaluate.metrics.experimental.auroc import (
     BinaryAUROC,
     MulticlassAUROC,
     MultilabelAUROC,
+)
+from cyclops.evaluate.metrics.experimental.average_precision import (
+    BinaryAveragePrecision,
+    MulticlassAveragePrecision,
+    MultilabelAveragePrecision,
 )
 from cyclops.evaluate.metrics.experimental.confusion_matrix import (
     BinaryConfusionMatrix,
@@ -24,6 +30,11 @@ from cyclops.evaluate.metrics.experimental.f_score import (
 )
 from cyclops.evaluate.metrics.experimental.mae import MeanAbsoluteError
 from cyclops.evaluate.metrics.experimental.mape import MeanAbsolutePercentageError
+from cyclops.evaluate.metrics.experimental.matthews_corr_coef import (
+    BinaryMCC,
+    MulticlassMCC,
+    MultilabelMCC,
+)
 from cyclops.evaluate.metrics.experimental.metric_dict import MetricDict
 from cyclops.evaluate.metrics.experimental.mse import MeanSquaredError
 from cyclops.evaluate.metrics.experimental.negative_predictive_value import (

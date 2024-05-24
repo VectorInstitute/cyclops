@@ -1,7 +1,9 @@
 """Classes for computing the Receiver Operating Characteristic (ROC) curve."""
+
 from typing import List, Tuple, Union
 
 from cyclops.evaluate.metrics.experimental.functional.roc import (
+    ROCCurve,
     _binary_roc_compute,
     _multiclass_roc_compute,
     _multilabel_roc_compute,
@@ -15,7 +17,7 @@ from cyclops.evaluate.metrics.experimental.utils.ops import dim_zero_cat
 from cyclops.evaluate.metrics.experimental.utils.types import Array
 
 
-class BinaryROC(BinaryPrecisionRecallCurve):
+class BinaryROC(BinaryPrecisionRecallCurve, registry_key="binary_roc_curve"):
     """The receiver operating characteristic (ROC) curve.
 
     Parameters
@@ -31,6 +33,8 @@ class BinaryROC(BinaryPrecisionRecallCurve):
     ignore_index : int, optional, default=None
         The value in `target` that should be ignored when computing the ROC curve.
         If `None`, all values in `target` are used.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -40,30 +44,34 @@ class BinaryROC(BinaryPrecisionRecallCurve):
     >>> preds = anp.asarray([0.11, 0.22, 0.84, 0.73, 0.33, 0.92])
     >>> metric = BinaryROC(thresholds=None)
     >>> metric(target, preds)
-    (Array([0.        , 0.        , 0.33333334, 0.33333334,
-           0.6666667 , 0.6666667 , 1.        ], dtype=float32), Array([0.        , 0.33333334, 0.33333334, 0.6666667 ,
-           0.6666667 , 1.        , 1.        ], dtype=float32), Array([1.  , 0.92, 0.84, 0.73, 0.33, 0.22, 0.11], dtype=float64))
+    ROCCurve(fpr=Array([0.        , 0.        , 0.33333334, 0.33333334,
+           0.6666667 , 0.6666667 , 1.        ], dtype=float32), tpr=Array([0.        , 0.33333334, 0.33333334, 0.6666667 ,
+           0.6666667 , 1.        , 1.        ], dtype=float32), thresholds=Array([1.  , 0.92, 0.84, 0.73, 0.33, 0.22, 0.11], dtype=float64))
     >>> metric = BinaryROC(thresholds=5)
     >>> metric(target, preds)
-    (Array([0.        , 0.33333334, 0.33333334, 0.6666667 ,
-           1.        ], dtype=float32), Array([0.        , 0.33333334, 0.6666667 , 0.6666667 ,
-           1.        ], dtype=float32), Array([1.  , 0.75, 0.5 , 0.25, 0.  ], dtype=float32))
+    ROCCurve(fpr=Array([0.        , 0.33333334, 0.33333334, 0.6666667 ,
+           1.        ], dtype=float32), tpr=Array([0.        , 0.33333334, 0.6666667 , 0.6666667 ,
+           1.        ], dtype=float32), thresholds=Array([1.  , 0.75, 0.5 , 0.25, 0.  ], dtype=float32))
 
     """  # noqa: W505
 
     name: str = "ROC Curve"
 
-    def _compute_metric(self) -> Tuple[Array, Array, Array]:
+    def _compute_metric(self) -> ROCCurve:  # type: ignore
         state = (
             (dim_zero_cat(self.target), dim_zero_cat(self.preds))  # type: ignore[attr-defined]
             if self.thresholds is None
             else self.confmat  # type: ignore[attr-defined]
         )
-        return _binary_roc_compute(state, self.thresholds)  # type: ignore[arg-type]
+        fpr, tpr, thresholds = _binary_roc_compute(state, self.thresholds)  # type: ignore[arg-type]
+        return ROCCurve(fpr, tpr, thresholds)
 
 
-class MulticlassROC(MulticlassPrecisionRecallCurve):
-    """The reciever operator characteristics (ROC) curve.
+class MulticlassROC(
+    MulticlassPrecisionRecallCurve,
+    registry_key="multiclass_roc_curve",
+):
+    """The receiver operator characteristics (ROC) curve.
 
     Parameters
     ----------
@@ -89,6 +97,8 @@ class MulticlassROC(MulticlassPrecisionRecallCurve):
     ignore_index : int or Tuple[int], optional, default=None
         The value(s) in `target` that should be ignored when computing the ROC curve.
         If `None`, all values in `target` are used.
+    **kwargs : Any
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------
@@ -96,12 +106,14 @@ class MulticlassROC(MulticlassPrecisionRecallCurve):
     >>> from cyclops.evaluate.metrics.experimental import MulticlassROC
     >>> target = anp.asarray([0, 1, 2, 0, 1, 2])
     >>> preds = anp.asarray(
-    ...     [[0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44],
-    ...     [0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44]]
+    ...     [
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...     ]
     ... )
     >>> metric = MulticlassROC(num_classes=3, thresholds=None)
     >>> metric(target, preds)
@@ -145,8 +157,11 @@ class MulticlassROC(MulticlassPrecisionRecallCurve):
         )
 
 
-class MultilabelROC(MultilabelPrecisionRecallCurve):
-    """The reciever operator characteristics (ROC) curve.
+class MultilabelROC(
+    MultilabelPrecisionRecallCurve,
+    registry_key="multilabel_roc_curve",
+):
+    """The receiver operator characteristics (ROC) curve.
 
     Parameters
     ----------
@@ -163,6 +178,8 @@ class MultilabelROC(MultilabelPrecisionRecallCurve):
     ignore_index : int, optional, default=None
         The value in `target` that should be ignored when computing the ROC Curve.
         If `None`, all values in `target` are used.
+    **kwargs
+        Additional keyword arguments common to all metrics.
 
     Examples
     --------

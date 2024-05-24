@@ -1,6 +1,7 @@
 """Functions for computing Receiver Operating Characteristic (ROC) curves."""
+
 import warnings
-from typing import List, Literal, Optional, Tuple, Union
+from typing import List, Literal, NamedTuple, Optional, Tuple, Union
 
 import array_api_compat as apc
 
@@ -26,6 +27,14 @@ from cyclops.evaluate.metrics.experimental.utils.ops import (
     safe_divide,
 )
 from cyclops.evaluate.metrics.experimental.utils.types import Array
+
+
+class ROCCurve(NamedTuple):
+    """Named tuple to store ROC curve (FPR, TPR and thresholds)."""
+
+    fpr: Union[Array, List[Array]]
+    tpr: Union[Array, List[Array]]
+    thresholds: Union[Array, List[Array]]
 
 
 def _binary_roc_compute(
@@ -91,7 +100,7 @@ def binary_roc(
     preds: Array,
     thresholds: Optional[Union[int, List[float], Array]] = None,
     ignore_index: Optional[int] = None,
-) -> Tuple[Array, Array, Array]:
+) -> ROCCurve:
     """Compute the receiver operating characteristic (ROC) curve for binary tasks.
 
     Parameters
@@ -120,15 +129,11 @@ def binary_roc(
 
     Returns
     -------
-    fpr : Array
-        The false positive rates for all unique thresholds. The shape of the array is
-        `(num_thresholds + 1,)`.
-    tpr : Array
-        The true positive rates for all unique thresholds. The shape of the array is
-        `(num_thresholds + 1,)`.
-    thresholds : Array
-        The thresholds used for computing the ROC curve values, in descending order.
-        The shape of the array is `(num_thresholds,)`.
+    ROCCurve
+        A named tuple containing the false positive rate (FPR), true positive rate
+        (TPR) and thresholds. The FPR and TPR are arrays of shape
+        `(num_thresholds + 1,)` and the thresholds are an array of shape
+        `(num_thresholds,)`.
 
     Raises
     ------
@@ -180,7 +185,9 @@ def binary_roc(
     >>> thresholds
     Array([1.  , 0.92, 0.84, 0.73, 0.33, 0.22, 0.11], dtype=float64)
     >>> fpr, tpr, thresholds = binary_roc(
-    ...     target, preds, thresholds=5,
+    ...     target,
+    ...     preds,
+    ...     thresholds=5,
     ... )
     >>> fpr
     Array([0.        , 0.33333334, 0.33333334, 0.6666667 ,
@@ -207,7 +214,8 @@ def binary_roc(
         xp=xp,
     )
     state = _binary_precision_recall_curve_update(target, preds, thresholds, xp=xp)
-    return _binary_roc_compute(state, thresholds)
+    fpr, tpr, thresh = _binary_roc_compute(state, thresholds)
+    return ROCCurve(fpr, tpr, thresh)
 
 
 def _multiclass_roc_compute(
@@ -275,7 +283,7 @@ def multiclass_roc(
     thresholds: Optional[Union[int, List[float], Array]] = None,
     average: Optional[Literal["macro", "micro", "none"]] = None,
     ignore_index: Optional[Union[int, Tuple[int]]] = None,
-) -> Union[Tuple[Array, Array, Array], Tuple[List[Array], List[Array], List[Array]]]:
+) -> ROCCurve:
     """Compute the receiver operating characteristic (ROC) curve for multiclass tasks.
 
     Parameters
@@ -316,19 +324,13 @@ def multiclass_roc(
 
     Returns
     -------
-    fpr : Array or List[Array]
-        The false positive rates for all unique thresholds. If `thresholds` is `"none"`
-        or `None`, a list for each class is returned with 1-D Arrays of shape
-        `(num_thresholds + 1,)`. Otherwise, a 2-D Array of shape
+    ROCCurve
+        A named tuple that contains the false positive rate, true positive rate,
+        and the thresholds used for computing the ROC curve. If `thresholds` is `"none"`
+        or `None`, a list of TPRs and FPRs for each class is returned with 1-D Arrays
+        of shape `(num_thresholds + 1,)`. Otherwise, a 2-D Array of shape
         `(num_thresholds + 1, num_classes)` is returned.
-    tpr : Array or List[Array]
-        The true positive rates for all unique thresholds. If `thresholds` is `"none"`
-        or `None`, a list for each class is returned with 1-D Arrays of shape
-        `(num_thresholds + 1,)`. Otherwise, a 2-D Array of shape
-        `(num_thresholds + 1, num_classes)` is returned.
-    thresholds : Array or List[Array]
-        The thresholds used for computing the ROC curve values, in descending order.
-        If `thresholds` is `"none"` or `None`, a list for each class is returned
+        Similarly, a list of thresholds for each class is returned
         with 1-D Arrays of shape `(num_thresholds,)`. Otherwise, a 1-D Array of
         shape `(num_thresholds,)` is returned.
 
@@ -379,14 +381,20 @@ def multiclass_roc(
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([0, 1, 2, 0, 1, 2])
     >>> preds = anp.asarray(
-    ...     [[0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44],
-    ...     [0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44]])
+    ...     [
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...     ]
+    ... )
     >>> fpr, tpr, thresholds = multiclass_roc(
-    ...     target, preds, num_classes=3, thresholds=None,
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     thresholds=None,
     ... )
     >>> fpr
     [Array([0. , 0.5, 1. , 1. ], dtype=float32),
@@ -401,7 +409,10 @@ def multiclass_roc(
     Array([1.  , 0.92, 0.73, 0.22], dtype=float64),
     Array([1.  , 0.67, 0.44, 0.12], dtype=float64)]
     >>> fpr, tpr, thresholds = multiclass_roc(
-    ...     target, preds, num_classes=3, thresholds=5,
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     thresholds=5,
     ... )
     >>> fpr
     Array([[0. , 0.5, 0.5, 1. , 1. ],
@@ -444,12 +455,13 @@ def multiclass_roc(
         average,
         xp=xp,
     )
-    return _multiclass_roc_compute(
+    fpr_, tpr_, thresholds_ = _multiclass_roc_compute(
         state,
         num_classes,
         thresholds=thresholds,
         average=average,
     )
+    return ROCCurve(fpr_, tpr_, thresholds_)
 
 
 def _multilabel_roc_compute(
@@ -493,7 +505,7 @@ def multilabel_roc(
     num_labels: int,
     thresholds: Optional[Union[int, List[float], Array]] = None,
     ignore_index: Optional[int] = None,
-) -> Union[Tuple[Array, Array, Array], Tuple[List[Array], List[Array], List[Array]]]:
+) -> ROCCurve:
     """Compute the receiver operating characteristic (ROC) curve for multilabel tasks.
 
     Parameters
@@ -524,21 +536,15 @@ def multilabel_roc(
 
     Returns
     -------
-    fpr : Array or List[Array]
-        The false positive rates for all unique thresholds. If `thresholds` is `None`,
-        a list for each label is returned with 1-D Arrays of shape
-        `(num_thresholds + 1,)`. Otherwise, a 2-D Array of shape
-        `(num_thresholds + 1, num_labels)` is returned.
-    tpr : Array or List[Array]
-        The true positive rates for all unique thresholds. If `thresholds` is `None`,
-        a list for each label is returned with 1-D Arrays of shape
-        `(num_thresholds + 1,)`. Otherwise, a 2-D Array of shape
-        `(num_thresholds + 1, num_labels)` is returned.
-    thresholds : Array or List[Array]
-        The thresholds used for computing the ROC curve values, in
-        descending order. If `thresholds` is `None`, a list for each label is
-        returned with 1-D Arrays of shape `(num_thresholds,)`. Otherwise, a 1-D
-        Array of shape `(num_thresholds,)` is returned.
+    ROCCurve
+        A named tuple that contains the false positive rate, true positive rate,
+        and the thresholds used for computing the ROC curve. If `thresholds` is `"none"`
+        or `None`, a list of TPRs and FPRs for each class is returned with 1-D Arrays
+        of shape `(num_thresholds + 1,)`. Otherwise, a 2-D Array of shape
+        `(num_thresholds + 1, num_classes)` is returned.
+        Similarly, a list of thresholds for each class is returned
+        with 1-D Arrays of shape `(num_thresholds,)`. Otherwise, a 1-D Array of
+        shape `(num_thresholds,)` is returned.
 
     Raises
     ------
@@ -587,7 +593,10 @@ def multilabel_roc(
     ...     [[0.11, 0.22, 0.67], [0.84, 0.73, 0.12], [0.33, 0.92, 0.44]],
     ... )
     >>> fpr, tpr, thresholds = multilabel_roc(
-    ...     target, preds, num_labels=3, thresholds=None,
+    ...     target,
+    ...     preds,
+    ...     num_labels=3,
+    ...     thresholds=None,
     ... )
     >>> fpr
     [Array([0. , 0. , 0.5, 1. ], dtype=float32),
@@ -602,7 +611,10 @@ def multilabel_roc(
     Array([1.  , 0.92, 0.73, 0.22], dtype=float64),
     Array([1.  , 0.67, 0.44, 0.12], dtype=float64)]
     >>> fpr, tpr, thresholds = multilabel_roc(
-    ...     target, preds, num_labels=3, thresholds=5,
+    ...     target,
+    ...     preds,
+    ...     num_labels=3,
+    ...     thresholds=5,
     ... )
     >>> fpr
     Array([[0. , 0. , 0. , 0.5, 1. ],
@@ -643,9 +655,10 @@ def multilabel_roc(
         thresholds,
         xp=xp,
     )
-    return _multilabel_roc_compute(
+    fpr_, tpr_, thresholds_ = _multilabel_roc_compute(
         state,
         num_labels,
         thresholds,
         ignore_index,
     )
+    return ROCCurve(fpr_, tpr_, thresholds_)

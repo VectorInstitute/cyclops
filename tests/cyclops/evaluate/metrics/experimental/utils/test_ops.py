@@ -1,4 +1,5 @@
 """Test utility functions for performing operations on Arrays."""
+
 from collections import defaultdict, namedtuple
 
 import numpy as np
@@ -411,7 +412,7 @@ def test_dim_zero_max():
     with pytest.raises(ValueError):
         dim_zero_max(anp.asarray([]))
 
-    with pytest.raises(AttributeError):
+    with pytest.raises(TypeError):
         dim_zero_max([array1, array2])
 
     with pytest.raises(TypeError):
@@ -447,7 +448,7 @@ def test_dim_zero_mean():
     result4 = dim_zero_mean(anp.asarray([]))
     np.testing.assert_array_equal(result4, anp.asarray(anp.nan))
 
-    with pytest.raises(AttributeError):
+    with pytest.raises(TypeError):
         dim_zero_mean([array1, array2])
 
     with pytest.raises(TypeError):
@@ -477,7 +478,7 @@ def test_dim_zero_min():
     with pytest.raises(ValueError):
         dim_zero_min(anp.asarray([]))
 
-    with pytest.raises(AttributeError):
+    with pytest.raises(TypeError):
         dim_zero_min([array1, array2])
 
     with pytest.raises(TypeError):
@@ -506,7 +507,7 @@ def test_dim_zero_sum():
     result4 = dim_zero_sum(anp.asarray([]))
     np.testing.assert_array_equal(result4, anp.asarray(0))
 
-    with pytest.raises(AttributeError):
+    with pytest.raises(TypeError):
         dim_zero_sum([array1, array2])
 
     with pytest.raises(TypeError):

@@ -1,4 +1,5 @@
 """Methods for computing the negative predictive value for classification tasks."""
+
 from typing import Literal, Optional, Tuple, Union
 
 import array_api_compat as apc
@@ -238,9 +239,7 @@ def multiclass_npv(
 
     Examples
     --------
-    >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...    multiclass_npv
-    ... )
+    >>> from cyclops.evaluate.metrics.experimental.functional import multiclass_npv
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([2, 1, 0, 0])
     >>> preds = anp.asarray([2, 1, 0, 1])
@@ -263,7 +262,11 @@ def multiclass_npv(
     >>> multiclass_npv(target, preds, num_classes=3, ignore_index=0)
     Array(1., dtype=float32)
     >>> multiclass_npv(
-    ...     target, preds, num_classes=3, average=None, ignore_index=(1, 2),
+    ...     target,
+    ...     preds,
+    ...     num_classes=3,
+    ...     average=None,
+    ...     ignore_index=(1, 2),
     ... )
     Array([0., 1., 1.], dtype=float32)
 
@@ -391,9 +394,7 @@ def multilabel_npv(
 
     Examples
     --------
-    >>> from cyclops.evaluate.metrics.experimental.functional import (
-    ...    multilabel_npv
-    ... )
+    >>> from cyclops.evaluate.metrics.experimental.functional import multilabel_npv
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([[0, 1, 0], [1, 0, 1]])
     >>> preds = anp.asarray([[0, 0, 1], [1, 0, 1]])
@@ -414,7 +415,11 @@ def multilabel_npv(
     >>> multilabel_npv(target, preds, num_labels=4, average="weighted")
     Array(0.1, dtype=float32)
     >>> multilabel_npv(
-    ...    target, preds, num_labels=4, average=None, ignore_index=1,
+    ...     target,
+    ...     preds,
+    ...     num_labels=4,
+    ...     average=None,
+    ...     ignore_index=1,
     ... )
     Array([0., 0., 1., 0.], dtype=float32)
 

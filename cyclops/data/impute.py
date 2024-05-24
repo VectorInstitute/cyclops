@@ -533,7 +533,7 @@ class AggregatedImputer:
 
         Inter imputation describes the imputation occurring between timesteps, or
         buckets, where for "missing" timesteps, it fills in information. A "missing"
-        timestep is one with no occurences, or where all the occurences were null.
+        timestep is one with no occurrences, or where all the occurrences were null.
 
         Parameters
         ----------
@@ -580,7 +580,7 @@ class AggregatedImputer:
 
 
 def numpy_2d_ffill(arr: np.typing.NDArray[np.float64]) -> Any:
-    """Foward fill a 2D array in a row-wise fashion, i.e., filling each row separately.
+    """Forward fill a 2D array in a row-wise fashion, i.e., filling each row separately.
 
     Parameters
     ----------

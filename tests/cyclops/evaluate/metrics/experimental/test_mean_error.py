@@ -1,4 +1,5 @@
 """Tests for mean error metrics."""
+
 from functools import partial
 
 import array_api_compat.torch
@@ -6,7 +7,7 @@ import numpy.array_api as anp
 import pytest
 import torch
 import torch.utils.dlpack
-from array_api_compat.common._helpers import _is_torch_array
+from array_api_compat.common._helpers import is_torch_array
 from torchmetrics.functional import (
     mean_absolute_error as tm_mean_absolute_error,
 )
@@ -110,7 +111,7 @@ class TestMeanError(MetricTester):
         """Test class implementation of metric."""
         target, preds = inputs
         device = "cpu"
-        if _is_torch_array(target) and torch.cuda.is_available():
+        if is_torch_array(target) and torch.cuda.is_available():
             device = "cuda"
 
         self.run_metric_class_implementation_test(
@@ -124,7 +125,7 @@ class TestMeanError(MetricTester):
             ),
             metric_args=metric_args,
             device=device,
-            use_device_for_ref=_is_torch_array(target),
+            use_device_for_ref=is_torch_array(target),
         )
 
     def test_mean_error_functional(
@@ -138,7 +139,7 @@ class TestMeanError(MetricTester):
         """Test functional implementation of metric."""
         target, preds = inputs
         device = "cpu"
-        if _is_torch_array(target) and torch.cuda.is_available():
+        if is_torch_array(target) and torch.cuda.is_available():
             device = "cuda"
 
         self.run_metric_function_implementation_test(
@@ -152,7 +153,7 @@ class TestMeanError(MetricTester):
             ),
             metric_args=metric_args,
             device=device,
-            use_device_for_ref=_is_torch_array(target),
+            use_device_for_ref=is_torch_array(target),
         )
 
 

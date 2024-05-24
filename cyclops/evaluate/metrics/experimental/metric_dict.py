@@ -1,4 +1,5 @@
 """Collection of metrics."""
+
 import hashlib
 import itertools
 import json
@@ -37,6 +38,8 @@ else:
         attribute="Metric",
         error="ignore",
     )
+    if TorchMetric is None:
+        TorchMetric = type(None)
 
 
 LOGGER = logging.getLogger(__name__)
@@ -109,10 +112,10 @@ class MetricDict(UserDict[str, Union[Metric, TorchMetric]]):
     --------
     >>> from cyclops.evaluate.metrics.experimental import MetricDict
     >>> from cyclops.evaluate.metrics.experimental import (
-    ...    BinaryAccuracy,
-    ...    BinaryF1Score,
-    ...    BinaryPrecision,
-    ...    BinaryRecall,
+    ...     BinaryAccuracy,
+    ...     BinaryF1Score,
+    ...     BinaryPrecision,
+    ...     BinaryRecall,
     ... )
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([0, 1, 0, 1])
@@ -358,7 +361,7 @@ class MetricDict(UserDict[str, Union[Metric, TorchMetric]]):
             for metric_names in self._metric_groups.values():
                 base_metric = self.data[metric_names[0]]
                 for metric_name in metric_names[1:]:
-                    for state in self.data[metric_name]._defaults:
+                    for state in base_metric._defaults:
                         base_metric_state = getattr(base_metric, state)
                         setattr(
                             self.data[metric_name],

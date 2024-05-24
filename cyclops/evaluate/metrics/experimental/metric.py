@@ -1,4 +1,5 @@
 """Base class for all metrics."""
+
 import inspect
 import logging
 import warnings
@@ -430,6 +431,7 @@ class Metric(ABC):
                     "object or a list of array API objects. But got "
                     f"`{type(default_value)} instead.",
                 )
+        self._defaults = {}
 
         self._update_count = 0
         self._computed = None
@@ -712,5 +714,7 @@ class OperatorMetric(Metric):
 
     def __repr__(self) -> str:
         """Return a string representation of the object."""
-        _op_metrics = f"(\n  {self._op}(\n    {self.metric_a!r},\n    {self.metric_b!r}\n  )\n)"  # noqa: E501
+        _op_metrics = (
+            f"(\n  {self._op}(\n    {self.metric_a!r},\n    {self.metric_b!r}\n  )\n)"  # noqa: E501
+        )
         return self.__class__.__name__ + _op_metrics

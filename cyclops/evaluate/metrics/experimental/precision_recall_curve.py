@@ -1,10 +1,12 @@
 """Classes for computing the precision-recall curve."""
+
 from types import ModuleType
-from typing import List, Literal, Optional, Tuple, Union
+from typing import Any, List, Literal, Optional, Tuple, Union
 
 import array_api_compat as apc
 
 from cyclops.evaluate.metrics.experimental.functional.precision_recall_curve import (
+    PRCurve,
     _binary_precision_recall_curve_compute,
     _binary_precision_recall_curve_format_arrays,
     _binary_precision_recall_curve_update,
@@ -43,6 +45,8 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
     ignore_index : int, optional, default=None
         The value in `target` that should be ignored when computing the precision
         and recall. If `None`, all values in `target` are used.
+    **kwargs : Any
+        Additional keyword arguments to pass to the `Metric` base class.
 
     Examples
     --------
@@ -52,14 +56,14 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
     >>> preds = anp.asarray([0.11, 0.22, 0.84, 0.73, 0.33, 0.92])
     >>> metric = BinaryPrecisionRecallCurve(thresholds=None)
     >>> metric(target, preds)
-    (Array([0.5      , 0.6      , 0.5      , 0.6666667,
-           0.5      , 1.       , 1.       ], dtype=float32), Array([1.        , 1.        , 0.6666667 , 0.6666667 ,
-           0.33333334, 0.33333334, 0.        ], dtype=float32), Array([0.11, 0.22, 0.33, 0.73, 0.84, 0.92], dtype=float64))
+    PRCurve(precision=Array([0.5      , 0.6      , 0.5      , 0.6666667,
+           0.5      , 1.       , 1.       ], dtype=float32), recall=Array([1.        , 1.        , 0.6666667 , 0.6666667 ,
+           0.33333334, 0.33333334, 0.        ], dtype=float32), thresholds=Array([0.11, 0.22, 0.33, 0.73, 0.84, 0.92], dtype=float64))
     >>> metric = BinaryPrecisionRecallCurve(thresholds=5)
     >>> metric(target, preds)
-    (Array([0.5      , 0.5      , 0.6666667, 0.5      ,
-           0.       , 1.       ], dtype=float32), Array([1.        , 0.6666667 , 0.6666667 , 0.33333334,
-           0.        , 0.        ], dtype=float32), Array([0.  , 0.25, 0.5 , 0.75, 1.  ], dtype=float32))
+    PRCurve(precision=Array([0.5      , 0.5      , 0.6666667, 0.5      ,
+           0.       , 1.       ], dtype=float32), recall=Array([1.        , 0.6666667 , 0.6666667 , 0.33333334,
+           0.        , 0.        ], dtype=float32), thresholds=Array([0.  , 0.25, 0.5 , 0.75, 1.  ], dtype=float32))
 
     """  # noqa: W505
 
@@ -69,9 +73,10 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
         self,
         thresholds: Optional[Union[int, List[float], Array]] = None,
         ignore_index: Optional[int] = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize a `BinaryPrecisionRecallCurve` instance."""
-        super().__init__()
+        super().__init__(**kwargs)
         _binary_precision_recall_curve_validate_args(thresholds, ignore_index)
         self.ignore_index = ignore_index
         self.thresholds = thresholds
@@ -97,7 +102,11 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
             )
 
             def default(xp: ModuleType) -> Array:
-                return xp.zeros((len_thresholds, 2, 2), dtype=xp.int32, device=self.device)  # type: ignore[no-any-return]
+                return xp.zeros(  # type: ignore
+                    (len_thresholds, 2, 2),
+                    dtype=xp.int32,
+                    device=self.device,
+                )
 
             self.add_state_default_factory(
                 "confmat",
@@ -133,14 +142,18 @@ class BinaryPrecisionRecallCurve(Metric, registry_key="binary_precision_recall_c
             self.target.append(state[0])  # type: ignore[attr-defined]
             self.preds.append(state[1])  # type: ignore[attr-defined]
 
-    def _compute_metric(self) -> Tuple[Array, Array, Array]:
+    def _compute_metric(self) -> PRCurve:
         """Compute the metric."""
         state = (
             (dim_zero_cat(self.target), dim_zero_cat(self.preds))  # type: ignore[attr-defined]
             if self.thresholds is None
             else self.confmat  # type: ignore[attr-defined]
         )
-        return _binary_precision_recall_curve_compute(state, self.thresholds)  # type: ignore[arg-type]
+        precision, recall, thresholds = _binary_precision_recall_curve_compute(
+            state,
+            self.thresholds,  # type: ignore
+        )
+        return PRCurve(precision, recall, thresholds)
 
 
 class MulticlassPrecisionRecallCurve(
@@ -173,6 +186,8 @@ class MulticlassPrecisionRecallCurve(
     ignore_index : int or Tuple[int], optional, default=None
         The value(s) in `target` that should be ignored when computing the
         precision and recall. If `None`, all values in `target` are used.
+    **kwargs : Any
+        Additional keyword arguments to pass to the `Metric` base class.
 
     Examples
     --------
@@ -180,12 +195,14 @@ class MulticlassPrecisionRecallCurve(
     >>> from cyclops.evaluate.metrics.experimental import MulticlassPrecisionRecallCurve
     >>> target = anp.asarray([0, 1, 2, 0, 1, 2])
     >>> preds = anp.asarray(
-    ...     [[0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44],
-    ...     [0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44]]
+    ...     [
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...     ]
     ... )
     >>> metric = MulticlassPrecisionRecallCurve(num_classes=3, thresholds=None)
     >>> metric(target, preds)
@@ -219,9 +236,10 @@ class MulticlassPrecisionRecallCurve(
         thresholds: Optional[Union[int, List[float], Array]] = None,
         average: Optional[Literal["macro", "micro", "none"]] = None,
         ignore_index: Optional[Union[int, Tuple[int]]] = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize a `MulticlassPrecisionRecallCurve` instance."""
-        super().__init__()
+        super().__init__(**kwargs)
         _multiclass_precision_recall_curve_validate_args(
             num_classes,
             thresholds=thresholds,
@@ -345,6 +363,8 @@ class MultilabelPrecisionRecallCurve(
     ignore_index : int, optional, default=None
         The value in `target` that should be ignored when computing the precision
         and recall. If `None`, all values in `target` are used.
+    **kwargs : Any
+        Additional keyword arguments to pass to the `Metric` base class.
 
     Examples
     --------
@@ -385,9 +405,10 @@ class MultilabelPrecisionRecallCurve(
         num_labels: int,
         thresholds: Optional[Union[int, List[float], Array]] = None,
         ignore_index: Optional[int] = None,
+        **kwargs: Any,
     ) -> None:
         """Initialize a `MultilabelPrecisionRecallCurve` instance."""
-        super().__init__()
+        super().__init__(**kwargs)
         _multilabel_precision_recall_curve_validate_args(
             num_labels,
             thresholds=thresholds,

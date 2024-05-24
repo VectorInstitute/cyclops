@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0  # Use the ref you want to point at
+    rev: v4.6.0  # Use the ref you want to point at
     hooks:
     - id: trailing-whitespace
     - id: check-ast
@@ -15,26 +15,23 @@ repos:
     - id: check-yaml
     - id: check-toml
 
-  - repo: https://github.com/psf/black
-    rev: 23.7.0
-    hooks:
-    - id: black
-
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.1.7'
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: 'v0.4.4'
     hooks:
     - id: ruff
       args: [--fix, --exit-non-zero-on-fix]
       types_or: [python, jupyter]
+    - id: ruff-format
+      types_or: [python, jupyter]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.7.1
+    rev: v1.10.0
     hooks:
     - id: mypy
       entry: python3 -m mypy --config-file pyproject.toml
       language: system
       types: [python]
-      exclude: "use_cases|tests|cyclops/(models|monitor|report/plot)"
+      exclude: "tests|cyclops/(models|monitor|report/plot)"
 
   - repo: local
     hooks:
@@ -42,10 +39,9 @@ repos:
       name: nbstripout
       language: system
       entry: python3 -m nbstripout
-      exclude: ^docs/source/tutorials/gemini/.*\.ipynb$
 
   - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.7.0
+    rev: 1.8.5
     hooks:
     - id: nbqa-black
     - id: nbqa-ruff
@@ -63,7 +59,19 @@ repos:
     hooks:
     - id: pytest
       name: pytest
-      entry: python3 -m pytest -m "not integration_test"
+      entry: python3 -m pytest -m "not integration_test" -n auto --dist loadscope
       language: system
       pass_filenames: false
       always_run: true
+
+ci:
+    autofix_commit_msg: |
+        [pre-commit.ci] Add auto fixes from pre-commit.com hooks
+
+        for more information, see https://pre-commit.ci
+    autofix_prs: true
+    autoupdate_branch: ''
+    autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+    autoupdate_schedule: weekly
+    skip: [pytest,doctest,nbstripout,mypy]
+    submodules: false

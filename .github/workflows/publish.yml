@@ -12,16 +12,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libcurl4-openssl-dev libssl-dev
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4.1.6
       - name: Install poetry
         run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
-      - uses: actions/setup-python@v4.7.1
+      - uses: actions/setup-python@v5.1.0
         with:
           python-version: '3.10'
       - name: Build package
         run: poetry build
       - name: Publish package
-        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+        uses: pypa/gh-action-pypi-publish@81e9d935c883d0b210363ab89cf05f3894778450
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}

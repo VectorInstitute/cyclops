@@ -12,6 +12,9 @@ on:
       - .github/workflows/integration_tests.yml
       - '**.py'
       - '**.ipynb'
+      - '**.html'
+      - '**.jinja'
+      - '**.js'
       - poetry.lock
       - pyproject.toml
       - '**.rst'
@@ -28,6 +31,9 @@ on:
       - .github/workflows/integration_tests.yml
       - '**.py'
       - '**.ipynb'
+      - '**.html'
+      - '**.jinja'
+      - '**.js'
       - poetry.lock
       - pyproject.toml
       - '**.rst'
@@ -36,12 +42,12 @@ on:
 
 jobs:
   integration-tests:
-    runs-on: [self-hosted, gpu, db]
+    runs-on: [self-hosted, gpu, db, cyclops]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4.1.6
       - name: Install poetry
-        run: pip install poetry
-      - uses: actions/setup-python@v4.7.1
+        run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
+      - uses: actions/setup-python@v5.1.0
         with:
           python-version: '3.10'
       - name: Install dependencies and check code
@@ -52,11 +58,12 @@ jobs:
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
           env MPICC=/opt/openmpi-4.1.5/bin/mpicc poetry install --with docs,dev,test --all-extras
-          coverage run -m pytest -m integration_test && coverage xml && coverage report -m
+          mpirun -n 2 python -m pytest --only-mpi
+          pytest -m integration_test --cov-report term --cov-report xml:./coverage.xml --cov=cyclops -n auto --dist loadscope
       - name: Upload coverage to Codecov
-        uses: Wandalen/wretry.action@v1.0.36
+        uses: Wandalen/wretry.action@v3.5.0
         with:
-          action: codecov/codecov-action@v3.1.3
+          action: codecov/codecov-action@v4.0.0
           with: |
             token: ${{ secrets.CODECOV_TOKEN }}
             file: ./coverage.xml

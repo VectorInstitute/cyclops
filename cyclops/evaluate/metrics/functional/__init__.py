@@ -37,12 +37,14 @@ from cyclops.evaluate.metrics.functional.precision_recall import (  # noqa: F401
     recall,
 )
 from cyclops.evaluate.metrics.functional.precision_recall_curve import (  # noqa: F401
+    PRCurve,
     binary_precision_recall_curve,
     multiclass_precision_recall_curve,
     multilabel_precision_recall_curve,
     precision_recall_curve,
 )
 from cyclops.evaluate.metrics.functional.roc import (  # noqa: F401
+    ROCCurve,
     binary_roc_curve,
     multiclass_roc_curve,
     multilabel_roc_curve,

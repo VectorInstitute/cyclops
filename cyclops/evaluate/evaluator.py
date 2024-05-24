@@ -3,21 +3,24 @@
 import logging
 import warnings
 from dataclasses import asdict
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Literal, Optional, Sequence, Union
 
 from datasets import Dataset, DatasetDict, config, load_dataset
 from datasets.splits import Split
 
 from cyclops.data.slicer import SliceSpec
-from cyclops.data.utils import (
-    check_required_columns,
-    get_columns_as_numpy_array,
-    set_decode,
-)
+from cyclops.data.utils import set_decode
 from cyclops.evaluate.fairness.config import FairnessConfig
 from cyclops.evaluate.fairness.evaluator import evaluate_fairness
-from cyclops.evaluate.metrics.metric import Metric, MetricCollection
-from cyclops.evaluate.utils import _format_column_names, choose_split
+from cyclops.evaluate.metrics.experimental.metric import Metric
+from cyclops.evaluate.metrics.experimental.metric_dict import MetricDict
+from cyclops.evaluate.metrics.experimental.utils.types import Array
+from cyclops.evaluate.utils import (
+    _format_column_names,
+    check_required_columns,
+    choose_split,
+    get_columns_as_array,
+)
 from cyclops.utils.log import setup_logging
 
 
@@ -27,7 +30,7 @@ setup_logging(print_level="WARN", logger=LOGGER)
 
 def evaluate(
     dataset: Union[str, Dataset, DatasetDict],
-    metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection],
+    metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], MetricDict],
     target_columns: Union[str, List[str]],
     prediction_columns: Union[str, List[str]],
     ignore_columns: Optional[Union[str, List[str]]] = None,
@@ -38,6 +41,7 @@ def evaluate(
     fairness_config: Optional[FairnessConfig] = None,
     override_fairness_metrics: bool = True,
     load_dataset_kwargs: Optional[Dict[str, Any]] = None,
+    array_lib: Literal["numpy", "torch", "cupy"] = "numpy",
 ) -> Dict[str, Any]:
     """Evaluate one or more models on a dataset using one or more metrics.
 
@@ -47,7 +51,7 @@ def evaluate(
         The dataset to evaluate on. If a string, the dataset will be loaded
         using `datasets.load_dataset`. If `DatasetDict`, the `split` argument
         must be specified.
-    metrics : Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection]
+    metrics : Union[Metric, Sequence[Metric], Dict[str, Metric], MetricDict]
         The metrics to compute.
     target_columns : Union[str, List[str]]
         The name of the column(s) containing the target values. A string value
@@ -95,6 +99,9 @@ def evaluate(
     load_dataset_kwargs : Dict[str, Any], optional
         Keyword arguments to pass to `datasets.load_dataset`. Only used if
         `dataset` is a string.
+    array_lib : {"numpy", "torch", "cupy"}, default="numpy"
+        The array library to use for the metric computation. The metric results
+        will be returned in the format of `array_lib`.
 
     Returns
     -------
@@ -129,6 +136,7 @@ def evaluate(
         ignore_columns=ignore_columns,
         batch_size=batch_size,
         raise_on_empty_slice=raise_on_empty_slice,
+        array_lib=array_lib,
     )
 
     results = {}
@@ -144,7 +152,9 @@ def evaluate(
         fairness_config.batch_size = batch_size
         fairness_config.remove_columns = ignore_columns
 
-        fairness_results = evaluate_fairness(**asdict(fairness_config))
+        fairness_results = evaluate_fairness(
+            **asdict(fairness_config), array_lib=array_lib
+        )
         results["fairness"] = fairness_results
 
     return results
@@ -202,34 +212,35 @@ def _load_data(
 
 
 def _prepare_metrics(
-    metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], MetricCollection],
-) -> MetricCollection:
+    metrics: Union[Metric, Sequence[Metric], Dict[str, Metric], MetricDict],
+) -> MetricDict:
     """Prepare metrics for evaluation."""
-    # TODO: wrap in BootstrappedMetric if computing confidence intervals
+    # TODO [fcogidi]: wrap in BootstrappedMetric if computing confidence intervals
     if isinstance(metrics, (Metric, Sequence, Dict)) and not isinstance(
         metrics,
-        MetricCollection,
+        MetricDict,
     ):
-        return MetricCollection(metrics)
-    if isinstance(metrics, MetricCollection):
+        return MetricDict(metrics)  # type: ignore[arg-type]
+    if isinstance(metrics, MetricDict):
         return metrics
 
     raise TypeError(
         f"Invalid type for `metrics`: {type(metrics)}. "
         "Expected one of: Metric, Sequence[Metric], Dict[str, Metric], "
-        "MetricCollection.",
+        "MetricDict.",
     )
 
 
 def _compute_metrics(
     dataset: Dataset,
-    metrics: MetricCollection,
+    metrics: MetricDict,
     slice_spec: SliceSpec,
     target_columns: Union[str, List[str]],
     prediction_columns: Union[str, List[str]],
     ignore_columns: Optional[Union[str, List[str]]] = None,
     batch_size: Optional[int] = config.DEFAULT_MAX_BATCH_SIZE,
     raise_on_empty_slice: bool = False,
+    array_lib: Literal["numpy", "torch", "cupy"] = "numpy",
 ) -> Dict[str, Dict[str, Any]]:
     """Compute metrics for a dataset."""
     target_columns = _format_column_names(target_columns)
@@ -238,11 +249,7 @@ def _compute_metrics(
     # temporarily stop decoding features to save memory
     set_decode(dataset, False, exclude=target_columns + prediction_columns)
 
-    with dataset.formatted_as(
-        "numpy",
-        columns=target_columns + prediction_columns,
-        output_all_columns=True,
-    ):
+    with dataset.formatted_as("arrow", columns=target_columns + prediction_columns):
         results: Dict[str, Dict[str, Any]] = {}
         for slice_name, slice_fn in slice_spec.slices():
             sliced_dataset = dataset.remove_columns(ignore_columns or []).filter(
@@ -266,37 +273,40 @@ def _compute_metrics(
                         RuntimeWarning,
                         stacklevel=1,
                     )
-                    metric_output = {
-                        metric_name: float("NaN") for metric_name in metrics
+                    metric_output: Dict[str, Array] = {
+                        metric_name: float("NaN")  # type: ignore
+                        for metric_name in metrics  # type: ignore
                     }
                 elif (
                     batch_size is None or batch_size < 0
                 ):  # dataset.iter does not support getting all batches at once
-                    targets = get_columns_as_numpy_array(
+                    targets = get_columns_as_array(
                         dataset=sliced_dataset,
                         columns=target_columns,
+                        array_lib=array_lib,
                     )
-                    predictions = get_columns_as_numpy_array(
+                    predictions = get_columns_as_array(
                         dataset=sliced_dataset,
                         columns=prediction_column,
+                        array_lib=array_lib,
                     )
                     metric_output = metrics(targets, predictions)
                 else:
                     for batch in sliced_dataset.iter(batch_size=batch_size):
-                        targets = get_columns_as_numpy_array(
-                            dataset=batch,
-                            columns=target_columns,
+                        targets = get_columns_as_array(
+                            dataset=batch, columns=target_columns, array_lib=array_lib
                         )
-                        predictions = get_columns_as_numpy_array(
+                        predictions = get_columns_as_array(
                             dataset=batch,
                             columns=prediction_column,
+                            array_lib=array_lib,
                         )
 
                         # update the metric state
-                        metrics.update_state(targets, predictions)
+                        metrics.update(targets, predictions)
 
                     metric_output = metrics.compute()
-                    metrics.reset_state()
+                metrics.reset()
 
                 model_name: str = "model_for_%s" % prediction_column
                 results.setdefault(model_name, {})

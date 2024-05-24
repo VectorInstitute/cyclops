@@ -1,4 +1,7 @@
 """Mean Absolute Error metric."""
+
+from typing import Any
+
 from cyclops.evaluate.metrics.experimental.functional.mae import (
     _mean_absolute_error_compute,
     _mean_absolute_error_update,
@@ -10,12 +13,17 @@ from cyclops.evaluate.metrics.experimental.utils.types import Array
 class MeanAbsoluteError(Metric):
     """Mean Absolute Error.
 
+    Parameters
+    ----------
+    **kwargs : Any
+        Keyword arguments to pass to the `Metric` base class.
+
     Examples
     --------
     >>> import numpy.array_api as anp
     >>> from cyclops.evaluate.metrics.experimental import MeanAbsoluteError
-    >>> target = anp.asarray([0.009, 1.05, 2., 3.])
-    >>> preds = anp.asarray([0., 1., 2., 2.])
+    >>> target = anp.asarray([0.009, 1.05, 2.0, 3.0])
+    >>> preds = anp.asarray([0.0, 1.0, 2.0, 2.0])
     >>> metric = MeanAbsoluteError()
     >>> metric(target, preds)
     Array(0.26475, dtype=float32)
@@ -24,8 +32,8 @@ class MeanAbsoluteError(Metric):
 
     name: str = "Mean Absolute Error"
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
         self.add_state_default_factory(
             "sum_abs_error",
             lambda xp: xp.asarray(0.0, dtype=xp.float32, device=self.device),  # type: ignore

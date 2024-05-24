@@ -33,7 +33,6 @@ from cyclops.report.utils import (
     get_slices,
     get_thresholds,
     get_timestamps,
-    get_trends,
     sweep_graphics,
     sweep_metric_cards,
     sweep_metrics,
@@ -362,14 +361,6 @@ def test_get_thresholds(model_card):
     assert len(thresholds_dict.values()) == 2
 
 
-def test_get_trends(model_card):
-    """Test get_trends function."""
-    trends = get_trends(model_card)
-    # read trends from json to dict
-    trends_dict = json.loads(trends)
-    assert len(trends_dict.values()) == 2
-
-
 def test_get_passed(model_card):
     """Test get_passed function."""
     passed = get_passed(model_card)
@@ -396,6 +387,66 @@ def test_create_metric_cards(model_card):
         timestamp=timestamp,
     )[-1]
     assert len(metric_cards) == 2
+    current_metrics = [
+        PerformanceMetric(
+            type="BinaryAccuracy",
+            value=0.85,
+            slice="overall",
+            description="Accuracy of binary classification",
+            graphics=None,
+            tests=None,
+        ),
+        PerformanceMetric(
+            type="MulticlassPrecision",
+            value=[0.9, 0.8, 0.7],
+            slice="class:0",
+            description="Precision of multiclass classification",
+            graphics=None,
+            tests=None,
+        ),
+    ]
+    timestamp = "2022-01-01"
+    last_metric_cards = [
+        MetricCard(
+            name="BinaryAccuracy",
+            type="BinaryAccuracy",
+            slice="overall",
+            tooltip="Accuracy of binary classification",
+            value=0.8,
+            threshold=0.9,
+            passed=False,
+            history=[0.75, 0.8, 0.85],
+            timestamps=["2021-01-01", "2021-02-01", "2021-03-01"],
+        ),
+        MetricCard(
+            name="MulticlassPrecision",
+            type="MulticlassPrecision",
+            slice="class:0",
+            tooltip="Precision of multiclass classification",
+            value=0.85,
+            threshold=0.9,
+            passed=True,
+            history=[0.8, 0.85, 0.9],
+            timestamps=["2021-01-01", "2021-02-01", "2021-03-01"],
+        ),
+    ]
+    metrics, tooltips, slices, values, metric_cards = create_metric_cards(
+        current_metrics=current_metrics,
+        timestamp=timestamp,
+        last_metric_cards=last_metric_cards,
+    )
+    assert metrics == ["Accuracy", "Precision"]
+    assert tooltips == [
+        "Accuracy of binary classification",
+        "Precision of multiclass classification",
+    ]
+    assert slices == ["class"]
+    assert values == [["0"]]
+    assert len(metric_cards) == 2
+    assert isinstance(metric_cards[0], MetricCard)
+    assert isinstance(metric_cards[1], MetricCard)
+    assert metric_cards[0].name == "Accuracy"
+    assert metric_cards[1].name == "Precision"
 
 
 def test_create_metric_card_plot():

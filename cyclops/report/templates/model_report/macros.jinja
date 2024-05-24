@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+
+{% macro render_if_exist_list(values) %}
+<div>
+  {% if values.__class__.__name__ == "User"%}
+  <li>
+    {% for name, value in values %}
+      {% if value %}
+          {{ value }}
+      {% endif %}
+    {% endfor %}
+  </li>
+  {% elif values.__class__.__name__ == "Citation"%}
+  <li>
+    {# {% for name, value in values %} #}
+      {# {% if value %} #}
+        {{ values.content | safe }}
+      {# {% endif %} #}
+    {# {% endfor %} #}
+  </li>
+  {% elif values.__class__.__name__ == "Graphic"%}
+    {{ render_graphic(values) }}
+  {% elif values.__class__.__name__ == "GraphicsCollection" %}
+    {{ render_graphics(values.collection) }}
+  {% else %}
+    {% if (values is string) or (values|int != 0) or (values|float != 0) %}
+    <li>
+      {{ values }}
+    </li>
+    {% else %}
+    <li>
+      {% for name, value in values %}
+        {% if value %}
+          {% if value.__class__.__name__ == "GraphicsCollection" %}
+            {{ render_graphics(value.collection) }}
+          {% elif (name == "description")%}
+            {{ value }}
+          {% elif (name == "link")%}
+            <a href="{{ value }}">{{ value }}</a>
+          {% else %}
+            {% if "str" in name%}
+              {{ value }}
+            {% else %}
+              <b>{{ name|regex_replace('_+', ' ')|title }}:</b> {{ value }}
+            {% endif %}
+          {% endif %}
+          <br>
+        {% endif %}
+      {% endfor %}
+    </li>
+    {% endif %}
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{% macro render_metric_table(comp) %}
+  <table class="styled-table">
+    <tr><th>Metric</th><th>Slice</th><th>Current Value</th><th>Threshold</th><th>Previous Value</th></tr>
+    {% for mp, mb in comp.new_metrics_failed_periodic|zip(comp.new_metrics_failed_baseline) %}
+    {% if mp.value != 0 %}
+      <tr>
+        <td style="padding: 5px; text-align: center;">{{ mp.type }}</td>
+        <td style="padding: 5px; text-align: center;">{{ mp.slice }}</td>
+          <td style="padding: 5px; text-align: center;" id="{{ mp.type }}/{{ mp.slice }}">{{ mp.value|round(2) }}</td>
+        {% if mp.tests|length != 0 %}
+          <td style="padding: 5px; text-align: center;">{{ mp.tests[0].threshold|round(2) }}</td>
+          <td style="padding: 5px; text-align: center;">{{mb.value|round(2)}}</td>
+        {% else %}
+          <td style="padding: 5px; text-align: center;">-</td>
+          <td style="padding: 5px; text-align: center;">-</td>
+        {% endif %}
+      </tr>
+    {% endif %}
+    {% endfor %}
+  </table>
+{% endmacro %}
+
+
+{% macro render_test_table(tests, passing, title) %}
+{% if passing %}
+  <table class="styled-table-pass" style="border: 3px solid green; ">
+    <tr><th style="background-color: green;">{{title}}</th></tr>
+    {% for test in tests %}
+      {% if test.passed %}
+        <tr>
+          <td style="padding: 5px; text-align: center;"><a href="#{{ test.name }}">{{ test.name }}</a></td>
+        </tr>
+      {% endif %}
+    {% endfor %}
+  </table>
+{% else %}
+<table class="styled-table-fail" style="border: 3px solid red;">
+  <tr><th style="background-color: red;">{{title}}</th></tr>
+  {% for test in tests %}
+    {% if not test.passed %}
+      <tr>
+        <td style="padding: 5px; text-align: center;"><a href="#{{ test.name }}">{{ test.name }}</a></td>
+      </tr>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+</table>
+{% endmacro %}
+
+
+{% macro render_graphic(graphic, class="img-item") %}
+<div class="{{ class }}">
+  {% if graphic.image.startswith('<div') %}
+    {{ graphic.image|safe }}
+  {% else %}
+    {% if 'data' in graphic.image %}
+      <img src='{{ graphic.image }}' alt='{{ graphic.name }}' />
+    {% else %}
+      <img src='data:image/png;base64,{{ graphic.image }}' alt='{{ graphic.name }}' />
+    {% endif %}
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{% macro render_graphics(graphics) %}
+<div>
+  {% if graphics.description %}<p>{{ graphics.description }}</p>{% endif %}
+  {% for graph in graphics %}
+    {{ render_graphic(graph) }}
+  {% endfor %}
+</div>
+{% endmacro %}
+
+
+{% macro render_metric_card(card, idx, class)%}
+<div class="{{class}}">
+  <div>
+   <span style="font-size: 18px; font-weight:bold;">
+      <div class="tooltip">
+      {{ card.name|regex_replace('(?<!^)(?=[A-Z][a-z])', ' ') }}
+        <div class="tooltiptext">
+          {{ card.tooltip }}
+        <div class="arrow-up"></div>
+        </div>
+      </div>
+    </span>
+    <div display: inline-block;>
+      {% if card.passed %}
+        <span style="font-size: 48px; font-weight:bolder; color: green">{{ card.value|round(2) }}</span>
+      {% elif not card.passed %}
+        <span style="font-size: 48px; font-weight:bolder; color: red">{{ card.value|round(2) }}</span>
+      {% else %}
+        <span style="font-size: 48px; font-weight:bolder; color: gray">{{ card.value|round(2) }}</span>
+      {% endif %}
+      <span style="display: inline-block; margin-left: 60px; margin-top: 60px;">
+        {% if card.passed %}
+          <span style="font-size: 40px; color: green;">&#9650;</span>
+        {% elif not card.passed %}
+          <span style="font-size: 40px; color: red;">&#9660;</span>
+        {% else %}
+          <span style="font-size: 40px; color: gray;">&#9472;</span>
+        {% endif %}
+      </span>
+      <span style="display: inline-block; line-height:1; margin-bottom: 10px;">
+        <span style="font-size: 14px;">{{card.threshold}}<br>minimum<br>threshold</span>
+      </span>
+      <div id="model-card-plot-{{idx}}">
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+
+{% macro render_perf(name, comp)%}
+<div class="card" id={{name}}>
+<div class="column" style="float: left; width: 80%;">
+  <h3 style="color: black; font-weight:normal;">How is your model doing?</h3><br>
+  <h3 style="color: gray;  font-weight:normal;">A quick glance of your most important metrics.</h3>
+</div>
+<span>
+  <h3 id="slider_p_title"><span style="color: black; font-weight:normal;">Last</span> <span id="slider_p_num">{{ comp.last_n_evals }}</span> <span style="color: black; font-weight:normal;">Evaluations</span></h3>
+  <input type="range" min="1" max="{{ comp.last_n_evals }}" value="{{ comp.last_n_evals }}" id="n_evals_slider_p" style="width: 100%;">
+</span>
+{% for metric_card in comp.metric_cards.collection%}
+  {% if metric_card.slice == 'overall' %}
+    {{ render_metric_card(metric_card, loop.index-1, "subcard_overview") }}
+  {% endif %}
+{% endfor %}
+</div>
+{% endmacro %}
+
+
+{% macro render_perf_over_time(name, comp)%}
+<div class="card" id={{name}} style="display: block;">
+  <span style="float: right; width: 10%; margin-right: 10%;">
+    <h3 id="slider_pot_title"><span style="color: black; font-weight:normal;">Last</span> <span id="slider_pot_num">{{ comp.last_n_evals }}</span> <span style="color: black; font-weight:normal;">Evaluations</span></h3>
+    <input type="range" min="1" max="{{ comp.last_n_evals }}" value="{{ comp.last_n_evals }}" id="n_evals_slider_pot" style="width: 100%;">
+  </span>
+  <div style="display: flex; flex-direction: column;">
+    <div class="column" style="float: left; width: 90%;">
+      <h3 style="color: black; font-weight:normal;">How is your model doing over time?</h3><br>
+      <h3 style="color: gray;  font-weight:normal;">See how your model is performing over several metrics and subgroups over time.</h3>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: center; padding: 10px; margin-bottom: 20px;">
+      <h4 style="padding-right: 10px;">Multi-plot Selection:</h4>
+      <div class="radio-buttons" id="plot-selection">
+        <input type="radio" id="Plot 1" name="plot" value="Plot 1" checked>
+        <label for="Plot 1">Plot 1</label>
+        <input type="radio" id="+" name="plot" value="+">
+        <label for="+" style="padding: 2.5px; font-weight:bold; font-size: 18px;">+</label>
+      </div>
+    </div>
+  </div>
+  <div class="column" style="float: left;">
+    <div class="subcard_overview" style="padding:10px; margin-bottom:20px; width:15vw;">
+      <h4>Metrics</h4>
+      <div class="radio-buttons" id="slice-selection">
+          <input type="radio" id="{{comp.metric_cards.metrics[0]}}" name="metric" value="{{comp.metric_cards.metrics[0]}}" checked>
+          {% if comp.metric_cards.metrics[0]|regex_search("\((.*?)\)")|length != 0 %}
+            {% set acronym = comp.metric_cards.metrics[0]|regex_search("\((.*?)\)") %}
+            <div class="tooltip">
+              <label for="{{comp.metric_cards.metrics[0]}}">{{acronym[0]}}</label>
+              <div class="tooltiptext">
+                {{ comp.metric_cards.tooltips[0] }}
+                <div class="arrow-up"></div>
+              </div>
+            </div>
+          {% else %}
+            <div class="tooltip">
+              <label for="{{comp.metric_cards.metrics[0]}}">{{comp.metric_cards.metrics[0]|regex_replace('(?<!^)(?=[A-Z][a-z])', ' ')}}</label>
+              <div class="tooltiptext">
+                {{ comp.metric_cards.tooltips[0] }}
+                <div class="arrow-up"></div>
+              </div>
+            </div>
+          {% endif %}
+        {% for metric, tooltip in comp.metric_cards.metrics[1:]|zip(comp.metric_cards.tooltips[1:]) %}
+          <input type="radio" id="{{metric}}" name="metric" value="{{metric}}">
+          {# when creating label look for "()" and display acronym inside brackets instead of full name #}
+          {% if metric|regex_search("\((.*?)\)")|length != 0 %}
+            {% set acronym = metric|regex_search("\((.*?)\)") %}
+            <div class="tooltip">
+              <label for="{{metric}}">{{acronym[0]}}</label>
+              <div class="tooltiptext">
+                {{ tooltip }}
+                <div class="arrow-up"></div>
+              </div>
+            </div>
+          {% else %}
+            <div class="tooltip">
+              <label for="{{metric}}">{{metric|regex_replace('(?<!^)(?=[A-Z][a-z])', ' ')}}</label>
+              <div class="tooltiptext">
+                {{ tooltip }}
+                <div class="arrow-up"></div>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% for slice, values in comp.metric_cards.slices|zip(comp.metric_cards.values) %}
+      <div class="subcard_overview" style="padding:10px; margin-bottom:10px; width:15vw;">
+        <h4>{{slice|regex_replace('(?<!^)(?=[A-Z][a-z])', ' ')}}</h4>
+        <div class="radio-buttons" id="slice-selection">
+          <input type="radio" id="overall_{{slice}}" name="{{slice}}" value="overall_{{slice}}" checked>
+          <label for="overall_{{slice}}">All</label>
+          {% for value in values %}
+            <input type="radio" id="{{value}}" name="{{slice}}" value="{{value}}">
+            {% if value|regex_search("\((.*?)\)")|length != 0 %}
+              {% set acronym = value|regex_search("\((.*?)\)") %}
+              <label for="{{value}}">{{acronym[0]}}</label>
+            {% else %}
+              <label for="{{value}}">{{value|regex_replace('(?<!^)(?=[A-Z][a-z])', ' ')}}</label>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <div class="subcard_overview" style="margin: 0px; margin-left:25px; float:left; min-width:500px; max-width:100%;">
+    <div id="plot"></div>
+  </div>
+</div>
+{% endmacro %}
+
+
+{% macro render_overview(name, comp) %}
+{{ render_perf(name, comp) }}
+{# {% set val = {'history': false} %}
+{% for metric_card in comp.metric_cards.collection%}
+    {% if metric_card.history|length > 1 %}
+      {% set _ = val.update({'history':true}) %}
+    {% endif %}
+{% endfor %}
+{% if val['history'] %} #}
+{{ render_perf_over_time(name, comp) }}
+{# {% endif %} #}
+{% endmacro %}
+
+
+{% macro render_objects(section)%}
+{% for name, object in section %}
+  {% if name == "performance_metrics" %} {# do nothing #}
+  {% elif object.__class__.__name__ == "GraphicsCollection"%}
+    <div class="subcard" style="flex-basis:100%;">
+      <h3>{{ name|regex_replace('_+', ' ')|title}}</h3>
+      <ul>
+        {{render_if_exist_list(object)}}
+      </ul>
+    </div>
+  {% else %}
+    {% if (object is list) and object|length != 0 %}
+    <div class="subcard">
+      <h3>{{ name|regex_replace('_+', ' ')|title}}</h3>
+      {% for objects in object%}
+          <ul>
+          {{ render_if_exist_list(objects) }}
+          </ul>
+      {% endfor %}
+    </div>
+    {% elif ( (object is string) or (object is int) or (object is float) or (object is bool) ) %}
+    <div class="subcard">
+      <h3>{{ name|title|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h3>
+      {{ object }}
+    </div>
+    {% elif (object is None) or (object is empty) %}
+    {% else %}
+    <div class="subcard">
+      <h3>{{ name|regex_replace('_+', ' ')|title}}</h3>
+      <ul>
+      {{render_if_exist_list(object)}}
+      </ul>
+    </div>
+    {% endif %}
+  {% endif %}
+{% endfor %}
+{% endmacro %}
+
+
+{% macro render_section(model_card, name, section)%}
+{% if section is not empty%}
+  {% set header = section.__class__.__name__ %}
+    <div class="card" id={{name}}>
+    <h2 class="collapsible">{{ header|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h2> {# print title of section #}
+    <hr class="collapsible-bar">
+    {% if header == "Datasets" %}
+      {% for dataset in section.data %}
+          {{ render_objects(dataset) }}
+      {% endfor %}
+      {# Display global plots from GraphicsCollection in Datasets, temporary fix #}
+      {% if section is hasattr "graphics" %}
+        <div class="subcard" style="flex-basis:100%;">
+          <h3>{{ "Graphics" }}</h3>
+          {{ render_if_exist_list(section.graphics) }}
+        </div>
+      {% endif %}
+    {% elif header == "QuantitativeAnalysis"%}
+      {% for metric_card in model_card.overview.metric_cards.collection %}
+        {% if metric_card.slice == 'overall' %}
+          {{ render_metric_card(metric_card, loop.index-1, "subcard") }}
+        {% endif %}
+      {% endfor %}
+      {% if section is hasattr "graphics"%}
+        {% if section.graphics is not none%}
+          <div class="subcard" style="flex-basis:100%;">
+            <h3>{{ "Graphics" }}</h3>
+            {{ render_if_exist_list(section.graphics) }}
+          </div>
+        {% endif %}
+      {% endif %}
+    {% else %}
+      {{ render_objects(section) }}
+    {% endif %}
+  </div>
+{% endif %}
+{% endmacro %}
+
+
+{% macro render_sidebar(model_card) %}
+<input class=minimizer type='checkbox' id='sidebar-toggle' />
+<label for="sidebar-toggle" id='sidebar-btn'>
+  <div id='sidebar_toggle_icon'>
+    <svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M6 4C4.34315 4 3 5.34315 3 7V17C3 18.6569 4.34315 20 6 20H18C19.6569 20 21 18.6569 21 17V7C21 5.34315 19.6569 4 18 4H6ZM5 7C5 6.44772 5.44772 6 6 6H9V18H6C5.44772 18 5 17.5523 5 17V7ZM11 18H18C18.5523 18 19 17.5523 19 17V7C19 6.44772 18.5523 6 18 6H11V18Z" fill="#000000"/>
+    </svg>
+  </div>
+</label>
+<div id='sidebar'>
+  <div id="model_info_card">
+    <div id="model_info">
+        <h4 style="margin: 0.5rem;">{{ model_card.model_details.name }}</h4>
+        <h6 style="margin: 0.5rem;">Model Monitoring Report</h6>
+        <br>
+        <h6 style="margin: 0.5rem;">Model Developed By: {{ model_card.model_details.owners[0].name }}</h6>
+        <h6 style="margin: 0.5rem;">Contact: {{ model_card.model_details.owners[0].contact }}</h6>
+        <h6 style="margin: 0.5rem;">Email: {{ model_card.model_details.owners[0].email }}</h6>
+    </div>
+  </div>
+  <hr>
+  <ul id='contents'>
+    {% for name, section in model_card %}
+      {% if section is not empty %}
+        <a href="#{{ name }}">
+          <li class="button" id="{{name}}_button">{{ section.__class__.__name__|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</li>
+        </a>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</div>
+{% endmacro %}

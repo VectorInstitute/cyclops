@@ -5,7 +5,6 @@ import os
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
-from cyclops.models.torch_utils import get_device
 from cyclops.models.wrappers import WrappedModel
 from cyclops.tasks.utils import prepare_models
 from cyclops.utils.log import setup_logging
@@ -16,7 +15,32 @@ setup_logging(print_level="INFO", logger=LOGGER)
 
 
 class BaseTask(ABC):
-    """Base task class."""
+    """Base task class.
+
+    Parameters
+    ----------
+    models
+        Models to use for the task. Can be a single model, a list of models, or a
+        dictionary of models.
+    task_features
+        Features to use for the task.
+    task_target
+        Target to use for the task.
+
+    Attributes
+    ----------
+    models
+        Models to use for the task.
+    task_features
+        Features to use for the task.
+    task_target
+        Target to use for the task.
+    trained_models
+        List of trained models.
+    pretrained_models
+        List of pretrained models.
+
+    """
 
     def __init__(
         self,
@@ -29,26 +53,13 @@ class BaseTask(ABC):
         task_features: List[str],
         task_target: Union[str, List[str]],
     ) -> None:
-        """Initialize base task class.
-
-        Parameters
-        ----------
-        models
-            Models to use for the task. Can be a single model, a list of models, or a
-            dictionary of models.
-        task_features
-            Features to use for the task.
-        task_target
-            Target to use for the task.
-
-        """
+        """Initialize base task class."""
         self.models = prepare_models(models)
         self._validate_models()
         self.task_features = task_features
         self.task_target = (
             [task_target] if isinstance(task_target, str) else task_target
         )
-        self.device = get_device()
         self.trained_models: List[str] = []
         self.pretrained_models: List[str] = []
 
@@ -174,7 +185,7 @@ class BaseTask(ABC):
         filepath : Union[str, Dict[str, str]]
             The destination path(s) where the model(s) will be saved.
             Can be a dictionary of model names and their corresponding paths
-            or a single parent dirctory.
+            or a single parent directory.
         model_name : Optional[Union[str, List[str]]], optional
             Model name, required if more than one model exists, by default None.
         **kwargs : Any

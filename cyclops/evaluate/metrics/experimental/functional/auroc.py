@@ -1,5 +1,7 @@
 """Functions for computing the area under the ROC curve (AUROC)."""
+
 import warnings
+from types import ModuleType
 from typing import List, Literal, Optional, Tuple, Union
 
 import array_api_compat as apc
@@ -56,7 +58,11 @@ def _binary_auroc_compute(
 ) -> Array:
     """Compute the area under the ROC curve for binary classification tasks."""
     fpr, tpr, _ = _binary_roc_compute(state, thresholds, pos_label)
-    xp = apc.array_namespace(state)
+    xp = (
+        apc.array_namespace(*state)
+        if isinstance(state, tuple)
+        else apc.array_namespace(state)
+    )
     if max_fpr is None or max_fpr == 1 or xp.sum(fpr) == 0 or xp.sum(tpr) == 0:
         return _auc_compute(fpr, tpr, 1.0)
 
@@ -194,6 +200,8 @@ def _reduce_auroc(
     tpr: Union[Array, List[Array]],
     average: Optional[Literal["macro", "weighted", "none"]] = None,
     weights: Optional[Array] = None,
+    *,
+    xp: ModuleType,
 ) -> Array:
     """Compute the area under the ROC curve and apply `average` method.
 
@@ -225,7 +233,6 @@ def _reduce_auroc(
         If the AUROC for one or more classes is `nan` and ``average`` is not ``none``.
 
     """
-    xp = apc.array_namespace((fpr[0], tpr[0]) if isinstance(fpr, list) else (fpr, tpr))
     if apc.is_array_api_obj(fpr) and apc.is_array_api_obj(tpr):
         res = _auc_compute(fpr, tpr, 1.0, axis=1)  # type: ignore
     else:
@@ -280,14 +287,21 @@ def _multiclass_auroc_compute(
 ) -> Array:
     """Compute the area under the ROC curve for multiclass classification tasks."""
     fpr, tpr, _ = _multiclass_roc_compute(state, num_classes, thresholds=thresholds)
-    xp = apc.array_namespace(state)
+    xp = (
+        apc.array_namespace(*state)
+        if isinstance(state, tuple)
+        else apc.array_namespace(state)
+    )
     return _reduce_auroc(
         fpr,
         tpr,
         average=average,
-        weights=xp.astype(bincount(state[0], minlength=num_classes), xp.float32)
-        if thresholds is None
-        else xp.sum(state[0, ...][:, 1, :], axis=-1),  # type: ignore[call-overload]
+        weights=(
+            xp.astype(bincount(state[0], minlength=num_classes), xp.float32, copy=False)
+            if thresholds is None
+            else xp.sum(state[0, ...][:, 1, :], axis=-1)  # type: ignore[call-overload]
+        ),
+        xp=xp,
     )
 
 
@@ -389,12 +403,15 @@ def multiclass_auroc(
     >>> import numpy.array_api as anp
     >>> target = anp.asarray([0, 1, 2, 0, 1, 2])
     >>> preds = anp.asarray(
-    ...     [[0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44],
-    ...     [0.11, 0.22, 0.67],
-    ...     [0.84, 0.73, 0.12],
-    ...     [0.33, 0.92, 0.44]])
+    ...     [
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...         [0.11, 0.22, 0.67],
+    ...         [0.84, 0.73, 0.12],
+    ...         [0.33, 0.92, 0.44],
+    ...     ]
+    ... )
     >>> multiclass_auroc(target, preds, num_classes=3, thresholds=None)
     Array(0.33333334, dtype=float32)
     >>> multiclass_auroc(target, preds, num_classes=3, thresholds=5)
@@ -481,17 +498,25 @@ def _multilabel_auroc_compute(
         return _binary_auroc_compute((target, preds), thresholds, max_fpr=None)
 
     fpr, tpr, _ = _multilabel_roc_compute(state, num_labels, thresholds, ignore_index)
-    xp = apc.array_namespace(state)
+    xp = (
+        apc.array_namespace(*state)
+        if isinstance(state, tuple)
+        else apc.array_namespace(state)
+    )
     return _reduce_auroc(
         fpr,
         tpr,
         average,
-        weights=xp.astype(
-            xp.sum(xp.astype(state[0] == 1, xp.int32), axis=0),
-            xp.float32,
-        )
-        if thresholds is None
-        else xp.sum(state[0, ...][:, 1, :], axis=-1),  # type: ignore[call-overload]
+        weights=(
+            xp.astype(
+                xp.sum(xp.astype(state[0] == 1, xp.int32, copy=False), axis=0),
+                xp.float32,
+                copy=False,
+            )
+            if thresholds is None
+            else xp.sum(state[0, ...][:, 1, :], axis=-1)  # type: ignore[call-overload]
+        ),
+        xp=xp,
     )
 
 

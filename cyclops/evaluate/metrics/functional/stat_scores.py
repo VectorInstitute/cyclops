@@ -369,7 +369,7 @@ def _multiclass_stat_scores_format(  # noqa: C901
         If more unique values are detected in `target` than `num_classes`.
     ValueError
         If the predictions are not in multiclass or continuous-multioutput
-        (logits or probabilites) format.
+        (logits or probabilities) format.
     RuntimeError
         If more unique values are detected in `preds` than `num_classes`.
 

@@ -28,6 +28,10 @@ def test_import_cyclops():
 
     assert cyclops.monitor.__name__ == "cyclops.monitor"
 
+    import cyclops.tasks
+
+    assert cyclops.tasks.__name__ == "cyclops.tasks"
+
 
 def test_medical_image_feature_without_monai():
     """Test that the MedicalImage feature raises an error without MONAI installed."""
