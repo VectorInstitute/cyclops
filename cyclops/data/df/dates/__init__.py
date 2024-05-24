@@ -1,4 +1,5 @@
 """Processors for date handling."""
+
 from cyclops.data.df.dates.dates import (
     DatePairHandler,
     analyze_dates,

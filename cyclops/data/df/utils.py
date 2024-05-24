@@ -1,4 +1,5 @@
 """Utility functions for working with Pandas DataFrames."""
+
 from functools import reduce
 from typing import (
     Any,

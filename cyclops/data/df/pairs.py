@@ -1,4 +1,5 @@
 """Functions for working with pairs of values in DataFrames."""
+
 from typing import Tuple, Union
 
 import networkx as nx
