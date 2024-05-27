@@ -1,0 +1,1417 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Readmission Prediction\n",
+    "\n",
+    "This notebook showcases readmission prediction on the [Diabetes 130-US Hospitals for Years 1999-2008](https://archive.ics.uci.edu/dataset/296/diabetes+130-us+hospitals+for+years+1999-2008) using CyclOps. The task is formulated as a binary classification task, where we predict the probability of early readmission of the patient within 30 days of discharge."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "## Install libraries"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "!pip install pycyclops\n",
+    "!pip install ucimlrepo"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Import Libraries"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "\"\"\"Readmission prediction.\"\"\"\n",
+    "\n",
+    "# ruff: noqa: E402\n",
+    "\n",
+    "import copy\n",
+    "import inspect\n",
+    "from datetime import date\n",
+    "\n",
+    "import numpy as np\n",
+    "import pandas as pd\n",
+    "import plotly.express as px\n",
+    "from datasets import Dataset\n",
+    "from datasets.features import ClassLabel\n",
+    "from sklearn.compose import ColumnTransformer\n",
+    "from sklearn.impute import SimpleImputer\n",
+    "from sklearn.pipeline import Pipeline\n",
+    "from sklearn.preprocessing import MinMaxScaler, OneHotEncoder\n",
+    "from ucimlrepo import fetch_ucirepo\n",
+    "\n",
+    "from cyclops.data.df.feature import TabularFeatures\n",
+    "from cyclops.data.slicer import SliceSpec\n",
+    "from cyclops.evaluate.fairness import FairnessConfig  # noqa: E402\n",
+    "from cyclops.evaluate.metrics import create_metric\n",
+    "from cyclops.evaluate.metrics.experimental.functional import (\n",
+    "    binary_npv,\n",
+    "    binary_ppv,\n",
+    "    binary_roc,\n",
+    ")\n",
+    "from cyclops.evaluate.metrics.experimental.metric_dict import MetricDict\n",
+    "from cyclops.models.catalog import create_model\n",
+    "from cyclops.report import ModelCardReport\n",
+    "from cyclops.report.plot.classification import ClassificationPlotter\n",
+    "from cyclops.report.utils import flatten_results_dict\n",
+    "from cyclops.tasks import BinaryTabularClassificationTask"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "CyclOps offers a package for documentation of the model through a model report. The `ModelCardReport` class is used to populate and generate the model report as an HTML file. The model report has the following sections:\n",
+    "\n",
+    "- Overview: Provides a high level overview of how the model is doing (a quick glance of important metrics), and how it is doing over time (performance over several metrics and subgroups over time).\n",
+    "- Datasets: High level statistics of the training data, including changes in distribution over time.\n",
+    "- Quantitative Analysis: This section contains additional detailed performance metrics of the model for different sets of the data and subpopulations.\n",
+    "- Fairness Analysis: This section contains the fairness metrics of the model.\n",
+    "- Model Details: This section contains descriptive metadata about the model such as the owners, version, license, etc.\n",
+    "- Model Parameters: This section contains the technical details of the model such as the model architecture, training parameters, etc.\n",
+    "- Considerations: This section contains descriptions of the considerations involved in developing and using the model such as the intended use, limitations, etc.\n",
+    "\n",
+    "We will use this to document the model development process as we go along and generate the model report at the end.\n",
+    "\n",
+    "`The model report tool is a work in progress and is subject to change.`"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "report = ModelCardReport()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Constants"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "RANDOM_SEED = 85\n",
+    "NAN_THRESHOLD = 0.75\n",
+    "TRAIN_SIZE = 0.8\n",
+    "EVAL_NUM = 3"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Data Loading"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "diabetes_130_data = fetch_ucirepo(id=296)\n",
+    "features = diabetes_130_data[\"data\"][\"features\"]\n",
+    "targets = diabetes_130_data[\"data\"][\"targets\"]\n",
+    "metadata = diabetes_130_data[\"metadata\"]\n",
+    "variables = diabetes_130_data[\"variables\"]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "metadata"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "def transform_label(value):\n",
+    "    \"\"\"Transform string labels of readmission into 0/1 binary labels.\n",
+    "\n",
+    "    Parameters\n",
+    "    ----------\n",
+    "    value: str\n",
+    "        Input value\n",
+    "\n",
+    "    Returns\n",
+    "    -------\n",
+    "    int\n",
+    "        0 if not readmitted or if greater than 30 days, 1 if less than 30 days\n",
+    "\n",
+    "    \"\"\"\n",
+    "    if value in [\"NO\", \">30\"]:\n",
+    "        return 0\n",
+    "    if value == \"<30\":\n",
+    "        return 1\n",
+    "\n",
+    "    raise ValueError(\"Unexpected value for readmission!\")\n",
+    "\n",
+    "\n",
+    "df = features\n",
+    "targets[\"readmitted\"] = targets[\"readmitted\"].apply(transform_label)\n",
+    "df[\"readmitted\"] = targets"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Choose a small subset for modelling"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df = df[0:1000]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Remove features that are NaNs or have just a single unique value"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "features_to_remove = []\n",
+    "for col in df:\n",
+    "    if len(df[col].value_counts()) <= 1:\n",
+    "        features_to_remove.append(col)\n",
+    "df = df.drop(columns=features_to_remove)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Sex values"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "fig = px.pie(df, names=\"gender\")\n",
+    "\n",
+    "fig.update_layout(\n",
+    "    title=\"Gender Distribution\",\n",
+    ")\n",
+    "\n",
+    "fig.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Add the figure to the report**"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "report.log_plotly_figure(\n",
+    "    fig=fig,\n",
+    "    caption=\"Gender Distribution\",\n",
+    "    section_name=\"datasets\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "###  Age distribution"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "fig = px.histogram(df, x=\"age\")\n",
+    "fig.update_layout(\n",
+    "    title=\"Age Distribution\",\n",
+    "    xaxis_title=\"Age\",\n",
+    "    yaxis_title=\"Count\",\n",
+    "    bargap=0.2,\n",
+    ")\n",
+    "\n",
+    "fig.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Add the figure to the report**"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "report.log_plotly_figure(\n",
+    "    fig=fig,\n",
+    "    caption=\"Age Distribution\",\n",
+    "    section_name=\"datasets\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Outcome distribution"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "df[\"outcome\"] = df[\"readmitted\"].astype(\"int\")\n",
+    "df = df.drop(columns=[\"readmitted\"])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "fig = px.pie(df, names=\"outcome\")\n",
+    "fig.update_traces(textinfo=\"percent+label\")\n",
+    "fig.update_layout(title_text=\"Outcome Distribution\")\n",
+    "fig.update_traces(\n",
+    "    hovertemplate=\"Outcome: %{label}<br>Count: \\\n",
+    "    %{value}<br>Percent: %{percent}\",\n",
+    ")\n",
+    "fig.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Add the figure to the report**"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "report.log_plotly_figure(\n",
+    "    fig=fig,\n",
+    "    caption=\"Outcome Distribution\",\n",
+    "    section_name=\"datasets\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "class_counts = df[\"outcome\"].value_counts()\n",
+    "class_ratio = class_counts[0] / class_counts[1]\n",
+    "print(class_ratio, class_counts)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "From the features in the dataset, we select all of them to train the model!"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "features_list = list(df.columns)\n",
+    "features_list.remove(\"outcome\")\n",
+    "features_list = sorted(features_list)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Identifying feature types\n",
+    "\n",
+    "Cyclops `TabularFeatures` class helps to identify feature types, an essential step before preprocessing the data. Understanding feature types (numerical/categorical/binary) allows us to apply appropriate preprocessing steps for each type."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "tab_features = TabularFeatures(\n",
+    "    data=df.reset_index(),\n",
+    "    features=features_list,\n",
+    "    by=\"index\",\n",
+    "    targets=\"outcome\",\n",
+    ")\n",
+    "print(tab_features.types)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Creating data preprocessors\n",
+    "\n",
+    "We create a data preprocessor using sklearn's ColumnTransformer. This helps in applying different preprocessing steps to different columns in the dataframe. For instance, binary features might be processed differently from numeric features."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "numeric_transformer = Pipeline(\n",
+    "    steps=[(\"imputer\", SimpleImputer(strategy=\"mean\")), (\"scaler\", MinMaxScaler())],\n",
+    ")\n",
+    "\n",
+    "binary_transformer = Pipeline(\n",
+    "    steps=[(\"imputer\", SimpleImputer(strategy=\"most_frequent\"))],\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "numeric_features = sorted((tab_features.features_by_type(\"numeric\")))\n",
+    "numeric_indices = [\n",
+    "    df[features_list].columns.get_loc(column) for column in numeric_features\n",
+    "]\n",
+    "print(numeric_features)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "binary_features = sorted(tab_features.features_by_type(\"binary\"))\n",
+    "binary_features.remove(\"outcome\")\n",
+    "ordinal_features = sorted(\n",
+    "    tab_features.features_by_type(\"ordinal\")\n",
+    "    + [\"medical_specialty\", \"diag_1\", \"diag_2\", \"diag_3\"]\n",
+    ")\n",
+    "binary_indices = [\n",
+    "    df[features_list].columns.get_loc(column) for column in binary_features\n",
+    "]\n",
+    "ordinal_indices = [\n",
+    "    df[features_list].columns.get_loc(column) for column in ordinal_features\n",
+    "]\n",
+    "print(binary_features, ordinal_features)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "preprocessor = ColumnTransformer(\n",
+    "    transformers=[\n",
+    "        (\"num\", numeric_transformer, numeric_indices),\n",
+    "        (\n",
+    "            \"onehot\",\n",
+    "            OneHotEncoder(handle_unknown=\"ignore\", sparse_output=False),\n",
+    "            binary_indices + ordinal_indices,\n",
+    "        ),\n",
+    "    ],\n",
+    "    remainder=\"passthrough\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Let's document the dataset in the model card. This can be done using the `log_dataset` method, which takes the following arguments:\n",
+    "- description: A description of the dataset.\n",
+    "- citation: The citation for the dataset.\n",
+    "- link: A link to a resource for the dataset.\n",
+    "- license_id: The SPDX license identifier for the dataset.\n",
+    "- version: The version of the dataset.\n",
+    "- features: A list of features in the dataset.\n",
+    "- split: The split of the dataset (train, test, validation, etc.).\n",
+    "- sensitive_features: A list of sensitive features used to train/evaluate the model.\n",
+    "- sensitive_feature_justification: A justification for the sensitive features used to train/evaluate the model."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "report.log_dataset(\n",
+    "    description=metadata[\"abstract\"],\n",
+    "    citation=inspect.cleandoc(\n",
+    "        \"\"\"\n",
+    "        @article{strack2014impact,\n",
+    "          title={Impact of HbA1c measurement on hospital readmission rates: analysis of 70,000 clinical database patient records},\n",
+    "          author={Strack, Beata and DeShazo, Jonathan P and Gennings, Chris and Olmo, Juan L and Ventura, Sebastian and Cios, Krzysztof J and Clore, John N and others},\n",
+    "          journal={BioMed research international},\n",
+    "          volume={2014},\n",
+    "          year={2014},\n",
+    "          publisher={Hindawi}\n",
+    "        }\n",
+    "    \"\"\",\n",
+    "    ),\n",
+    "    link=metadata[\"repository_url\"],\n",
+    "    license_id=\"CC0-1.0\",\n",
+    "    version=\"Version 1\",\n",
+    "    features=features_list,\n",
+    "    sensitive_features=[\"gender\", \"age\", \"race\"],\n",
+    "    sensitive_feature_justification=\"Demographic information like age and gender \\\n",
+    "        often have a strong correlation with health outcomes. For example, older \\\n",
+    "        patients are more likely to have a higher risk of readmission.\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Creating Hugging Face Dataset\n",
+    "\n",
+    "We convert our processed Pandas dataframe into a Hugging Face dataset, a powerful and easy-to-use data format which is also compatible with CyclOps models and evaluator modules. The dataset is then split to train and test sets."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "dataset = Dataset.from_pandas(df)\n",
+    "dataset.cleanup_cache_files()\n",
+    "print(dataset)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "dataset = dataset.cast_column(\"outcome\", ClassLabel(num_classes=2))\n",
+    "dataset = dataset.train_test_split(\n",
+    "    train_size=TRAIN_SIZE,\n",
+    "    stratify_by_column=\"outcome\",\n",
+    "    seed=RANDOM_SEED,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Model Creation\n",
+    "\n",
+    "CyclOps model registry allows for straightforward creation and selection of models. This registry maintains a list of pre-configured models, which can be instantiated with a single line of code. Here we use a SGD classifier to fit a logisitic regression model. The model configurations can be passed to `create_model` based on the sklearn parameters for SGDClassifier."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "model_name = \"xgb_classifier\"\n",
+    "model = create_model(model_name, random_state=123)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Task Creation\n",
+    "\n",
+    "We use Cyclops tasks to define our model's task (in this case, readmission prediction), train the model, make predictions, and evaluate performance. Cyclops task classes encapsulate the entire ML pipeline into a single, cohesive structure, making the process smooth and easy to manage."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "readmission_prediction_task = BinaryTabularClassificationTask(\n",
+    "    {model_name: model},\n",
+    "    task_features=features_list,\n",
+    "    task_target=\"outcome\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "readmission_prediction_task.list_models()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Training\n",
+    "\n",
+    "If `best_model_params` is passed to the `train` method, the best model will be selected after the hyperparameter search. The parameters in `best_model_params` indicate the values to create the parameters grid.\n",
+    "\n",
+    "Note that the data preprocessor needs to be passed to the tasks methods if the Hugging Face dataset is not already preprocessed. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "best_model_params = {\n",
+    "    \"n_estimators\": [100, 250, 500],\n",
+    "    \"learning_rate\": [0.1, 0.01],\n",
+    "    \"max_depth\": [2, 5],\n",
+    "    \"reg_lambda\": [0, 1, 10],\n",
+    "    \"colsample_bytree\": [0.7, 0.8, 1],\n",
+    "    \"gamma\": [0, 1, 2, 10],\n",
+    "    \"method\": \"random\",\n",
+    "    \"scale_pos_weight\": [int(class_ratio)],\n",
+    "}\n",
+    "readmission_prediction_task.train(\n",
+    "    dataset[\"train\"],\n",
+    "    model_name=model_name,\n",
+    "    transforms=preprocessor,\n",
+    "    best_model_params=best_model_params,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "model_params = readmission_prediction_task.list_models_params()[model_name]\n",
+    "print(model_params)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Log the model parameters to the report.**\n",
+    "\n",
+    "We can add model parameters to the model card using the `log_model_parameters` method."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "report.log_model_parameters(params=model_params)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Prediction\n",
+    "\n",
+    "The prediction output can be either the whole Hugging Face dataset with the prediction columns added to it or the single column containing the predicted values."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "y_pred = readmission_prediction_task.predict(\n",
+    "    dataset[\"test\"],\n",
+    "    model_name=model_name,\n",
+    "    transforms=preprocessor,\n",
+    "    proba=True,\n",
+    "    only_predictions=True,\n",
+    ")\n",
+    "prediction_df = pd.DataFrame(\n",
+    "    {\n",
+    "        \"y_prob\": [y_pred_i[1] for y_pred_i in y_pred],\n",
+    "        \"y_true\": dataset[\"test\"][\"outcome\"],\n",
+    "        \"gender\": dataset[\"test\"][\"gender\"],\n",
+    "    }\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Evaluation\n",
+    "\n",
+    "Evaluation is done using various evaluation metrics that provide different perspectives on the model's predictive abilities i.e. standard performance metrics and fairness metrics.\n",
+    "\n",
+    "The standard performance metrics can be created using the `MetricDict` object."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "metric_names = [\n",
+    "    \"binary_accuracy\",\n",
+    "    \"binary_precision\",\n",
+    "    \"binary_recall\",\n",
+    "    \"binary_f1_score\",\n",
+    "    \"binary_auroc\",\n",
+    "    \"binary_average_precision\",\n",
+    "    \"binary_roc_curve\",\n",
+    "    \"binary_precision_recall_curve\",\n",
+    "]\n",
+    "metrics = [\n",
+    "    create_metric(metric_name, experimental=True) for metric_name in metric_names\n",
+    "]\n",
+    "metric_collection = MetricDict(metrics)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "In addition to overall metrics, it might be interesting to see how the model performs on certain subpopulations. We can define these subpopulations using `SliceSpec` objects. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "spec_list = [\n",
+    "    {\n",
+    "        \"age\": {\n",
+    "            \"value\": \"[50-60)\",\n",
+    "        },\n",
+    "    },\n",
+    "    {\n",
+    "        \"age\": {\n",
+    "            \"value\": \"[60-70)\",\n",
+    "        },\n",
+    "    },\n",
+    "]\n",
+    "slice_spec = SliceSpec(spec_list)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "A `MetricDict` can also be defined for the fairness metrics."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "specificity = create_metric(metric_name=\"binary_specificity\", experimental=True)\n",
+    "sensitivity = create_metric(metric_name=\"binary_sensitivity\", experimental=True)\n",
+    "\n",
+    "fpr = -specificity + 1\n",
+    "fnr = -sensitivity + 1\n",
+    "\n",
+    "ber = (fpr + fnr) / 2\n",
+    "\n",
+    "fairness_metric_collection = MetricDict(\n",
+    "    {\n",
+    "        \"Sensitivity\": sensitivity,\n",
+    "        \"Specificity\": specificity,\n",
+    "        \"BER\": ber,\n",
+    "    },\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The FairnessConfig helps in setting up and evaluating the fairness of the model predictions."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "fairness_config = FairnessConfig(\n",
+    "    metrics=fairness_metric_collection,\n",
+    "    dataset=None,  # dataset is passed from the evaluator\n",
+    "    target_columns=None,  # target columns are passed from the evaluator\n",
+    "    groups=[\"age\"],\n",
+    "    group_base_values={\"age\": \"[40-50)\"},\n",
+    "    thresholds=[0.5],\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The evaluate methods outputs the evaluation results and the Hugging Face dataset with the predictions added to it."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "results, dataset_with_preds = readmission_prediction_task.evaluate(\n",
+    "    dataset=dataset[\"test\"],\n",
+    "    metrics=metric_collection,\n",
+    "    model_names=model_name,\n",
+    "    transforms=preprocessor,\n",
+    "    prediction_column_prefix=\"preds\",\n",
+    "    slice_spec=slice_spec,\n",
+    "    batch_size=-1,\n",
+    "    fairness_config=fairness_config,\n",
+    "    override_fairness_metrics=False,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "results_female, _ = readmission_prediction_task.evaluate(\n",
+    "    dataset=dataset[\"test\"],\n",
+    "    metrics=MetricDict(\n",
+    "        {\n",
+    "            \"BinaryAccuracy\": create_metric(\n",
+    "                metric_name=\"binary_accuracy\",\n",
+    "                experimental=True,\n",
+    "            ),\n",
+    "        },\n",
+    "    ),\n",
+    "    model_names=model_name,\n",
+    "    transforms=preprocessor,\n",
+    "    prediction_column_prefix=\"preds\",\n",
+    "    slice_spec=SliceSpec([{\"gender\": {\"value\": \"Female\"}}], include_overall=False),\n",
+    "    batch_size=-1,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "**Log the performance metrics to the report.**\n",
+    "\n",
+    "We can add a performance metric to the model card using the `log_performance_metric` method, which expects a dictionary where the keys are in the following format: `slice_name/metric_name`. For instance, `overall/accuracy`. \n",
+    "\n",
+    "We first need to process the evaluation results to get the metrics in the right format."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "model_name = f\"model_for_preds.{model_name}\"\n",
+    "results_flat = flatten_results_dict(\n",
+    "    results=results,\n",
+    "    remove_metrics=[\"BinaryROC\", \"BinaryPrecisionRecallCurve\"],\n",
+    "    model_name=model_name,\n",
+    ")\n",
+    "results_female_flat = flatten_results_dict(\n",
+    "    results=results_female,\n",
+    "    model_name=model_name,\n",
+    ")\n",
+    "# ruff: noqa: W505\n",
+    "for name, metric in results_female_flat.items():\n",
+    "    split, name = name.split(\"/\")  # noqa: PLW2901\n",
+    "    descriptions = {\n",
+    "        \"BinaryPrecision\": \"The proportion of predicted positive instances that are correctly predicted.\",\n",
+    "        \"BinaryRecall\": \"The proportion of actual positive instances that are correctly predicted. Also known as recall or true positive rate.\",\n",
+    "        \"BinaryAccuracy\": \"The proportion of all instances that are correctly predicted.\",\n",
+    "        \"BinaryAUROC\": \"The area under the receiver operating characteristic curve (AUROC) is a measure of the performance of a binary classification model.\",\n",
+    "        \"BinaryAveragePrecision\": \"The area under the precision-recall curve (AUPRC) is a measure of the performance of a binary classification model.\",\n",
+    "        \"BinaryF1Score\": \"The harmonic mean of precision and recall.\",\n",
+    "    }\n",
+    "    report.log_quantitative_analysis(\n",
+    "        \"performance\",\n",
+    "        name=name,\n",
+    "        value=metric.tolist(),\n",
+    "        description=descriptions[name],\n",
+    "        metric_slice=split,\n",
+    "        pass_fail_thresholds=0.7,\n",
+    "        pass_fail_threshold_fns=lambda x, threshold: bool(x >= threshold),\n",
+    "    )\n",
+    "\n",
+    "for name, metric in results_flat.items():\n",
+    "    split, name = name.split(\"/\")  # noqa: PLW2901\n",
+    "    descriptions = {\n",
+    "        \"BinaryPrecision\": \"The proportion of predicted positive instances that are correctly predicted.\",\n",
+    "        \"BinaryRecall\": \"The proportion of actual positive instances that are correctly predicted. Also known as recall or true positive rate.\",\n",
+    "        \"BinaryAccuracy\": \"The proportion of all instances that are correctly predicted.\",\n",
+    "        \"BinaryAUROC\": \"The area under the receiver operating characteristic curve (AUROC) is a measure of the performance of a binary classification model.\",\n",
+    "        \"BinaryAveragePrecision\": \"The area under the precision-recall curve (AUPRC) is a measure of the performance of a binary classification model.\",\n",
+    "        \"BinaryF1Score\": \"The harmonic mean of precision and recall.\",\n",
+    "    }\n",
+    "    report.log_quantitative_analysis(\n",
+    "        \"performance\",\n",
+    "        name=name,\n",
+    "        value=metric.tolist(),\n",
+    "        description=descriptions[name],\n",
+    "        metric_slice=split,\n",
+    "        pass_fail_thresholds=0.7,\n",
+    "        pass_fail_threshold_fns=lambda x, threshold: bool(x >= threshold),\n",
+    "    )"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can also use the `ClassificationPlotter` to plot the performance metrics and the add the figure to the model card using the `log_plotly_figure` method."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "plotter = ClassificationPlotter(task_type=\"binary\", class_names=[\"0\", \"1\"])\n",
+    "plotter.set_template(\"plotly_white\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# extracting the ROC curves and AUROC results for all the slices\n",
+    "roc_curves = {\n",
+    "    slice_name: slice_results[\"BinaryROC\"]\n",
+    "    for slice_name, slice_results in results[model_name].items()\n",
+    "}\n",
+    "aurocs = {\n",
+    "    slice_name: slice_results[\"BinaryAUROC\"]\n",
+    "    for slice_name, slice_results in results[model_name].items()\n",
+    "}\n",
+    "roc_curves.keys()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# plotting the ROC curves for all the slices\n",
+    "roc_plot = plotter.roc_curve_comparison(roc_curves, aurocs=aurocs)\n",
+    "report.log_plotly_figure(\n",
+    "    fig=roc_plot,\n",
+    "    caption=\"ROC Curve for Female Patients\",\n",
+    "    section_name=\"quantitative analysis\",\n",
+    ")\n",
+    "roc_plot.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# extracting the precision-recall curves and average precision results for all the slices\n",
+    "pr_curves = {\n",
+    "    slice_name: slice_results[\"BinaryPrecisionRecallCurve\"]\n",
+    "    for slice_name, slice_results in results[model_name].items()\n",
+    "}\n",
+    "average_precisions = {\n",
+    "    slice_name: slice_results[\"BinaryAveragePrecision\"]\n",
+    "    for slice_name, slice_results in results[model_name].items()\n",
+    "}\n",
+    "pr_curves.keys()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# plotting the precision-recall curves for all the slices\n",
+    "pr_plot = plotter.precision_recall_curve_comparison(\n",
+    "    pr_curves,\n",
+    "    auprcs=average_precisions,\n",
+    ")\n",
+    "report.log_plotly_figure(\n",
+    "    fig=pr_plot,\n",
+    "    caption=\"Precision-Recall Curve Comparison\",\n",
+    "    section_name=\"quantitative analysis\",\n",
+    ")\n",
+    "pr_plot.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Extracting the overall classification metric values.\n",
+    "overall_performance = {\n",
+    "    metric_name: metric_value\n",
+    "    for metric_name, metric_value in results[model_name][\"overall\"].items()\n",
+    "    if metric_name not in [\"BinaryROC\", \"BinaryPrecisionRecallCurve\"]\n",
+    "}"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Plotting the overall classification metric values.\n",
+    "overall_performance_plot = plotter.metrics_value(\n",
+    "    overall_performance,\n",
+    "    title=\"Overall Performance\",\n",
+    ")\n",
+    "report.log_plotly_figure(\n",
+    "    fig=overall_performance_plot,\n",
+    "    caption=\"Overall Performance\",\n",
+    "    section_name=\"quantitative analysis\",\n",
+    ")\n",
+    "overall_performance_plot.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Extracting the metric values for all the slices.\n",
+    "slice_metrics = {\n",
+    "    slice_name: {\n",
+    "        metric_name: metric_value\n",
+    "        for metric_name, metric_value in slice_results.items()\n",
+    "        if metric_name not in [\"BinaryROC\", \"BinaryPrecisionRecallCurve\"]\n",
+    "    }\n",
+    "    for slice_name, slice_results in results[model_name].items()\n",
+    "}"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "# Plotting the metric values for all the slices.\n",
+    "slice_metrics_plot = plotter.metrics_comparison_bar(slice_metrics)\n",
+    "report.log_plotly_figure(\n",
+    "    fig=slice_metrics_plot,\n",
+    "    caption=\"Slice Metric Comparison\",\n",
+    "    section_name=\"quantitative analysis\",\n",
+    ")\n",
+    "slice_metrics_plot.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Plotting the metric values for all the slices.\n",
+    "# ROC curve components\n",
+    "pred_probs = np.array(dataset_with_preds[\"preds.xgb_classifier\"])\n",
+    "true_labels = np.array(dataset_with_preds[\"outcome\"])\n",
+    "roc_curve = binary_roc(true_labels, pred_probs)\n",
+    "ppv = np.zeros_like(roc_curve.thresholds)\n",
+    "npv = np.zeros_like(roc_curve.thresholds)\n",
+    "\n",
+    "# Calculate PPV and NPV for each threshold\n",
+    "for i, threshold in enumerate(roc_curve.thresholds):\n",
+    "    # Calculate PPV and NPV\n",
+    "    ppv[i] = binary_ppv(true_labels, pred_probs, threshold=threshold)\n",
+    "    npv[i] = binary_npv(true_labels, pred_probs, threshold=threshold)\n",
+    "runway_plot = plotter.threshperf(roc_curve, ppv, npv, pred_probs)\n",
+    "report.log_plotly_figure(\n",
+    "    fig=runway_plot,\n",
+    "    caption=\"Threshold-Performance plot\",\n",
+    "    section_name=\"quantitative analysis\",\n",
+    ")\n",
+    "runway_plot.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can also plot the calibration curve of the model on the test set"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "calibration_plot = plotter.calibration(\n",
+    "    prediction_df, y_true_col=\"y_true\", y_prob_col=\"y_prob\", group_col=\"gender\"\n",
+    ")\n",
+    "report.log_plotly_figure(\n",
+    "    fig=calibration_plot,\n",
+    "    caption=\"Calibration plot\",\n",
+    "    section_name=\"quantitative analysis\",\n",
+    ")\n",
+    "calibration_plot.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Reformatting the fairness metrics\n",
+    "fairness_results = copy.deepcopy(results[\"fairness\"])\n",
+    "fairness_metrics = {}\n",
+    "# remove the group size from the fairness results and add it to the slice name\n",
+    "for slice_name, slice_results in fairness_results.items():\n",
+    "    group_size = slice_results.pop(\"Group Size\")\n",
+    "    fairness_metrics[f\"{slice_name} (Size={group_size})\"] = slice_results"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Plotting the fairness metrics\n",
+    "fairness_plot = plotter.metrics_comparison_scatter(\n",
+    "    fairness_metrics,\n",
+    "    title=\"Fairness Metrics\",\n",
+    ")\n",
+    "report.log_plotly_figure(\n",
+    "    fig=fairness_plot,\n",
+    "    caption=\"Fairness Metrics\",\n",
+    "    section_name=\"fairness analysis\",\n",
+    ")\n",
+    "fairness_plot.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Report Generation\n",
+    "\n",
+    "Before generating the model card, let us document some of the details of the model and some considerations involved in developing and using the model.\n",
+    "\n",
+    "\n",
+    "Let's start with populating the model details section, which includes the following fields by default:\n",
+    "- description: A high-level description of the model and its usage for a general audience.\n",
+    "- version: The version of the model.\n",
+    "- owners: The individuals or organizations that own the model.\n",
+    "- license: The license under which the model is made available.\n",
+    "- citation: The citation for the model.\n",
+    "- references: Links to resources that are relevant to the model.\n",
+    "- path: The path to where the model is stored.\n",
+    "- regulatory_requirements: The regulatory requirements that are relevant to the model.\n",
+    "\n",
+    "We can add additional fields to the model details section by passing a dictionary to the `log_from_dict` method and specifying the section name as `model_details`. You can also use the `log_descriptor` method to add a new field object with a `description` attribute to any section of the model card."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "report.log_from_dict(\n",
+    "    data={\n",
+    "        \"name\": \"Readmission Prediction Model\",\n",
+    "        \"description\": \"The model was trained on the Diabetes 130-US Hospitals for Years 1999-2008 \\\n",
+    "        dataset to predict risk of readmission within 30 days of discharge.\",\n",
+    "    },\n",
+    "    section_name=\"model_details\",\n",
+    ")\n",
+    "\n",
+    "report.log_version(\n",
+    "    version_str=\"0.0.1\",\n",
+    "    date=str(date.today()),\n",
+    "    description=\"Initial Release\",\n",
+    ")\n",
+    "report.log_owner(\n",
+    "    name=\"CyclOps Team\",\n",
+    "    contact=\"vectorinstitute.github.io/cyclops/\",\n",
+    "    email=\"cyclops@vectorinstitute.ai\",\n",
+    ")\n",
+    "report.log_license(identifier=\"Apache-2.0\")\n",
+    "report.log_reference(\n",
+    "    link=\"https://xgboost.readthedocs.io/en/stable/python/python_api.html\",  # noqa: E501\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Next, let's populate the considerations section, which includes the following fields by default:\n",
+    "- users: The intended users of the model.\n",
+    "- use_cases: The use cases for the model. These could be primary, downstream or out-of-scope use cases.\n",
+    "- fairness_assessment: A description of the benefits and harms of the model for different groups as well as the steps taken to mitigate the harms.\n",
+    "- ethical_considerations: The risks associated with using the model and the steps taken to mitigate them. This can be populated using the  `log_risk` method.\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "report.log_from_dict(\n",
+    "    data={\n",
+    "        \"users\": [\n",
+    "            {\"description\": \"Hospitals\"},\n",
+    "            {\"description\": \"Clinicians\"},\n",
+    "        ],\n",
+    "    },\n",
+    "    section_name=\"considerations\",\n",
+    ")\n",
+    "report.log_user(description=\"ML Engineers\")\n",
+    "report.log_use_case(\n",
+    "    description=\"Predicting risk of readmission.\",\n",
+    "    kind=\"primary\",\n",
+    ")\n",
+    "report.log_use_case(\n",
+    "    description=\"Predicting risk of pathologies and conditions other\\\n",
+    "    than risk of readmission.\",\n",
+    "    kind=\"out-of-scope\",\n",
+    ")\n",
+    "report.log_fairness_assessment(\n",
+    "    affected_group=\"sex, age\",\n",
+    "    benefit=\"Improved health outcomes for patients.\",\n",
+    "    harm=\"Biased predictions for patients in certain groups (e.g. older patients) \\\n",
+    "        may lead to worse health outcomes.\",\n",
+    "    mitigation_strategy=\"We will monitor the performance of the model on these groups \\\n",
+    "        and retrain the model if the performance drops below a certain threshold.\",\n",
+    ")\n",
+    "report.log_risk(\n",
+    "    risk=\"The model may be used to make decisions that affect the health of patients.\",\n",
+    "    mitigation_strategy=\"The model should be continuously monitored for performance \\\n",
+    "        and retrained if the performance drops below a certain threshold.\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Once the model card is populated, you can generate the report using the `export` method. The report is generated in the form of an HTML file. A JSON file containing the model card data will also be generated along with the HTML file. By default, the files will be saved in a folder named `cyclops_reports` in the current working directory. You can change the path by passing a `output_dir` argument when instantiating the `ModelCardReport` class."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "synthetic_timestamps = pd.date_range(\n",
+    "    start=\"20/6/2024\", periods=3, freq=\"W\"\n",
+    ").values.astype(str)\n",
+    "report_path = report.export(\n",
+    "    output_filename=\"readmission_report_periodic.html\",\n",
+    "    synthetic_timestamp=synthetic_timestamps[EVAL_NUM - 1],\n",
+    "    last_n_evals=3,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "You can view the generated HTML [report](./heart_failure_report_periodic.html)."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.12"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
