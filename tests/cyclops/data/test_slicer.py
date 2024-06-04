@@ -325,13 +325,15 @@ def test_filter_string_contains(
 
     result = np.zeros_like(col, dtype=bool)
     for substring in contains:
-        result |= col.str.contains(substring, case=False).to_numpy(dtype=bool)
+        result |= col.str.match(substring, case=True).to_numpy(dtype=bool)
 
     if negate:
         result = ~result
 
     if keep_nulls:
         result |= pd.isnull(col)
+        # remove NAs
+        result &= ~pd.isna(col)
     else:
         result &= pd.notnull(col)
 
@@ -526,3 +528,32 @@ def test_slice_spec():
                     month,
                 ),
             )
+
+
+def test_create_intersection():
+    """Test the creation of slice intersections."""
+    spec_list = [
+        {"feature_1": {"value": "value_1"}},
+        {"feature_2": {"min_value": "2020-01-01", "keep_nulls": False}},
+        {"feature_3": {"year": ["2000", "2010", "2020"]}},
+    ]
+
+    slice_spec = SliceSpec(spec_list)
+    assert slice_spec.spec_list == spec_list
+
+    intersect_list = [
+        {"feature_1": {"value": "value_1"}},
+        {"feature_2": {"min_value": "2020-01-01", "keep_nulls": False}},
+        {"feature_3": {"year": ["2000", "2010", "2020"]}},
+        {
+            "feature_1": {"value": "value_1"},
+            "feature_2": {"min_value": "2020-01-01", "keep_nulls": False},
+            "feature_3": {"year": ["2000", "2010", "2020"]},
+        },
+    ]
+
+    int_slice_spec1 = SliceSpec(spec_list, intersections=[(0, 1, 2)])
+    assert int_slice_spec1.spec_list == intersect_list
+
+    int_slice_spec2 = SliceSpec(spec_list, intersections=3)
+    assert int_slice_spec2.spec_list == intersect_list

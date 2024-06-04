@@ -186,12 +186,12 @@ def wrap_model(model: Union[Module, BaseEstimator], **kwargs) -> WrappedModel:
         If model is not a pyTorch or sklearn model.
 
     """
+    if is_sklearn_model(model):
+        return SKModel(model, **kwargs)
     if is_pytorch_model(model):
         from cyclops.models.wrappers import PTModel
 
         return PTModel(model, **kwargs)
-    if is_sklearn_model(model):
-        return SKModel(model, **kwargs)
     raise TypeError("``model`` must be a PyTorch or sklearn model")
 
 

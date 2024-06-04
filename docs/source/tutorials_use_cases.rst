@@ -39,6 +39,18 @@ contains observations, medications and procedures as features.
 
     tutorials/synthea/los_prediction.ipynb
 
+Diabetes 130-US Hospitals for Years 1999-2008 Readmission Prediction
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is a binary classification problem where the goal is to predict
+risk of readmission. The `diabetes dataset <https://archive.ics.uci.edu/ml/datasets/Diabetes+130-US+hospitals+for+years+1999-2008>`_
+is available on UCI Machine Learning Repository. The dataset contains
+47 features and 1 target variable.
+
+.. toctree::
+
+    tutorials/diabetes_130/readmission_prediction.ipynb
+
 Image data
 ----------
 

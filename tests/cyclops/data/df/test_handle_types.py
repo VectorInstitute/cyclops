@@ -41,9 +41,11 @@ def test_to_dtype():
     series_two = pd.Series([True, False, True])
     assert pd.api.types.is_bool_dtype(to_dtype(series_two, BINARY))
     series_three = pd.Series([0, 1, 3])
-    assert pd.api.types.is_categorical_dtype(to_dtype(series_three, ORDINAL))
+    assert isinstance(
+        to_dtype(series_three, ORDINAL).dtype, pd.api.types.CategoricalDtype
+    )
     series_four = pd.Series(["a", "B", "C"])
-    assert pd.api.types.is_object_dtype(to_dtype(series_four, STRING))
+    assert pd.api.types.is_string_dtype(to_dtype(series_four, STRING))
 
 
 def test_collect_indicators():

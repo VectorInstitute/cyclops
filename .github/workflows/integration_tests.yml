@@ -44,10 +44,10 @@ jobs:
   integration-tests:
     runs-on: [self-hosted, gpu, db, cyclops]
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v4.1.6
       - name: Install poetry
         run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
-      - uses: actions/setup-python@v5.0.0
+      - uses: actions/setup-python@v5.1.0
         with:
           python-version: '3.10'
       - name: Install dependencies and check code
@@ -59,11 +59,11 @@ jobs:
           source $(poetry env info --path)/bin/activate
           env MPICC=/opt/openmpi-4.1.5/bin/mpicc poetry install --with docs,dev,test --all-extras
           mpirun -n 2 python -m pytest --only-mpi
-          coverage run -m pytest -m integration_test -n auto --dist loadscope && coverage xml && coverage report -m
+          pytest -m integration_test --cov-report term --cov-report xml:./coverage.xml --cov=cyclops -n auto --dist loadscope
       - name: Upload coverage to Codecov
-        uses: Wandalen/wretry.action@v1.4.4
+        uses: Wandalen/wretry.action@v3.5.0
         with:
-          action: codecov/codecov-action@v4.0.1
+          action: codecov/codecov-action@v4.0.0
           with: |
             token: ${{ secrets.CODECOV_TOKEN }}
             file: ./coverage.xml

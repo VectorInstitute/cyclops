@@ -26,13 +26,13 @@ jobs:
   run-code-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v4.1.6
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
         with:
           virtualenvs-create: true
           virtualenvs-in-project: true
-      - uses: actions/setup-python@v5.0.0
+      - uses: actions/setup-python@v5.1.0
         with:
           python-version: '3.10'
           cache: 'poetry'

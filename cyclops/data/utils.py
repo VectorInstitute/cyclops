@@ -1,10 +1,17 @@
 """Utilities for datasets."""
 
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union, get_args
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Union,
+    get_args,
+)
 
-import numpy as np
-import numpy.typing as npt
 import pandas as pd
 import PIL
 import psutil
@@ -18,7 +25,6 @@ from datasets.features import (
     Sequence,
     Value,
 )
-from numpy.typing import ArrayLike
 
 from cyclops.utils.common import to_list
 from cyclops.utils.log import setup_logging
@@ -108,78 +114,6 @@ def set_decode(
         for feature_name, feature in dataset.features.items():
             if feature_name not in (exclude or []) and hasattr(feature, "decode"):
                 dataset.features[feature_name].decode = decode
-
-
-def get_columns_as_numpy_array(
-    dataset: Union[Dataset, Dict[str, ArrayLike]],
-    columns: Union[str, List[str]],
-) -> npt.NDArray[Any]:
-    """Get columns of dataset as numpy array.
-
-    Parameters
-    ----------
-    dataset : Dataset, Dict[str, ArrayLike]
-        A Hugging Face dataset object or a dictionary of arraylike objects.
-    columns : List[str], str
-        List of column names or single column name to get as numpy array.
-
-    Returns
-    -------
-    np.ndarray
-        Numpy array of columns.
-
-    """
-    if not isinstance(dataset, (Dataset, dict)):
-        raise TypeError(
-            "dataset must be a Hugging Face dataset or a dictionary of numpy arrays.",
-        )
-
-    if isinstance(columns, str):
-        columns = [columns]
-
-    if isinstance(dataset, Dataset) and dataset.format != "numpy":
-        with dataset.formatted_as("numpy", columns=columns, output_all_columns=True):
-            out_arr = np.stack([dataset[col] for col in columns], axis=-1).squeeze()
-    else:
-        out_arr = np.stack([dataset[col] for col in columns], axis=-1).squeeze()
-
-    if out_arr.ndim == 0:
-        out_arr = np.expand_dims(out_arr, axis=-1)
-
-    return out_arr  # type: ignore[no-any-return]
-
-
-def check_required_columns(
-    dataset_column_names: List[str],
-    *required_columns: Union[List[str], str, None],
-) -> None:
-    """Check if required columns are present in dataset.
-
-    Parameters
-    ----------
-    dataset_column_names : List[str]
-        List of column names in dataset.
-    required_columns : Union[List[str], str, None]
-        List of required column names or single required column name.
-
-    Raises
-    ------
-    ValueError
-        If a required column is not present in the dataset.
-
-    """
-    required_columns_ = [
-        column
-        for column in required_columns
-        if column is not None
-        for column in (column if isinstance(column, list) else [column])
-        if column is not None
-    ]
-    missing_columns = set(required_columns_) - set(dataset_column_names)
-    if missing_columns:
-        raise ValueError(
-            f"Dataset is missing the following required columns: {missing_columns}.",
-        )
 
 
 def feature_is_numeric(feature: FEATURE_TYPES) -> bool:

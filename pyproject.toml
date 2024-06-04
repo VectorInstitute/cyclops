@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pycyclops"
-version = "0.2.6"
+version = "0.2.9"
 description = "Framework for healthcare ML implementation"
 authors = ["Vector AI Engineering <cyclops@vectorinstitute.ai>"]
 license = "Apache-2.0"
@@ -13,7 +13,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.9, <3.12"
-pandas = "^2.0"
+pandas = {version = "^2.1", extras = ["performance"]}
 numpy = "^1.24.0"
 scikit-learn = "^1.4.0"
 scipy = "^1.11.0"
@@ -146,7 +146,7 @@ optional = true
 
 [tool.poetry.group.deploy.dependencies]
 aiohttp = "^3.9.2"
-bentoml = { version = "1.2.0", extras = ["triton"] }
+bentoml = { version = "1.2.5", extras = ["triton"] }
 torchxrayvision = "^1.2.1"
 kaggle = "^1.5.13"
 onnx = "^1.15.0"
