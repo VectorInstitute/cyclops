@@ -10,6 +10,14 @@ function updatePlot() {
   var label_selection = document.querySelectorAll('#plot-selection label');
   var label_slice_selection = document.querySelectorAll('#slice-selection label');
 
+  var mean_std_plot_selection = document.querySelectorAll('#mean-std-selection input[type="checkbox"]');
+  var mean_plot_selection = mean_std_plot_selection[0];
+  var std_plot_selection = mean_std_plot_selection[1];
+
+  var mean_std_label_selection = document.querySelectorAll('#mean-std-selection label');
+  var mean_label_selection = mean_std_label_selection[0];
+  var std_label_selection = mean_std_label_selection[1];
+
   // get all inputs values from div class radio-buttons
   // get name of inputs
   var inputs_name = [];
@@ -69,6 +77,25 @@ function updatePlot() {
       label_selection[i].style.border = "2px solid #DADCE0";
       label_selection[i].style.color = "#000000";
       }
+      if (mean_plot_selection.checked) {
+        mean_label_selection.style.backgroundColor = rgbaColor;
+        mean_label_selection.style.border = "2px solid " + plot_color;
+        mean_label_selection.style.color = plot_color;
+        }
+        else {
+        mean_label_selection.style.backgroundColor = "#ffffff";
+        mean_label_selection.style.border = "2px solid #DADCE0";
+        mean_label_selection.style.color = "#000000";
+        }
+      if (std_plot_selection.checked) {
+        std_label_selection.style.backgroundColor = rgbaColor;
+        std_label_selection.style.border = "2px solid " + plot_color;
+        std_label_selection.style.color = plot_color;
+        } else {
+        std_label_selection.style.backgroundColor = "#ffffff";
+        std_label_selection.style.border = "2px solid #DADCE0";
+        std_label_selection.style.color = "#000000";
+        }
   } else {
       for (let i = 0; i < plot_selection.length-1; i++) {
       if (plot_selection[i].value !== plot_selected.value) {
@@ -85,6 +112,25 @@ function updatePlot() {
           label_selection[i].style.backgroundColor = rgbaColor;
           label_selection[i].style.border = "2px solid " + plot_color;
           label_selection[i].style.color = plot_color;
+          if (mean_plot_selection.checked) {
+            mean_label_selection.style.backgroundColor = rgbaColor;
+            mean_label_selection.style.border = "2px solid " + plot_color;
+            mean_label_selection.style.color = plot_color;
+            }
+            else {
+            mean_label_selection.style.backgroundColor = "#ffffff";
+            mean_label_selection.style.border = "2px solid #DADCE0";
+            mean_label_selection.style.color = "#000000";
+            }
+          if (std_plot_selection.checked) {
+            std_label_selection.style.backgroundColor = rgbaColor;
+            std_label_selection.style.border = "2px solid " + plot_color;
+            std_label_selection.style.color = plot_color;
+            } else {
+            std_label_selection.style.backgroundColor = "#ffffff";
+            std_label_selection.style.border = "2px solid #DADCE0";
+            std_label_selection.style.color = "#000000";
+            }
       }
       }
   }
@@ -106,6 +152,25 @@ function updatePlot() {
           label_slice_selection[j].style.backgroundColor = rgbaColor;
           label_slice_selection[j].style.border = "2px solid " + plot_color;
           label_slice_selection[j].style.color = plot_color;
+          if (mean_plot_selection.checked) {
+            mean_label_selection.style.backgroundColor = rgbaColor;
+            mean_label_selection.style.border = "2px solid " + plot_color;
+            mean_label_selection.style.color = plot_color;
+            }
+            else {
+            mean_label_selection.style.backgroundColor = "#ffffff";
+            mean_label_selection.style.border = "2px solid #DADCE0";
+            mean_label_selection.style.color = "#000000";
+            }
+          if (std_plot_selection.checked) {
+            std_label_selection.style.backgroundColor = rgbaColor;
+            std_label_selection.style.border = "2px solid " + plot_color;
+            std_label_selection.style.color = plot_color;
+            } else {
+            std_label_selection.style.backgroundColor = "#ffffff";
+            std_label_selection.style.border = "2px solid #DADCE0";
+            std_label_selection.style.color = "#000000";
+            }
           }
           else {
           inputs_all[j].checked = false;
@@ -212,7 +277,11 @@ function updatePlot() {
       if (nulls === 10) {
       var plot_title = "Current " + name + " is trending " + trend_keyword + " and is " + passed_keyword + " the threshold.";
       var plot_title = multipleStringLines(plot_title);
-      var showlegend = false;
+      if (mean_plot_selection.checked || std_plot_selection.checked) {
+        var showlegend = true;
+      } else {
+        var showlegend = false;
+        }
       }
       else {
       var plot_title = "";
@@ -249,9 +318,60 @@ function updatePlot() {
       marker: {color: plot_colors[i+1]},
       line: {color: plot_colors[i+1]},
       name: name,
+      legendgroup: name + i,
       //name: selection.toString(),
       };
+
+      // check if length of history_data is >= mean_std_min_evals and if so get rolling mean and std if mean_plot_selection or std_plot_selection is checked
+      var mean_std_min_evals = mean_plot_selection.value;
+        if (history_data.length >= mean_std_min_evals ) {
+            var history_mean_data = rollingMean(history_data, mean_std_min_evals);
+            var history_std_data = rollingStd(history_data, mean_std_min_evals);
+        }
+
+        if (std_plot_selection.checked) {
+            // shaded region for rolling std
+            var trace_std_upper = {
+                x: timestamp_data.slice(-history_std_data.length),
+                y: history_mean_data.map((x, i) => x + history_std_data[i]),
+                // fill: 'tonexty',
+                fillcolor: `rgba(${plot_colors[i+1].slice(4, -1)}, 0.3)`,
+                mode: 'lines',
+                line: {width: 0, color: `rgba(${plot_colors[i+1].slice(4, -1)}, 0.3)`},
+                type: 'scatter',
+                showlegend: false,
+                legendgroup: name + i,
+                name: "Std. Dev. " + name,
+            };
+            var trace_std_lower = {
+                x: timestamp_data.slice(-history_std_data.length),
+                y: history_mean_data.map((x, i) => x - history_std_data[i]),
+                fill: 'tonexty',
+                fillcolor: `rgba(${plot_colors[i+1].slice(4, -1)}, 0.3)`,
+                mode: 'none',
+                type: 'scatter',
+                name: "Std. Dev. " + name,
+                legendgroup: name + i,
+                };
+            traces.push(trace_std_upper);
+            traces.push(trace_std_lower);
+        }
+      if (mean_plot_selection.checked) {
+        // dotted line for rolling mean
+        var trace_mean = {
+            x: timestamp_data.slice(-history_mean_data.length),
+            y: history_mean_data,
+            mode: 'lines',
+            type: 'scatter',
+            marker: {color: plot_colors[i+1]},
+            line: {color: plot_colors[i+1], dash: 'dot'},
+            name: "Mean " + name,
+            legendgroup: name + i,
+            };
+          traces.push(trace_mean);
+      }
       traces.push(trace);
+
   }
 
   if (nulls === 10) {
@@ -263,6 +383,7 @@ function updatePlot() {
       marker: {color: 'rgb(0,0,0)'},
       line: {color: 'rgb(0,0,0)', dash: 'dot'},
       name: '',
+      showlegend: false,
       };
       traces.push(threshold_trace);
   }
@@ -293,8 +414,8 @@ function updatePlot() {
       // show legend at top
       legend: {
       orientation: "h",
-      yanchor: "top",
-      y: 1.1,
+      yanchor: "bottom",
+      y: -0.3,
       xanchor: "left",
       x: 0.1
       },
@@ -396,6 +517,14 @@ function updatePlotSelection() {
   var label_slice_selection = document.querySelectorAll('#slice-selection label');
   var button_plot_selection = document.querySelectorAll('#plot-selection button');
 
+  var mean_std_plot_selection = document.querySelectorAll('#mean-std-selection input[type="checkbox"]');
+  var mean_plot_selection = mean_std_plot_selection[0];
+  var std_plot_selection = mean_std_plot_selection[1];
+
+  var mean_std_label_selection = document.querySelectorAll('#mean-std-selection label');
+  var mean_label_selection = mean_std_label_selection[0];
+  var std_label_selection = mean_std_label_selection[1];
+
   // if plot_selected is "+" then add new radio button to plot_selection called "Plot N" where last plot is N-1 but keep "+" at end and set new radio button to checked for second last element
   if (plot_selected.value === "+") {
       // if 10 plots already exist, don't add new plot and gray out "+"
@@ -428,6 +557,25 @@ function updatePlotSelection() {
       new_label.style.backgroundColor = rgbaColor;
       new_label.style.border = "2px solid " + plot_color;
       new_label.style.color = plot_color;
+      if (mean_plot_selection.checked) {
+        mean_label_selection.style.backgroundColor = rgbaColor;
+        mean_label_selection.style.border = "2px solid " + plot_color;
+        mean_label_selection.style.color = plot_color;
+        }
+        else {
+        mean_label_selection.style.backgroundColor = "#ffffff";
+        mean_label_selection.style.border = "2px solid #DADCE0";
+        mean_label_selection.style.color = "#000000";
+        }
+      if (std_plot_selection.checked) {
+        std_label_selection.style.backgroundColor = rgbaColor;
+        std_label_selection.style.border = "2px solid " + plot_color;
+        std_label_selection.style.color = plot_color;
+        } else {
+        std_label_selection.style.backgroundColor = "#ffffff";
+        std_label_selection.style.border = "2px solid #DADCE0";
+        std_label_selection.style.color = "#000000";
+        }
 
       // add button to delete plot
       var delete_button = document.createElement("button");
@@ -479,6 +627,25 @@ function updatePlotSelection() {
               label_slice_selection[j].style.backgroundColor = rgbaColor;
               label_slice_selection[j].style.border = "2px solid " + plot_color;
               label_slice_selection[j].style.color = plot_color;
+              if (mean_plot_selection.checked) {
+                mean_label_selection.style.backgroundColor = rgbaColor;
+                mean_label_selection.style.border = "2px solid " + plot_color;
+                mean_label_selection.style.color = plot_color;
+                }
+                else {
+                mean_label_selection.style.backgroundColor = "#ffffff";
+                mean_label_selection.style.border = "2px solid #DADCE0";
+                mean_label_selection.style.color = "#000000";
+                }
+              if (std_plot_selection.checked) {
+                std_label_selection.style.backgroundColor = rgbaColor;
+                std_label_selection.style.border = "2px solid " + plot_color;
+                std_label_selection.style.color = plot_color;
+                } else {
+                std_label_selection.style.backgroundColor = "#ffffff";
+                std_label_selection.style.border = "2px solid #DADCE0";
+                std_label_selection.style.color = "#000000";
+                }
           }
           else {
               inputs_all[j].checked = false;
@@ -505,6 +672,25 @@ function updatePlotSelection() {
           label_selection[i].style.backgroundColor = rgbaColor;
           label_selection[i].style.border = "2px solid " + plot_color;
           label_selection[i].style.color = plot_color;
+          if (mean_plot_selection.checked) {
+            mean_label_selection.style.backgroundColor = rgbaColor;
+            mean_label_selection.style.border = "2px solid " + plot_color;
+            mean_label_selection.style.color = plot_color;
+            }
+            else {
+            mean_label_selection.style.backgroundColor = "#ffffff";
+            mean_label_selection.style.border = "2px solid #DADCE0";
+            mean_label_selection.style.color = "#000000";
+            }
+          if (std_plot_selection.checked) {
+            std_label_selection.style.backgroundColor = rgbaColor;
+            std_label_selection.style.border = "2px solid " + plot_color;
+            std_label_selection.style.color = plot_color;
+            } else {
+            std_label_selection.style.backgroundColor = "#ffffff";
+            std_label_selection.style.border = "2px solid #DADCE0";
+            std_label_selection.style.color = "#000000";
+            }
       }
       }
       selection = selections[parseInt(plot_selected.value.split(" ")[1]-1)];
@@ -520,6 +706,25 @@ function updatePlotSelection() {
               label_slice_selection[j].style.backgroundColor = rgbaColor;
               label_slice_selection[j].style.border = "2px solid " + plot_color;
               label_slice_selection[j].style.color = plot_color;
+              if (mean_plot_selection.checked) {
+                mean_label_selection.style.backgroundColor = rgbaColor;
+                mean_label_selection.style.border = "2px solid " + plot_color;
+                mean_label_selection.style.color = plot_color;
+                }
+                else {
+                mean_label_selection.style.backgroundColor = "#ffffff";
+                mean_label_selection.style.border = "2px solid #DADCE0";
+                mean_label_selection.style.color = "#000000";
+                }
+              if (std_plot_selection.checked) {
+                std_label_selection.style.backgroundColor = rgbaColor;
+                std_label_selection.style.border = "2px solid " + plot_color;
+                std_label_selection.style.color = plot_color;
+                } else {
+                std_label_selection.style.backgroundColor = "#ffffff";
+                std_label_selection.style.border = "2px solid #DADCE0";
+                std_label_selection.style.color = "#000000";
+                }
           }
           else {
               inputs_all[j].checked = false;
@@ -600,6 +805,7 @@ function updatePlotSelection() {
       var last_n_evals = document.getElementById("n_evals_slider_pot").value;
       history_data = history_data.slice(-last_n_evals);
       timestamp_data = timestamp_data.slice(-last_n_evals);
+
       // get slope of line of best fit, if >0.01 then trending up, if <0.01 then trending down, else flat
       var slope = lineOfBestFit(history_data)[0];
       if (slope > 0.01) {
@@ -635,7 +841,11 @@ function updatePlotSelection() {
       if (nulls === 10) {
       var plot_title = "Current " + name + " is trending " + "flat" + " and is " + passed_keyword + " the threshold.";
       var plot_title = multipleStringLines(plot_title);
-      var showlegend = false;
+      if (mean_plot_selection.checked || std_plot_selection.checked) {
+        var showlegend = true;
+      } else {
+        var showlegend = false;
+        }
       }
       else {
       var plot_title = "";
@@ -673,8 +883,59 @@ function updatePlotSelection() {
       marker: {color: plot_colors[i+1]},
       line: {color: plot_colors[i+1]},
       name: name,
+      legendgroup: name + i,
       };
-      traces.push(trace);
+
+      // check if length of history_data is >= mean_std_min_evals and if so get rolling mean and std if mean_plot_selection or std_plot_selection is checked
+      var mean_std_min_evals = mean_plot_selection.value;
+        if (history_data.length >= mean_std_min_evals ) {
+            var history_mean_data = rollingMean(history_data, mean_std_min_evals);
+            var history_std_data = rollingStd(history_data, mean_std_min_evals);
+        }
+        if (std_plot_selection.checked) {
+            // shaded region for rolling std
+            var trace_std_upper = {
+                x: timestamp_data.slice(-history_std_data.length),
+                y: history_mean_data.map((x, i) => x + history_std_data[i]),
+                // fill: 'tonexty',
+                fillcolor: `rgba(${plot_colors[i+1].slice(4, -1)}, 0.3)`,
+                mode: 'lines',
+                line: {width: 0, color: `rgba(${plot_colors[i+1].slice(4, -1)}, 0.3)`},
+                type: 'scatter',
+                showlegend: false,
+                legendgroup: name + i,
+                name: "Std. Dev. " + name,
+            };
+            var trace_std_lower = {
+                x: timestamp_data.slice(-history_std_data.length),
+                y: history_mean_data.map((x, i) => x - history_std_data[i]),
+                fill: 'tonexty',
+                fillcolor: `rgba(${plot_colors[i+1].slice(4, -1)}, 0.3)`,
+                mode: 'none',
+                type: 'scatter',
+                name: "Std. Dev. " + name,
+                legendgroup: name + i,
+                };
+            traces.push(trace_std_upper);
+            traces.push(trace_std_lower);
+        }
+      if (mean_plot_selection.checked) {
+        // dotted line for rolling mean
+        var trace_mean = {
+            x: timestamp_data.slice(-history_mean_data.length),
+            y: history_mean_data,
+            mode: 'lines',
+            type: 'scatter',
+            marker: {color: plot_colors[i+1]},
+            line: {color: plot_colors[i+1], dash: 'dot'},
+            name: "Mean " + name,
+            legendgroup: name + i,
+            };
+          traces.push(trace_mean);
+      }
+
+    traces.push(trace);
+
   }
 
   if (nulls === 10) {
@@ -686,6 +947,7 @@ function updatePlotSelection() {
       marker: {color: 'rgb(0,0,0)'},
       line: {color: 'rgb(0,0,0)', dash: 'dot'},
       name: '',
+      showlegend: false,
       };
       traces.push(threshold_trace);
   }
@@ -716,8 +978,8 @@ function updatePlotSelection() {
       // show legend at top
       legend: {
       orientation: "h",
-      yanchor: "top",
-      y: 1.1,
+      yanchor: "bottom",
+      y: -0.3,
       xanchor: "left",
       x: 0.1
       },
@@ -736,12 +998,19 @@ function updatePlotSelection() {
   Plotly.newPlot(plot, traces, layout, {displayModeBar: false});
 }
 
-
 function deletePlotSelection(plot_number) {
   var plot_selection = document.querySelectorAll('#plot-selection input[type="radio"]');
   var label_selection = document.querySelectorAll('#plot-selection label');
   var label_slice_selection = document.querySelectorAll('#slice-selection label');
   var button_plot_selection = document.querySelectorAll('#plot-selection button');
+
+  var mean_std_plot_selection = document.querySelectorAll('#mean-std-selection input[type="checkbox"]');
+  var mean_plot_selection = mean_std_plot_selection[0];
+  var std_plot_selection = mean_std_plot_selection[1];
+
+  var mean_std_label_selection = document.querySelectorAll('#mean-std-selection label');
+  var mean_label_selection = mean_std_label_selection[0];
+  var std_label_selection = mean_std_label_selection[1];
 
   // set last plot to checked
   // get plot_selection with name "Plot N" where N is plot_number
@@ -770,6 +1039,25 @@ function deletePlotSelection(plot_number) {
   plot_selection[plot_number-1].style.backgroundColor = rgbaColor;
   plot_selection[plot_number-1].style.border = "2px solid " + plot_color;
   plot_selection[plot_number-1].style.color = plot_color;
+  if (mean_plot_selection.checked) {
+    mean_label_selection.style.backgroundColor = rgbaColor;
+    mean_label_selection.style.border = "2px solid " + plot_color;
+    mean_label_selection.style.color = plot_color;
+    }
+    else {
+    mean_label_selection.style.backgroundColor = "#ffffff";
+    mean_label_selection.style.border = "2px solid #DADCE0";
+    mean_label_selection.style.color = "#000000";
+    }
+  if (std_plot_selection.checked) {
+    std_label_selection.style.backgroundColor = rgbaColor;
+    std_label_selection.style.border = "2px solid " + plot_color;
+    std_label_selection.style.color = plot_color;
+    } else {
+    std_label_selection.style.backgroundColor = "#ffffff";
+    std_label_selection.style.border = "2px solid #DADCE0";
+    std_label_selection.style.color = "#000000";
+    }
 
   // make visibility of delete button from last plot visible
   if (button_plot_selection.length >= 2) {
@@ -824,3 +1112,32 @@ function lineOfBestFit(y) {
   var b = (y_sum - m * x_sum) / n;
   return [m, b];
   }
+
+function rollingMean(data, window) {
+    var mean = [];
+    for (var i = 0; i < data.length - window + 1; i++) {
+        var sum = 0;
+        for (var j = 0; j < window; j++) {
+        sum += data[i + j];
+        }
+        mean.push(sum / window);
+    }
+    return mean;
+    }
+
+function rollingStd(data, window) {
+    var std = [];
+    for (var i = 0; i < data.length - window + 1; i++) {
+        var sum = 0;
+        for (var j = 0; j < window; j++) {
+        sum += data[i + j];
+        }
+        var mean = sum / window;
+        var variance = 0;
+        for (var j = 0; j < window; j++) {
+        variance += (data[i + j] - mean) ** 2;
+        }
+        std.push(Math.sqrt(variance / window));
+    }
+    return std;
+    }

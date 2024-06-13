@@ -212,7 +212,15 @@
   </div>
   <div class="column" style="float: left;">
     <div class="subcard_overview" style="padding:10px; margin-bottom:20px; width:15vw;">
-      <h4>Metrics</h4>
+      <div style="display: flex; justify-content: space-between;">
+        <h4>Metrics</h4>
+        <div class="radio-buttons" id="mean-std-selection" style="justify-right">
+          <input type="checkbox" id="mean" value="Mean", name="Mean">
+          <label for="mean">Mean</label>
+          <input type="checkbox" id="std" value="Std", name="Std">
+          <label for="std">Std</label>
+        </div>
+      </div>
       <div class="radio-buttons" id="slice-selection">
           <input type="radio" id="{{comp.metric_cards.metrics[0]}}" name="metric" value="{{comp.metric_cards.metrics[0]}}" checked>
           {% if comp.metric_cards.metrics[0]|regex_search("\((.*?)\)")|length != 0 %}
