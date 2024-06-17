@@ -309,6 +309,20 @@ function updatePlot() {
       suffix = suffix.slice(0, -2);
       name += suffix + " )";
       }
+      if (nulls === 10) {
+        var threshold_trace = {
+        x: timestamp_data,
+        y: Array.from({length: history_data.length}, (_, i) => threshold),
+        mode: 'lines',
+        type: 'scatter',
+        marker: {color: 'rgb(0,0,0)'},
+        line: {color: 'rgb(0,0,0)', dash: 'dot'},
+        name: 'Threshold',
+        showlegend: true,
+        legendgroup: name + i,
+        };
+        traces.push(threshold_trace);
+    }
       var trace = {
       // range of x is the length of the list of floats
       x: timestamp_data,
@@ -374,19 +388,7 @@ function updatePlot() {
 
   }
 
-  if (nulls === 10) {
-      var threshold_trace = {
-      x: timestamp_data,
-      y: Array.from({length: history_data.length}, (_, i) => threshold),
-      mode: 'lines',
-      type: 'scatter',
-      marker: {color: 'rgb(0,0,0)'},
-      line: {color: 'rgb(0,0,0)', dash: 'dot'},
-      name: '',
-      showlegend: false,
-      };
-      traces.push(threshold_trace);
-  }
+
   var width = Math.max(parent.innerWidth - 900, 500);
   var layout = {
       title: {
@@ -874,6 +876,21 @@ function updatePlotSelection() {
       name += suffix + " )";
       }
 
+      if (nulls === 10) {
+        var threshold_trace = {
+        x: timestamp_data,
+        y: Array.from({length: history_data.length}, (_, i) => threshold),
+        mode: 'lines',
+        type: 'scatter',
+        marker: {color: 'rgb(0,0,0)'},
+        line: {color: 'rgb(0,0,0)', dash: 'dot'},
+        name: 'Threshold',
+        showlegend: true,
+        legendgroup: name + i,
+        };
+        traces.push(threshold_trace);
+    }
+
       var trace = {
       // range of x is the length of the list of floats
       x: timestamp_data,
@@ -935,22 +952,9 @@ function updatePlotSelection() {
       }
 
     traces.push(trace);
-
   }
 
-  if (nulls === 10) {
-      var threshold_trace = {
-      x: timestamp_data,
-      y: Array.from({length: history_data.length}, (_, i) => threshold),
-      mode: 'lines',
-      type: 'scatter',
-      marker: {color: 'rgb(0,0,0)'},
-      line: {color: 'rgb(0,0,0)', dash: 'dot'},
-      name: '',
-      showlegend: false,
-      };
-      traces.push(threshold_trace);
-  }
+
   var width = Math.max(parent.innerWidth - 900, 500);
   var layout = {
       title: {
