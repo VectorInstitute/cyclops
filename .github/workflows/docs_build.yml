@@ -22,7 +22,7 @@ jobs:
   build:
     runs-on: [self-hosted, db, gpu]
     steps:
-      - uses: actions/checkout@v4.1.6
+      - uses: actions/checkout@v4.1.7
         with:
           submodules: 'true'
       - name: Install dependencies, build docs and coverage report
