@@ -1,9 +1,9 @@
 """A light weight server for evaluation."""
 
+import logging
 import shutil
 from datetime import datetime
 
-import numpy as np
 import pandas as pd
 from datasets.arrow_dataset import Dataset
 from fastapi import FastAPI, Form
@@ -18,10 +18,14 @@ from cyclops.evaluate.metrics.experimental import MetricDict
 from cyclops.report.plot.classification import ClassificationPlotter
 from cyclops.report.report import ModelCardReport
 from cyclops.report.utils import flatten_results_dict
+from cyclops.utils.log import setup_logging
+
+
+LOGGER = logging.getLogger(__name__)
+setup_logging(print_level="WARN", logger=LOGGER)
 
 
 app = FastAPI()
-
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
@@ -38,18 +42,15 @@ async def evaluate_result(
     preds_prob: Annotated[str, Form()], target: Annotated[str, Form()]
 ):
     """Calculate metric and return result from request body."""
-    print(type(preds_prob))
-    print(type(target))
-
     preds_prob = [float(num.strip()) for num in preds_prob.split(",")]
     target = [float(num.strip()) for num in target.split(",")]
 
     # Evaluate and generate report file
     df = pd.DataFrame(data={"target": target, "preds_prob": preds_prob})
     _eval(df)
-    print("generated report.")
+    LOGGER.info("Generated report.")
     return templates.TemplateResponse(
-        "smart_test_report.html", {"request": {"method": "GET"}}
+        "test_report.html", {"request": {"method": "GET"}}
     )
 
 
@@ -57,50 +58,25 @@ async def evaluate_result(
 async def get_result():
     """Calculate metric and return result from request body."""
     return templates.TemplateResponse(
-        "smart_test_report.html", {"request": {"method": "GET"}}
+        "test_report.html", {"request": {"method": "GET"}}
     )
 
 
 def _export(report: ModelCardReport):
     """Prepare and export report file."""
-    synthetic_timestamps = pd.date_range(
-        start=datetime.today().date(), periods=10, freq="D"
-    ).values.astype(str)
-
-    report._model_card.overview = None
     report_path = report.export(
-        output_filename="smart_test_report.html",
-        synthetic_timestamp=synthetic_timestamps[0],
+        output_filename="test_report.html",
+        synthetic_timestamp=str(datetime.today()),
         last_n_evals=3,
     )
-
     shutil.copy(f"{report_path}", "./static")
-    for i in range(len(synthetic_timestamps[1:])):
-        report._model_card.overview = None
-
-        for metric in report._model_card.quantitative_analysis.performance_metrics:
-            metric.value = np.clip(
-                metric.value + np.random.normal(0, 0.1),
-                0,
-                1,
-            )
-            metric.tests[0].passed = bool(metric.value >= 0.6)
-
-        report_path = report.export(
-            output_filename="test_report.html",
-            synthetic_timestamp=synthetic_timestamps[i + 1],
-            last_n_evals=3,
-        )
-        shutil.copy(f"{report_path}", "./static")
     shutil.rmtree("./cyclops_report")
 
 
 def _eval(df: pd.DataFrame):
     """Evaluate and return report."""
     report = ModelCardReport()
-
     data = Dataset.from_pandas(df)
-
     metric_names = [
         "binary_accuracy",
         "binary_precision",
@@ -111,7 +87,6 @@ def _eval(df: pd.DataFrame):
         create_metric(metric_name, experimental=True) for metric_name in metric_names
     ]
     metric_collection = MetricDict(metrics)
-
     result = evaluator.evaluate(
         dataset=data,
         metrics=metric_collection,  # type: ignore[list-item]
@@ -161,7 +136,6 @@ def _eval(df: pd.DataFrame):
         caption="Overall Performance",
         section_name="quantitative analysis",
     )
-
     report.log_from_dict(
         data={
             "name": "Heart Failure Prediction Model",
@@ -170,7 +144,6 @@ def _eval(df: pd.DataFrame):
         },
         section_name="model_details",
     )
-
     report.log_version(
         version_str="0.0.1",
         date=str(datetime.today().date()),
@@ -185,7 +158,6 @@ def _eval(df: pd.DataFrame):
     report.log_reference(
         link="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html",  # noqa: E501
     )
-
     report.log_from_dict(
         data={
             "users": [
@@ -200,5 +172,4 @@ def _eval(df: pd.DataFrame):
         description="Predicting risk of heart failure.",
         kind="primary",
     )
-
     _export(report)

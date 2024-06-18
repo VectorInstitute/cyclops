@@ -2,7 +2,7 @@
 
 1. Install the required dependencies with poetry.
 ```bash
-poetry install --with deploy
+poetry install --with deploy_models
 ```
 2. Serialize trained model and move it to the `model_repo` directory. Then create
    a `config.pbtxt` file for the model.
