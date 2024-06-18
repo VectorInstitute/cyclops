@@ -343,7 +343,7 @@
 <li><p><strong>task</strong> (<em>Literal</em><em>[</em><em>&quot;binary&quot;</em><em>, </em><em>&quot;multiclass&quot;</em><em>, </em><em>&quot;multilabel&quot;</em><em>]</em>) – Task type. One of <code class="docutils literal notranslate"><span class="pre">binary</span></code>, <code class="docutils literal notranslate"><span class="pre">multiclass</span></code>, <code class="docutils literal notranslate"><span class="pre">multilabel</span></code>.</p></li>
 <li><p><strong>max_fpr</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>default=None</em>) – The maximum value of the false positive rate. If not None, a partial AUC
 in the range [0, max_fpr] is returned. Only used for binary classification.</p></li>
-<li><p><strong>thresholds</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>floats</em><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a><em> of </em><em>floats</em><em>, </em><em>default=None</em>) – Thresholds used for binarizing the values of <code class="docutils literal notranslate"><span class="pre">preds</span></code>.
+<li><p><strong>thresholds</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>floats</em><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><em>numpy.ndarray</em></a><em> of </em><em>floats</em><em>, </em><em>default=None</em>) – Thresholds used for binarizing the values of <code class="docutils literal notranslate"><span class="pre">preds</span></code>.
 If int, then the number of thresholds to use.
 If list or array, then the thresholds to use.
 If None, then the thresholds are automatically determined by the
@@ -441,7 +441,7 @@ tasks. One of:</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>max_fpr</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>default=None</em>) – The maximum value of the false positive rate. If not None, then
 the partial AUCROC in the range [0, max_fpr] is returned.</p></li>
-<li><p><strong>thresholds</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a><em>]</em><em>, </em><em>default=None</em>) – Thresholds used for binarizing the values of <code class="docutils literal notranslate"><span class="pre">preds</span></code>.
+<li><p><strong>thresholds</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><em>numpy.ndarray</em></a><em>]</em><em>, </em><em>default=None</em>) – Thresholds used for binarizing the values of <code class="docutils literal notranslate"><span class="pre">preds</span></code>.
 If int, then the number of thresholds to use.
 If list or array, then the thresholds to use.
 If None, then the thresholds are automatically determined by the
@@ -478,7 +478,7 @@ unique values in <code class="docutils literal notranslate"><span class="pre">pr
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>num_classes</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Number of classes.</p></li>
-<li><p><strong>thresholds</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a><em>]</em><em>, </em><em>default=None</em>) – Thresholds used for binarizing the values of <code class="docutils literal notranslate"><span class="pre">preds</span></code>.
+<li><p><strong>thresholds</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><em>numpy.ndarray</em></a><em>]</em><em>, </em><em>default=None</em>) – Thresholds used for binarizing the values of <code class="docutils literal notranslate"><span class="pre">preds</span></code>.
 If int, then the number of thresholds to use.
 If list or array, then the thresholds to use.
 If None, then the thresholds are automatically determined by the
@@ -538,7 +538,7 @@ this determines the type of averaging performed on the scores. One of:</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>num_labels</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The number of labels in the multilabel classification task.</p></li>
-<li><p><strong>thresholds</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a><em>]</em><em>, </em><em>default=None</em>) – Thresholds used for binarizing the values of <code class="docutils literal notranslate"><span class="pre">preds</span></code>.
+<li><p><strong>thresholds</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><em>numpy.ndarray</em></a><em>]</em><em>, </em><em>default=None</em>) – Thresholds used for binarizing the values of <code class="docutils literal notranslate"><span class="pre">preds</span></code>.
 If int, then the number of thresholds to use.
 If list or array, then the thresholds to use.
 If None, then the thresholds are automatically determined by the
@@ -640,7 +640,7 @@ tasks. One of:</p>
 <code class="docutils literal notranslate"><span class="pre">auroc</span></code> is a float. Otherwise, <code class="docutils literal notranslate"><span class="pre">auroc</span></code> is a numpy array.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)">float</a> or <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)">float</a> or <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)">numpy.ndarray</a></p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
@@ -693,7 +693,7 @@ are not in the range [0, 1], then they will be transformed to this range
 via a sigmoid function.</p></li>
 <li><p><strong>max_fpr</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>default=None</em>) – The maximum value of the false positive rate. If not None, then
 the partial AUCROC in the range [0, max_fpr] is returned.</p></li>
-<li><p><strong>thresholds</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a><em>]</em><em>, </em><em>default=None</em>) – Thresholds used for binarizing the values of <code class="docutils literal notranslate"><span class="pre">preds</span></code>.
+<li><p><strong>thresholds</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><em>numpy.ndarray</em></a><em>]</em><em>, </em><em>default=None</em>) – Thresholds used for binarizing the values of <code class="docutils literal notranslate"><span class="pre">preds</span></code>.
 If int, then the number of thresholds to use.
 If list or array, then the thresholds to use.
 If None, then the thresholds are automatically determined by the
@@ -733,7 +733,7 @@ unique values in <code class="docutils literal notranslate"><span class="pre">pr
 are not in the range [0, 1], then they will be transformed to this range
 via a softmax function.</p></li>
 <li><p><strong>num_classes</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Number of classes.</p></li>
-<li><p><strong>thresholds</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a><em>]</em><em>, </em><em>default=None</em>) – Thresholds used for binarizing the values of <code class="docutils literal notranslate"><span class="pre">preds</span></code>.
+<li><p><strong>thresholds</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><em>numpy.ndarray</em></a><em>]</em><em>, </em><em>default=None</em>) – Thresholds used for binarizing the values of <code class="docutils literal notranslate"><span class="pre">preds</span></code>.
 If int, then the number of thresholds to use.
 If list or array, then the thresholds to use.
 If None, then the thresholds are automatically determined by the
@@ -760,7 +760,7 @@ this determines the type of averaging performed on the scores. One of</p>
 of shape (num_classes,) is returned, otherwise a float is returned.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Union[<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)">float</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a>]</p>
+<dd class="field-odd"><p>Union[<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)">float</a>, <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)">numpy.ndarray</a>]</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
@@ -793,7 +793,7 @@ of shape (num_classes,) is returned, otherwise a float is returned.</p>
 are not in the range [0, 1], then they will be transformed to this range
 via a softmax function.</p></li>
 <li><p><strong>num_labels</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Number of labels.</p></li>
-<li><p><strong>thresholds</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a><em>]</em><em>, </em><em>default=None</em>) – Thresholds used for binarizing the values of <code class="docutils literal notranslate"><span class="pre">preds</span></code>.
+<li><p><strong>thresholds</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>]</em><em>, </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><em>numpy.ndarray</em></a><em>]</em><em>, </em><em>default=None</em>) – Thresholds used for binarizing the values of <code class="docutils literal notranslate"><span class="pre">preds</span></code>.
 If int, then the number of thresholds to use.
 If list or array, then the thresholds to use.
 If None, then the thresholds are automatically determined by the
@@ -825,7 +825,7 @@ this determines the type of averaging performed on the scores. One of</p>
 of shape (num_labels,) is returned, otherwise a float is returned.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)">float</a> or <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)">float</a> or <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)">numpy.ndarray</a></p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>

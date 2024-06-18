@@ -340,7 +340,7 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>thresholds</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>floats</em><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a><em> of </em><em>floats</em><em>, </em><em>default=None</em>) – Thresholds used for computing the precision and recall scores.
+<li><p><strong>thresholds</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><em>floats</em><em> or </em><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><em>numpy.ndarray</em></a><em> of </em><em>floats</em><em>, </em><em>default=None</em>) – Thresholds used for computing the precision and recall scores.
 If int, then the number of thresholds to use.
 If list or numpy.ndarray, then the thresholds to use.
 If None, then the thresholds are automatically determined by the
@@ -417,7 +417,7 @@ this acts as 0, but warnings are also raised.</p></li>
 <dd class="field-even"><p>The average precision score(s).</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)">float</a> or <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)">numpy.ndarray</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)">float</a> or <a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)">numpy.ndarray</a></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#ValueError" title="(in Python v3.9)"><strong>ValueError</strong></a> – If <code class="docutils literal notranslate"><span class="pre">task</span></code> is not one of <code class="docutils literal notranslate"><span class="pre">binary</span></code>, <code class="docutils literal notranslate"><span class="pre">multiclass</span></code> or <code class="docutils literal notranslate"><span class="pre">multilabel</span></code>.</p>
@@ -437,7 +437,7 @@ this acts as 0, but warnings are also raised.</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>target</strong> (<em>npt.ArrayLike</em>) – Target values.</p></li>
 <li><p><strong>preds</strong> (<em>npt.ArrayLike</em>) – Predicted values.</p></li>
-<li><p><strong>thresholds</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a>) – Thresholds used for computing the precision and recall scores. If not None,
+<li><p><strong>thresholds</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.0)"><em>numpy.ndarray</em></a>) – Thresholds used for computing the precision and recall scores. If not None,
 must be a 1D numpy array of floats in the [0, 1] range and monotonically
 increasing.</p></li>
 <li><p><strong>pos_label</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The label of the positive class.</p></li>
