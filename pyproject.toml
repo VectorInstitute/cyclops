@@ -141,16 +141,22 @@ mpi4py = {git = "https://github.com/mpi4py/mpi4py"}
 imbalanced-learn = "^0.12.0"
 pyperf = "^2.6.3"
 
-[tool.poetry.group.deploy]
+[tool.poetry.group.deploy_models]
 optional = true
 
-[tool.poetry.group.deploy.dependencies]
+[tool.poetry.group.deploy_models.dependencies]
 aiohttp = "^3.9.2"
 bentoml = { version = "1.2.5", extras = ["triton"] }
 torchxrayvision = "^1.2.1"
 kaggle = "^1.5.13"
 onnx = "^1.15.0"
 skl2onnx = "^1.16.0"
+
+[tool.poetry.group.deploy_report]
+optional = true
+
+[tool.poetry.group.deploy_report.dependencies]
+fastapi = "^0.111.0"
 
 [tool.poetry.extras]
 torch = ["torch"]

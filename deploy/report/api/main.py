@@ -1,19 +1,17 @@
 """A light weight server for evaluation."""
-import copy
+
 import shutil
 from datetime import datetime
-from typing import List, Union
 
 import numpy as np
 import pandas as pd
 from datasets.arrow_dataset import Dataset
-from fastapi import Body, Depends, FastAPI, Form
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi import FastAPI, Form
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from typing_extensions import Annotated
 
-from cyclops.api.model.eval_request import RequestData
 from cyclops.evaluate import evaluator
 from cyclops.evaluate.metrics import create_metric
 from cyclops.evaluate.metrics.experimental import MetricDict
@@ -27,14 +25,18 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+
 # This endpoint serves the UI
 @app.get("/", response_class=HTMLResponse)
 async def get_home():
     """Return home page for using evaluate API."""
     return templates.TemplateResponse("index.html", {"request": {"method": "POST"}})
 
+
 @app.post("/evaluate")
-async def evaluate_result(preds_prob: Annotated[str, Form()], target: Annotated[str, Form()]):
+async def evaluate_result(
+    preds_prob: Annotated[str, Form()], target: Annotated[str, Form()]
+):
     """Calculate metric and return result from request body."""
     print(type(preds_prob))
     print(type(target))
@@ -43,17 +45,20 @@ async def evaluate_result(preds_prob: Annotated[str, Form()], target: Annotated[
     target = [float(num.strip()) for num in target.split(",")]
 
     # Evaluate and generate report file
-    df = pd.DataFrame(
-        data={"target":target, "preds_prob": preds_prob}
-    )
+    df = pd.DataFrame(data={"target": target, "preds_prob": preds_prob})
     _eval(df)
     print("generated report.")
-    return templates.TemplateResponse("smart_test_report.html", {"request": {"method": "GET"}})
+    return templates.TemplateResponse(
+        "smart_test_report.html", {"request": {"method": "GET"}}
+    )
+
 
 @app.get("/evaluate")
 async def get_result():
     """Calculate metric and return result from request body."""
-    return templates.TemplateResponse("smart_test_report.html", {"request": {"method": "GET"}})
+    return templates.TemplateResponse(
+        "smart_test_report.html", {"request": {"method": "GET"}}
+    )
 
 
 def _export(report: ModelCardReport):
@@ -61,7 +66,6 @@ def _export(report: ModelCardReport):
     synthetic_timestamps = pd.date_range(
         start=datetime.today().date(), periods=10, freq="D"
     ).values.astype(str)
-
 
     report._model_card.overview = None
     report_path = report.export(
@@ -71,9 +75,7 @@ def _export(report: ModelCardReport):
     )
 
     shutil.copy(f"{report_path}", "./static")
-    # metric_save = None
     for i in range(len(synthetic_timestamps[1:])):
-
         report._model_card.overview = None
 
         for metric in report._model_card.quantitative_analysis.performance_metrics:
@@ -85,7 +87,7 @@ def _export(report: ModelCardReport):
             metric.tests[0].passed = bool(metric.value >= 0.6)
 
         report_path = report.export(
-            output_filename="smart_test_report.html",
+            output_filename="test_report.html",
             synthetic_timestamp=synthetic_timestamps[i + 1],
             last_n_evals=3,
         )
@@ -103,7 +105,7 @@ def _eval(df: pd.DataFrame):
         "binary_accuracy",
         "binary_precision",
         "binary_recall",
-        "binary_f1_score"
+        "binary_f1_score",
     ]
     metrics = [
         create_metric(metric_name, experimental=True) for metric_name in metric_names
@@ -144,7 +146,9 @@ def _eval(df: pd.DataFrame):
     # Extracting the overall classification metric values.
     overall_performance = {
         metric_name: metric_value
-        for metric_name, metric_value in result["model_for_preds_prob"]["overall"].items()
+        for metric_name, metric_value in result["model_for_preds_prob"][
+            "overall"
+        ].items()
         if metric_name not in ["BinaryROC", "BinaryPrecisionRecallCurve"]
     }
     # Plotting the overall classification metric values.
@@ -159,13 +163,13 @@ def _eval(df: pd.DataFrame):
     )
 
     report.log_from_dict(
-    data={
-        "name": "Heart Failure Prediction Model",
-        "description": "The model was trained on the Kaggle Heart Failure \
+        data={
+            "name": "Heart Failure Prediction Model",
+            "description": "The model was trained on the Kaggle Heart Failure \
         Prediction Dataset to predict risk of heart failure.",
-    },
-    section_name="model_details",
-)
+        },
+        section_name="model_details",
+    )
 
     report.log_version(
         version_str="0.0.1",
@@ -183,14 +187,14 @@ def _eval(df: pd.DataFrame):
     )
 
     report.log_from_dict(
-    data={
-        "users": [
-            {"description": "Hospitals"},
-            {"description": "Clinicians"},
-        ],
-    },
-    section_name="considerations",
-)
+        data={
+            "users": [
+                {"description": "Hospitals"},
+                {"description": "Clinicians"},
+            ],
+        },
+        section_name="considerations",
+    )
     report.log_user(description="ML Engineers")
     report.log_use_case(
         description="Predicting risk of heart failure.",
@@ -198,7 +202,3 @@ def _eval(df: pd.DataFrame):
     )
 
     _export(report)
-
-
-if __name__ == "__main__":
-    app.run(debug=True)
