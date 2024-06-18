@@ -214,11 +214,23 @@
     <div class="subcard_overview" style="padding:10px; margin-bottom:20px; width:15vw;">
       <div style="display:flex; flex-direction:column; gap:10px;">
         <h4 style="margin-bottom: 0px;">Metrics</h4>
-        <div class="radio-buttons" id="mean-std-selection" style="margin-bottom:20px;">
+        <div class="radio-buttons" id="mean-std-selection" style="margin-bottom:30px;">
           <input type="checkbox" id="mean" value="Mean", name="Mean">
-          <label for="mean">Mean</label>
+          <div class="tooltip">
+            <label for="mean">Mean</label>
+            <div class="tooltiptext">
+              The moving average of all data points.
+              <div class="arrow-up"></div>
+            </div>
+          </div>
           <input type="checkbox" id="std" value="Std", name="Std">
-          <label for="std">Std</label>
+          <div class="tooltip">
+            <label for="std">Std</label>
+            <div class="tooltiptext">
+              A measure of how dispersed the data points are in relation to the mean.
+              <div class="arrow-up"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="radio-buttons" id="slice-selection">
