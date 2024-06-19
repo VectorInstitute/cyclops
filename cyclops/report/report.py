@@ -1054,6 +1054,7 @@ class ModelCardReport:
         interactive: bool = True,
         save_json: bool = True,
         last_n_evals: Optional[int] = None,
+        mean_std_min_evals: int = 3,
         synthetic_timestamp: Optional[str] = None,
     ) -> str:
         """Export the model card report to an HTML file.
@@ -1073,6 +1074,10 @@ class ModelCardReport:
         last_n_evals : int, optional
             The number of most recent evaluations to include in the report and
             calculate trends for. If not provided, all evaluations will be included.
+        mean_std_min_evals : int
+            The minimum number of evaluations required to calculate the mean and
+            standard deviation for the performance over time plot in the overview
+            section. The default is 3.
         synthetic_timestamp : str, optional
             A synthetic timestamp to use for the report. This is useful for
             generating back-dated reports. The default is None, which uses the
@@ -1143,6 +1148,7 @@ class ModelCardReport:
         if self._model_card.overview is not None:
             last_n_evals = 0 if last_n_evals is None else last_n_evals
             self._model_card.overview.last_n_evals = last_n_evals
+            self._model_card.overview.mean_std_min_evals = mean_std_min_evals
 
         self._validate()
         template = self._get_jinja_template(template_path=template_path)
