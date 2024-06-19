@@ -15,8 +15,10 @@
 
 <html lang="en">
   <head>
+
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial_scale=1">
+
     <style>
       html {
         scroll-behavior: smooth;
@@ -351,7 +353,20 @@
         align-items: center;
       }
 
+      .radio-buttons {
+        display: flex;
+        row-gap: 15px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: left;
+        align-items: center;
+      }
+
       input[type="radio"] {
+        display: none;
+      }
+
+      input[type="checkbox"] {
         display: none;
       }
 
@@ -412,6 +427,17 @@
         color: #0073e4;
       }
 
+      .radio-buttons input[type="checkbox"]:checked+label {
+        background-color: rgba(0, 115, 228, 0.2);
+        border: 2px solid #0073e4;
+        color: #0073e4;
+      }
+
+      .radio-buttons input[type="checkbox"]:checked + .tooltip label {
+        background-color: rgba(0, 115, 228, 0.2);
+        border: 2px solid #0073e4;
+        color: #0073e4;
+      }
 
       .radio-buttons #button {
         padding-right: 5px;
@@ -584,4 +610,22 @@
       }
   }
   document.addEventListener('DOMContentLoaded', updateLastNEvals);
+
+function storeMeanStdMinEvals() {
+  var mean_radio_button = document.getElementById("mean");
+  var mean_std_min_evals = {{ model_card.overview.mean_std_min_evals }};
+  mean_radio_button.value = mean_std_min_evals;
+}
+document.addEventListener('DOMContentLoaded', storeMeanStdMinEvals);
+
+
+function changeMeanStd() {
+  updatePlot();
+}
+
+var mean_std_plot_selection = document.querySelectorAll('#mean-std-selection input[type="checkbox"]');
+for (let selection of mean_std_plot_selection) {
+  selection.addEventListener('change', changeMeanStd);
+}
+
 </script>
