@@ -7,7 +7,7 @@ For purposes of the foregoing, "Sell" means practicing any or all of the rights 
 - Software: CyclOps
 - License: Apache 2.0
 - Licensor: Vector Institute
-                                 
+
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
