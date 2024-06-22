@@ -1,1 +1,1 @@
-"""Web api package."""
+"""CyclOps evaluation server."""

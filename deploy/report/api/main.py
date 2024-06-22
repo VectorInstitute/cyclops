@@ -1,17 +1,19 @@
 """A light weight server for evaluation."""
 
 import logging
+import os
 import shutil
 from datetime import datetime
+from typing import Any, Dict, List
 
 import pandas as pd
 from datasets.arrow_dataset import Dataset
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from typing_extensions import Annotated
+from pydantic import BaseModel, Field, validator
 
+from cyclops.data.slicer import SliceSpec
 from cyclops.evaluate import evaluator
 from cyclops.evaluate.metrics import create_metric
 from cyclops.evaluate.metrics.experimental import MetricDict
@@ -26,55 +28,165 @@ setup_logging(print_level="WARN", logger=LOGGER)
 
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+TEMPLATES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
+templates = Jinja2Templates(directory=TEMPLATES_PATH)
+
+
+class EvaluationInput(BaseModel):
+    """Input data for evaluation."""
+
+    preds_prob: List[float] = Field(..., min_items=1)
+    target: List[float] = Field(..., min_items=1)
+    metadata: Dict[str, List[Any]] = Field(default_factory=dict)
+
+    @classmethod
+    @validator("preds_prob", "target")
+    def check_list_length(
+        cls, v: List[float], values: Dict[str, List[Any]], **kwargs: Any
+    ) -> List[float]:
+        """Check if preds_prob and target have the same length.
+
+        Parameters
+        ----------
+        v : List[float]
+            List of values.
+        values : Dict[str, List[Any]]
+            Dictionary of values.
+
+        Returns
+        -------
+        List[float]
+            List of values.
+
+        Raises
+        ------
+        ValueError
+            If preds_prob and target have different lengths.
+
+        """
+        if "preds_prob" in values and len(v) != len(values["preds_prob"]):
+            raise ValueError("preds_prob and target must have the same length")
+        return v
+
+    @classmethod
+    @validator("metadata")
+    def check_metadata_length(
+        cls, v: Dict[str, List[Any]], values: Dict[str, List[Any]], **kwargs: Any
+    ) -> Dict[str, List[Any]]:
+        """Check if metadata columns have the same length as preds_prob and target.
+
+        Parameters
+        ----------
+        v : Dict[str, List[Any]]
+            Dictionary of values.
+        values : Dict[str, List[Any]]
+            Dictionary of values.
+
+        Returns
+        -------
+        Dict[str, List[Any]]
+            Dictionary of values.
+
+        Raises
+        ------
+        ValueError
+            If metadata columns have different lengths than preds_prob and target.
+
+        """
+        if "preds_prob" in values:
+            for column in v.values():
+                if len(column) != len(values["preds_prob"]):
+                    raise ValueError(
+                        "All metadata columns must have the same length as preds_prob and target"
+                    )
+        return v
 
 
 # This endpoint serves the UI
 @app.get("/", response_class=HTMLResponse)
-async def get_home():
-    """Return home page for using evaluate API."""
-    return templates.TemplateResponse("index.html", {"request": {"method": "POST"}})
+async def get_home() -> HTMLResponse:
+    """Return home page for cyclops model report app.
+
+    Returns
+    -------
+    HTMLResponse
+        Home page for cyclops model report app.
+
+    """
+    return templates.TemplateResponse(
+        "test_report.html", {"request": {"method": "POST"}}
+    )
 
 
 @app.post("/evaluate")
-async def evaluate_result(
-    preds_prob: Annotated[str, Form()], target: Annotated[str, Form()]
-):
-    """Calculate metric and return result from request body."""
-    preds_prob = [float(num.strip()) for num in preds_prob.split(",")]
-    target = [float(num.strip()) for num in target.split(",")]
+async def evaluate_result(data: EvaluationInput) -> None:
+    """Calculate metric and return result from request body.
 
-    # Evaluate and generate report file
-    df = pd.DataFrame(data={"target": target, "preds_prob": preds_prob})
-    _eval(df)
-    LOGGER.info("Generated report.")
-    return templates.TemplateResponse(
-        "test_report.html", {"request": {"method": "GET"}}
-    )
+    Parameters
+    ----------
+    data : EvaluationInput
+        Input data for evaluation.
+
+    Raises
+    ------
+    HTTPException
+        If there is an internal server error.
+
+    """
+    try:
+        # Create a dictionary with all data
+        df_dict = {
+            "target": data.target,
+            "preds_prob": data.preds_prob,
+            **data.metadata,
+        }
+
+        # Create DataFrame
+        df = pd.DataFrame(df_dict)
+
+        _eval(df)
+        LOGGER.info("Generated report.")
+    except Exception as e:
+        LOGGER.error(f"Error during evaluation: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
 @app.get("/evaluate")
-async def get_result():
-    """Calculate metric and return result from request body."""
+async def get_report() -> HTMLResponse:
+    """Return latest updated model report.
+
+    Returns
+    -------
+    HTMLResponse
+        Latest updated model report as HTML response.
+
+    """
     return templates.TemplateResponse(
         "test_report.html", {"request": {"method": "GET"}}
     )
 
 
-def _export(report: ModelCardReport):
+def _export(report: ModelCardReport) -> None:
     """Prepare and export report file."""
+    if not os.path.exists("./cyclops_report"):
+        LOGGER.info("Creating report for the first time!")
     report_path = report.export(
         output_filename="test_report.html",
         synthetic_timestamp=str(datetime.today()),
         last_n_evals=3,
     )
-    shutil.copy(f"{report_path}", "./static")
-    shutil.rmtree("./cyclops_report")
+    shutil.copy(f"{report_path}", TEMPLATES_PATH)
 
 
-def _eval(df: pd.DataFrame):
-    """Evaluate and return report."""
+def _eval(df: pd.DataFrame) -> None:
+    """Evaluate and return report.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame containing target, preds_prob and metadata columns.
+
+    """
     report = ModelCardReport()
     data = Dataset.from_pandas(df)
     metric_names = [
@@ -87,9 +199,29 @@ def _eval(df: pd.DataFrame):
         create_metric(metric_name, experimental=True) for metric_name in metric_names
     ]
     metric_collection = MetricDict(metrics)
+    spec_list = [
+        {
+            "Age": {
+                "min_value": 30,
+                "max_value": 50,
+                "min_inclusive": True,
+                "max_inclusive": False,
+            },
+        },
+        {
+            "Age": {
+                "min_value": 50,
+                "max_value": 70,
+                "min_inclusive": True,
+                "max_inclusive": False,
+            },
+        },
+    ]
+    slice_spec = SliceSpec(spec_list)
     result = evaluator.evaluate(
         dataset=data,
-        metrics=metric_collection,  # type: ignore[list-item]
+        metrics=metric_collection,
+        slice_spec=slice_spec,
         target_columns="target",
         prediction_columns="preds_prob",
     )
