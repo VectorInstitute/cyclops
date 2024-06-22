@@ -11,7 +11,7 @@ from datasets.arrow_dataset import Dataset
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from cyclops.data.slicer import SliceSpec
 from cyclops.evaluate import evaluator
@@ -35,28 +35,26 @@ templates = Jinja2Templates(directory=TEMPLATES_PATH)
 class EvaluationInput(BaseModel):
     """Input data for evaluation."""
 
-    preds_prob: List[float] = Field(..., min_items=1)
-    target: List[float] = Field(..., min_items=1)
+    preds_prob: List[float] = Field(..., min_length=1)
+    target: List[float] = Field(..., min_length=1)
     metadata: Dict[str, List[Any]] = Field(default_factory=dict)
 
+    @field_validator("target")
     @classmethod
-    @validator("preds_prob", "target")
-    def check_list_length(
-        cls, v: List[float], values: Dict[str, List[Any]], **kwargs: Any
-    ) -> List[float]:
+    def check_list_length(cls, v: List[float], info: ValidationInfo) -> List[float]:
         """Check if preds_prob and target have the same length.
 
         Parameters
         ----------
         v : List[float]
-            List of values.
-        values : Dict[str, List[Any]]
-            Dictionary of values.
+            List of target values.
+        info : ValidationInfo
+            Validation information.
 
         Returns
         -------
         List[float]
-            List of values.
+            List of target values.
 
         Raises
         ------
@@ -64,28 +62,30 @@ class EvaluationInput(BaseModel):
             If preds_prob and target have different lengths.
 
         """
-        if "preds_prob" in values and len(v) != len(values["preds_prob"]):
+        preds_prob = info.data.get("preds_prob", [])
+        if len(v) != len(preds_prob):
             raise ValueError("preds_prob and target must have the same length")
         return v
 
+    @field_validator("metadata")
     @classmethod
-    @validator("metadata")
     def check_metadata_length(
-        cls, v: Dict[str, List[Any]], values: Dict[str, List[Any]], **kwargs: Any
+        cls, v: Dict[str, List[Any]], info: ValidationInfo
     ) -> Dict[str, List[Any]]:
         """Check if metadata columns have the same length as preds_prob and target.
 
         Parameters
         ----------
         v : Dict[str, List[Any]]
-            Dictionary of values.
-        values : Dict[str, List[Any]]
-            Dictionary of values.
+            Dictionary of metadata columns.
+
+        info : ValidationInfo
+            Validation information.
 
         Returns
         -------
         Dict[str, List[Any]]
-            Dictionary of values.
+            Dictionary of metadata columns.
 
         Raises
         ------
@@ -93,12 +93,12 @@ class EvaluationInput(BaseModel):
             If metadata columns have different lengths than preds_prob and target.
 
         """
-        if "preds_prob" in values:
-            for column in v.values():
-                if len(column) != len(values["preds_prob"]):
-                    raise ValueError(
-                        "All metadata columns must have the same length as preds_prob and target"
-                    )
+        preds_prob = info.data.get("preds_prob", [])
+        for column in v.values():
+            if len(column) != len(preds_prob):
+                raise ValueError(
+                    "All metadata columns must have the same length as preds_prob and target"
+                )
         return v
 
 
@@ -134,16 +134,14 @@ async def evaluate_result(data: EvaluationInput) -> None:
 
     """
     try:
-        # Create a dictionary with all data
-        df_dict = {
-            "target": data.target,
-            "preds_prob": data.preds_prob,
-            **data.metadata,
-        }
-
-        # Create DataFrame
-        df = pd.DataFrame(df_dict)
-
+        # Create dataframe with target, preds_prob and metadata columns
+        df = pd.DataFrame(
+            {
+                "target": data.target,
+                "preds_prob": data.preds_prob,
+                **data.metadata,
+            }
+        )
         _eval(df)
         LOGGER.info("Generated report.")
     except Exception as e:
@@ -167,7 +165,14 @@ async def get_report() -> HTMLResponse:
 
 
 def _export(report: ModelCardReport) -> None:
-    """Prepare and export report file."""
+    """Prepare and export report file.
+
+    Parameters
+    ----------
+    report : ModelCardReport
+        ModelCardReport object.
+
+    """
     if not os.path.exists("./cyclops_report"):
         LOGGER.info("Creating report for the first time!")
     report_path = report.export(
@@ -198,7 +203,7 @@ def _eval(df: pd.DataFrame) -> None:
     metrics = [
         create_metric(metric_name, experimental=True) for metric_name in metric_names
     ]
-    metric_collection = MetricDict(metrics)
+    metric_collection = MetricDict(metrics)  # type: ignore
     spec_list = [
         {
             "Age": {
