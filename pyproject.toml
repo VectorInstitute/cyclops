@@ -188,9 +188,6 @@ extra_checks = true
 [tool.ruff]
 include = ["*.py", "pyproject.toml", "*.ipynb"]
 line-length = 88
-exclude = [
-    "nbs",
-]
 
 [tool.ruff.format]
 quote-style = "double"

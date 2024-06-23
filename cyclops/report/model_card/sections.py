@@ -30,9 +30,14 @@ from cyclops.report.model_card.fields import (
 class Overview(BaseModelCardSection):
     """Overview section with aggregate metrics."""
 
-    last_n_evals: Optional[int] = Field(
-        None,
+    last_n_evals: int = Field(
+        0,
         description="The number of evaluations to display in the model card.",
+    )
+
+    mean_std_min_evals: int = Field(
+        3,
+        description="The minimum number of evaluations required to calculate mean and std in performance over time plot.",
     )
 
     metric_cards: Optional[MetricCardCollection] = Field(
