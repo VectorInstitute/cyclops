@@ -7,8 +7,6 @@ on:
     paths:
       - .pre-commit-config.yaml
       - .github/workflows/code_checks.yml
-      - .github/workflows/docs_build.yml
-      - .github/workflows/docs_deploy.yml
       - .github/workflows/integration_tests.yml
       - '**.py'
       - '**.ipynb'
@@ -26,8 +24,6 @@ on:
     paths:
       - .pre-commit-config.yaml
       - .github/workflows/code_checks.yml
-      - .github/workflows/docs_build.yml
-      - .github/workflows/docs_deploy.yml
       - .github/workflows/integration_tests.yml
       - '**.py'
       - '**.ipynb'

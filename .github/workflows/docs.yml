@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - .pre-commit-config.yaml
-      - .github/workflows/docs_build.yml
+      - .github/workflows/docs.yml
       - '**.py'
       - '**.ipynb'
       - '**.html'
@@ -21,6 +21,19 @@ on:
   push:
     branches:
       - main
+    paths:
+      - .pre-commit-config.yaml
+      - .github/workflows/docs.yml
+      - '**.py'
+      - '**.ipynb'
+      - '**.html'
+      - '**.jinja'
+      - '**.js'
+      - poetry.lock
+      - pyproject.toml
+      - '**.rst'
+      - '**.md'
+      - docs/cyclops-webpage
 
 jobs:
   build:
