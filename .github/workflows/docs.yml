@@ -55,11 +55,11 @@ jobs:
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
           poetry install --with docs,test --all-extras
+          
+          # Install Pandoc
           PANDOC_VERSION="2.19"
-          wget -q "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-linux-amd64.tar.gz"
-          tar xzf "pandoc-${PANDOC_VERSION}-linux-amd64.tar.gz" --strip-components 1 -C /usr/local/
-          rm "pandoc-${PANDOC_VERSION}-linux-amd64.tar.gz"
-          pandoc --version
+          curl -sLo- "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-linux-amd64.tar.gz" | tar xzf - --strip-components 2 -C /usr/local/bin --exclude="share"
+
           cd docs
           rm -rf source/reference/api/_autosummary
           make html
