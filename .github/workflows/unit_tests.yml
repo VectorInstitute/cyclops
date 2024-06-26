@@ -1,0 +1,56 @@
+name: unit tests
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/unit_tests.yml
+      - '**.py'
+      - '**.html'
+      - '**.jinja'
+      - '**.js'
+      - poetry.lock
+      - pyproject.toml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/unit_tests.yml
+      - '**.py'
+      - '**.html'
+      - '**.jinja'
+      - '**.js'
+      - poetry.lock
+      - pyproject.toml
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.7
+        with:
+          submodules: 'true'
+      - name: Install dependencies, run unit tests and coverage report
+        run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
+      - uses: actions/setup-python@v5.1.0
+        with:
+          python-version: '3.10'
+          cache: 'poetry'
+      - run: |
+          python3 -m pip install --upgrade pip && python3 -m pip install poetry
+          poetry env use '3.10'
+          source $(poetry env info --path)/bin/activate
+          poetry install --with docs,dev,test --all-extras
+          cd .. && pytest -m "not integration_test" --cov-report term --cov-report xml:./coverage.xml --cov=cyclops -n auto --dist loadscope
+      - name: Upload coverage to Codecov
+        uses: Wandalen/wretry.action@v3.5.0
+        with:
+          action: codecov/codecov-action@v4.0.0
+          with: |
+            token: ${{ secrets.CODECOV_TOKEN }}
+            file: ./coverage.xml
+            name: codecov-umbrella
+            fail_ci_if_error: true
+          attempt_limit: 5
+          attempt_delay: 30000

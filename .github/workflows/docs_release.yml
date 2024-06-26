@@ -1,12 +1,12 @@
-name: docs deploy
+name: docs release
 
 on:
-  push:
+  pull_request:
     branches:
       - main
     paths:
       - .pre-commit-config.yaml
-      - .github/workflows/docs_build.yml
+      - .github/workflows/docs_release.yml
       - '**.py'
       - '**.ipynb'
       - '**.html'
@@ -17,9 +17,11 @@ on:
       - '**.rst'
       - '**.md'
       - docs/cyclops-webpage
+    types: [labeled, closed]
 
 jobs:
   build:
+    if: contains(github.event.pull_request.labels.*.name, 'release') || (github.event.action == 'closed' && github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.7
@@ -37,11 +39,11 @@ jobs:
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
           poetry install --with docs,dev,test --all-extras
-      - name: Build docs without running notebooks
+      - name: Build docs with notebooks
         run: |
           cd docs
           rm -rf source/reference/api/_autosummary
-          make html SPHINXOPTS="-D nbsphinx_execute='never'"
+          make html
       - name: Upload coverage to Codecov
         uses: Wandalen/wretry.action@v3.5.0
         with:
@@ -66,6 +68,7 @@ jobs:
           yarn build
           cp -r ../build/html build/api
       - name: Deploy to GitHub Pages
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true
         uses: peaceiris/actions-gh-pages@v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
