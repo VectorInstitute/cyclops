@@ -1,50 +1,49 @@
 name: docs release
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - .pre-commit-config.yaml
-      - .github/workflows/docs_release.yml
-      - '**.py'
-      - '**.ipynb'
-      - '**.html'
-      - '**.jinja'
-      - '**.js'
-      - poetry.lock
-      - pyproject.toml
-      - '**.rst'
-      - '**.md'
-      - docs/cyclops-webpage
-    types: [labeled, closed]
+    pull_request:
+      branches:
+        - main
+      paths:
+        - .pre-commit-config.yaml
+        - .github/workflows/docs_release.yml
+        - '**.py'
+        - '**.ipynb'
+        - '**.html'
+        - '**.jinja'
+        - '**.js'
+        - poetry.lock
+        - pyproject.toml
+        - '**.rst'
+        - '**.md'
+        - docs/cyclops-webpage
+      types: [labeled, closed]
 
 jobs:
-  build:
+  release-build:
     if: contains(github.event.pull_request.labels.*.name, 'release') || (github.event.action == 'closed' && github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.7
         with:
           submodules: 'true'
-      - name: Install dependencies, run unit tests and coverage report
+      - name: Install poetry
         run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
-      - name: Set up Python
-        uses: actions/setup-python@v5.1.0
+      - uses: actions/setup-python@v5.1.0
         with:
           python-version: '3.10'
           cache: 'poetry'
-      - name: Install dependencies, build docs with notebooks
+      - name: Install dependencies, build docs without running notebooks
         run: |
           python3 -m pip install --upgrade pip && python3 -m pip install poetry
+          poetry env use '3.10'
+          source $(poetry env info --path)/bin/activate
+          poetry install --with docs,test --all-extras
 
           # Install Pandoc
           PANDOC_VERSION="2.19"
           curl -sLo- "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-linux-amd64.tar.gz" | tar xzf - --strip-components 2 -C /usr/local/bin --exclude="share"
 
-          poetry env use '3.10'
-          source $(poetry env info --path)/bin/activate
-          poetry install --with docs,test --all-extras
           cd docs
           rm -rf source/reference/api/_autosummary
           make html
