@@ -50,28 +50,15 @@ jobs:
         with:
           python-version: '3.10'
           cache: 'poetry'
-      - name: Install dependencies
+      - name: Install dependencies, build docs without running notebooks
         run: |
           python3 -m pip install --upgrade pip && python3 -m pip install poetry
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
           poetry install --with docs,test --all-extras
-      - name: Build docs without running notebooks
-        run: |
           cd docs
           rm -rf source/reference/api/_autosummary
           make html SPHINXOPTS="-D nbsphinx_execute='never'"
-      - name: Upload coverage to Codecov
-        uses: Wandalen/wretry.action@v3.5.0
-        with:
-          action: codecov/codecov-action@v4.0.0
-          with: |
-            token: ${{ secrets.CODECOV_TOKEN }}
-            file: ./coverage.xml
-            name: codecov-umbrella
-            fail_ci_if_error: true
-          attempt_limit: 5
-          attempt_delay: 30000
       - name: Set up Node.js
         uses: actions/setup-node@v4.0.2
         with:

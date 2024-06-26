@@ -45,17 +45,6 @@ jobs:
           cd docs
           rm -rf source/reference/api/_autosummary
           make html
-      - name: Upload coverage to Codecov
-        uses: Wandalen/wretry.action@v3.5.0
-        with:
-          action: codecov/codecov-action@v4.0.0
-          with: |
-            token: ${{ secrets.CODECOV_TOKEN }}
-            file: ./coverage.xml
-            name: codecov-umbrella
-            fail_ci_if_error: true
-          attempt_limit: 5
-          attempt_delay: 30000
       - name: Set up Node.js
         uses: actions/setup-node@v4.0.2
         with:
