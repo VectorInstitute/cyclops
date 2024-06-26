@@ -1,7 +1,7 @@
-name: docs deploy
+name: docs
 
 on:
-  push:
+  pull_request:
     branches:
       - main
     paths:
@@ -17,9 +17,14 @@ on:
       - '**.rst'
       - '**.md'
       - docs/cyclops-webpage
+    types: [opened, synchronize, closed]
+  push:
+    branches:
+      - main
 
 jobs:
   build:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize' || (github.event.action == 'closed' && github.event.pull_request.merged == true)))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.7
@@ -66,6 +71,7 @@ jobs:
           yarn build
           cp -r ../build/html build/api
       - name: Deploy to GitHub Pages
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
         uses: peaceiris/actions-gh-pages@v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
