@@ -8,7 +8,7 @@ from typing import Any, Dict, List
 
 import pandas as pd
 from datasets.arrow_dataset import Dataset
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field, validator
@@ -25,7 +25,6 @@ from cyclops.utils.log import setup_logging
 
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
-
 
 app = FastAPI()
 TEMPLATES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates")
@@ -44,26 +43,7 @@ class EvaluationInput(BaseModel):
     def check_list_length(
         cls, v: List[float], values: Dict[str, List[Any]], **kwargs: Any
     ) -> List[float]:
-        """Check if preds_prob and target have the same length.
-
-        Parameters
-        ----------
-        v : List[float]
-            List of values.
-        values : Dict[str, List[Any]]
-            Dictionary of values.
-
-        Returns
-        -------
-        List[float]
-            List of values.
-
-        Raises
-        ------
-        ValueError
-            If preds_prob and target have different lengths.
-
-        """
+        """Check if preds_prob and target have the same length."""
         if "preds_prob" in values and len(v) != len(values["preds_prob"]):
             raise ValueError("preds_prob and target must have the same length")
         return v
@@ -73,26 +53,7 @@ class EvaluationInput(BaseModel):
     def check_metadata_length(
         cls, v: Dict[str, List[Any]], values: Dict[str, List[Any]], **kwargs: Any
     ) -> Dict[str, List[Any]]:
-        """Check if metadata columns have the same length as preds_prob and target.
-
-        Parameters
-        ----------
-        v : Dict[str, List[Any]]
-            Dictionary of values.
-        values : Dict[str, List[Any]]
-            Dictionary of values.
-
-        Returns
-        -------
-        Dict[str, List[Any]]
-            Dictionary of values.
-
-        Raises
-        ------
-        ValueError
-            If metadata columns have different lengths than preds_prob and target.
-
-        """
+        """Check if metadata columns have the same length as preds_prob and target."""
         if "preds_prob" in values:
             for column in v.values():
                 if len(column) != len(values["preds_prob"]):
@@ -104,35 +65,14 @@ class EvaluationInput(BaseModel):
 
 # This endpoint serves the UI
 @app.get("/", response_class=HTMLResponse)
-async def get_home() -> HTMLResponse:
-    """Return home page for cyclops model report app.
-
-    Returns
-    -------
-    HTMLResponse
-        Home page for cyclops model report app.
-
-    """
-    return templates.TemplateResponse(
-        "test_report.html", {"request": {"method": "POST"}}
-    )
+async def get_home(request: Request) -> HTMLResponse:
+    """Return home page for cyclops model report app."""
+    return templates.TemplateResponse("test_report.html", {"request": request})
 
 
 @app.post("/evaluate")
 async def evaluate_result(data: EvaluationInput) -> None:
-    """Calculate metric and return result from request body.
-
-    Parameters
-    ----------
-    data : EvaluationInput
-        Input data for evaluation.
-
-    Raises
-    ------
-    HTTPException
-        If there is an internal server error.
-
-    """
+    """Calculate metric and return result from request body."""
     try:
         # Create a dictionary with all data
         df_dict = {
@@ -140,10 +80,8 @@ async def evaluate_result(data: EvaluationInput) -> None:
             "preds_prob": data.preds_prob,
             **data.metadata,
         }
-
         # Create DataFrame
         df = pd.DataFrame(df_dict)
-
         _eval(df)
         LOGGER.info("Generated report.")
     except Exception as e:
@@ -151,19 +89,10 @@ async def evaluate_result(data: EvaluationInput) -> None:
         raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
-@app.get("/evaluate")
-async def get_report() -> HTMLResponse:
-    """Return latest updated model report.
-
-    Returns
-    -------
-    HTMLResponse
-        Latest updated model report as HTML response.
-
-    """
-    return templates.TemplateResponse(
-        "test_report.html", {"request": {"method": "GET"}}
-    )
+@app.get("/evaluate", response_class=HTMLResponse)
+async def get_report(request: Request) -> HTMLResponse:
+    """Return latest updated model report."""
+    return templates.TemplateResponse("test_report.html", {"request": request})
 
 
 def _export(report: ModelCardReport) -> None:
@@ -179,14 +108,7 @@ def _export(report: ModelCardReport) -> None:
 
 
 def _eval(df: pd.DataFrame) -> None:
-    """Evaluate and return report.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        DataFrame containing target, preds_prob and metadata columns.
-
-    """
+    """Evaluate and return report."""
     report = ModelCardReport()
     data = Dataset.from_pandas(df)
     metric_names = [
@@ -226,7 +148,6 @@ def _eval(df: pd.DataFrame) -> None:
         prediction_columns="preds_prob",
     )
     results_flat = flatten_results_dict(results=result)
-
     # Log into report
     for name, metric in results_flat["model_for_preds_prob"].items():
         split, name = name.split("/")  # noqa: PLW2901
@@ -245,11 +166,9 @@ def _eval(df: pd.DataFrame) -> None:
             pass_fail_thresholds=0.6,
             pass_fail_threshold_fns=lambda x, threshold: bool(x >= threshold),
         )
-
     # Log plot in report
     plotter = ClassificationPlotter(task_type="binary", class_names=["0", "1"])
     plotter.set_template("plotly_white")
-
     # Extracting the overall classification metric values.
     overall_performance = {
         metric_name: metric_value
@@ -271,8 +190,7 @@ def _eval(df: pd.DataFrame) -> None:
     report.log_from_dict(
         data={
             "name": "Heart Failure Prediction Model",
-            "description": "The model was trained on the Kaggle Heart Failure \
-        Prediction Dataset to predict risk of heart failure.",
+            "description": "The model was trained on the Kaggle Heart Failure Prediction Dataset to predict risk of heart failure.",
         },
         section_name="model_details",
     )
