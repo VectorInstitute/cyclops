@@ -43,27 +43,26 @@ jobs:
       - uses: actions/checkout@v4.1.7
         with:
           submodules: 'true'
-      - name: Install dependencies, run unit tests and coverage report
+      - name: Install poetry
         run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
-      - name: Set up Python
-        uses: actions/setup-python@v5.1.0
+      - uses: actions/setup-python@v5.1.0
         with:
           python-version: '3.10'
           cache: 'poetry'
       - name: Install dependencies, build docs without running notebooks
         run: |
           python3 -m pip install --upgrade pip && python3 -m pip install poetry
+          poetry env use '3.10'
+          source $(poetry env info --path)/bin/activate
+          poetry install --with docs,test --all-extras
 
           # Install Pandoc
           PANDOC_VERSION="2.19"
           curl -sLo- "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-linux-amd64.tar.gz" | tar xzf - --strip-components 2 -C /usr/local/bin --exclude="share"
 
-          poetry env use '3.10'
-          source $(poetry env info --path)/bin/activate
-          poetry install --with docs,test --all-extras
           cd docs
           rm -rf source/reference/api/_autosummary
-          make html SPHINXOPTS="-D nbsphinx_execute='never'"
+          make html
       - name: Set up Node.js
         uses: actions/setup-node@v4.0.2
         with:
@@ -77,7 +76,53 @@ jobs:
           yarn build
           cp -r ../build/html build/api
       - name: Deploy to GitHub Pages
-        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
+        uses: peaceiris/actions-gh-pages@v4.0.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: github_pages
+          publish_dir: docs/cyclops-webpage/build
+
+  release-build:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.7
+        with:
+          submodules: 'true'
+      - name: Install poetry
+        run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
+      - uses: actions/setup-python@v5.1.0
+        with:
+          python-version: '3.10'
+          cache: 'poetry'
+      - name: Install dependencies, build docs with notebook execution
+        run: |
+          python3 -m pip install --upgrade pip && python3 -m pip install poetry
+          poetry env use '3.10'
+          source $(poetry env info --path)/bin/activate
+          poetry install --with docs,test --all-extras
+
+          # Install Pandoc
+          PANDOC_VERSION="2.19"
+          curl -sLo- "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-linux-amd64.tar.gz" | tar xzf - --strip-components 2 -C /usr/local/bin --exclude="share"
+
+          cd docs
+          rm -rf source/reference/api/_autosummary
+          make html-with-notebooks
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.0.2
+        with:
+          node-version: 18
+          cache: yarn
+          cache-dependency-path: '**/yarn.lock'
+      - name: Build webpage
+        run: |
+          cd docs/cyclops-webpage
+          yarn install --frozen-lockfile
+          yarn build
+          cp -r ../build/html build/api
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
