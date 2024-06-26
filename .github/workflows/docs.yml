@@ -55,7 +55,7 @@ jobs:
           python3 -m pip install --upgrade pip && python3 -m pip install poetry
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
-          poetry install --with docs,dev,test --all-extras
+          poetry install --with docs,test --all-extras
       - name: Build docs without running notebooks
         run: |
           cd docs
