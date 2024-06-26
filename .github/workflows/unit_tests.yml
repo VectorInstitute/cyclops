@@ -42,7 +42,7 @@ jobs:
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
           poetry install --with test --all-extras
-          cd .. && pytest -m "not integration_test" --cov-report term --cov-report xml:./coverage.xml --cov=cyclops -n auto --dist loadscope
+          pytest -m "not integration_test" --cov-report term --cov-report xml:./coverage.xml --cov=cyclops -n auto --dist loadscope
       - name: Upload coverage to Codecov
         uses: Wandalen/wretry.action@v3.5.0
         with:
