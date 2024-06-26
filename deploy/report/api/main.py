@@ -43,7 +43,26 @@ class EvaluationInput(BaseModel):
     def check_list_length(
         cls, v: List[float], values: Dict[str, List[Any]], **kwargs: Any
     ) -> List[float]:
-        """Check if preds_prob and target have the same length."""
+        """Check if preds_prob and target have the same length.
+
+        Parameters
+        ----------
+        v : List[float]
+            List of values.
+        values : Dict[str, List[Any]]
+            Dictionary of values.
+
+        Returns
+        -------
+        List[float]
+            List of values.
+
+        Raises
+        ------
+        ValueError
+            If preds_prob and target have different lengths.
+
+        """
         if "preds_prob" in values and len(v) != len(values["preds_prob"]):
             raise ValueError("preds_prob and target must have the same length")
         return v
@@ -53,7 +72,26 @@ class EvaluationInput(BaseModel):
     def check_metadata_length(
         cls, v: Dict[str, List[Any]], values: Dict[str, List[Any]], **kwargs: Any
     ) -> Dict[str, List[Any]]:
-        """Check if metadata columns have the same length as preds_prob and target."""
+        """Check if metadata columns have the same length as preds_prob and target.
+
+        Parameters
+        ----------
+        v : Dict[str, List[Any]]
+            Dictionary of values.
+        values : Dict[str, List[Any]]
+            Dictionary of values.
+
+        Returns
+        -------
+        Dict[str, List[Any]]
+            Dictionary of values.
+
+        Raises
+        ------
+        ValueError
+            If metadata columns have different lengths than preds_prob and target.
+
+        """
         if "preds_prob" in values:
             for column in v.values():
                 if len(column) != len(values["preds_prob"]):
@@ -66,13 +104,37 @@ class EvaluationInput(BaseModel):
 # This endpoint serves the UI
 @app.get("/", response_class=HTMLResponse)
 async def get_home(request: Request) -> HTMLResponse:
-    """Return home page for cyclops model report app."""
+    """Return home page for cyclops model report app.
+
+    Parameters
+    ----------
+    request : Request
+        Request object.
+
+    Returns
+    -------
+    HTMLResponse
+        HTML response for home page
+
+    """
     return templates.TemplateResponse("test_report.html", {"request": request})
 
 
 @app.post("/evaluate")
 async def evaluate_result(data: EvaluationInput) -> None:
-    """Calculate metric and return result from request body."""
+    """Calculate metric and return result from request body.
+
+    Parameters
+    ----------
+    data : EvaluationInput
+        Evaluation input data.
+
+    Raises
+    ------
+    HTTPException
+        If there is an internal server error.
+
+    """
     try:
         # Create a dictionary with all data
         df_dict = {
@@ -91,12 +153,31 @@ async def evaluate_result(data: EvaluationInput) -> None:
 
 @app.get("/evaluate", response_class=HTMLResponse)
 async def get_report(request: Request) -> HTMLResponse:
-    """Return latest updated model report."""
+    """Return latest updated model report.
+
+    Parameters
+    ----------
+    request : Request
+        Request object.
+
+    Returns
+    -------
+    HTMLResponse
+        HTML response for model report
+
+    """
     return templates.TemplateResponse("test_report.html", {"request": request})
 
 
 def _export(report: ModelCardReport) -> None:
-    """Prepare and export report file."""
+    """Prepare and export report file.
+
+    Parameters
+    ----------
+    report : ModelCardReport
+        ModelCardReport object
+
+    """
     if not os.path.exists("./cyclops_report"):
         LOGGER.info("Creating report for the first time!")
     report_path = report.export(
@@ -108,7 +189,14 @@ def _export(report: ModelCardReport) -> None:
 
 
 def _eval(df: pd.DataFrame) -> None:
-    """Evaluate and return report."""
+    """Evaluate and return report.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        DataFrame with target, preds_prob and metadata columns
+
+    """
     report = ModelCardReport()
     data = Dataset.from_pandas(df)
     metric_names = [
