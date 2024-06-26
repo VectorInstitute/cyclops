@@ -1,43 +1,27 @@
-name: docs
+name: docs release
 
 on:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - .pre-commit-config.yaml
-      - .github/workflows/docs.yml
-      - '**.py'
-      - '**.ipynb'
-      - '**.html'
-      - '**.jinja'
-      - '**.js'
-      - poetry.lock
-      - pyproject.toml
-      - '**.rst'
-      - '**.md'
-      - docs/cyclops-webpage
-    types: [opened, synchronize, closed]
-  push:
-    branches:
-      - main
-    paths:
-      - .pre-commit-config.yaml
-      - .github/workflows/docs.yml
-      - '**.py'
-      - '**.ipynb'
-      - '**.html'
-      - '**.jinja'
-      - '**.js'
-      - poetry.lock
-      - pyproject.toml
-      - '**.rst'
-      - '**.md'
-      - docs/cyclops-webpage
+    pull_request:
+      branches:
+        - main
+      paths:
+        - .pre-commit-config.yaml
+        - .github/workflows/docs_release.yml
+        - '**.py'
+        - '**.ipynb'
+        - '**.html'
+        - '**.jinja'
+        - '**.js'
+        - poetry.lock
+        - pyproject.toml
+        - '**.rst'
+        - '**.md'
+        - docs/cyclops-webpage
+      types: [labeled, closed]
 
 jobs:
-  build:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize' || (github.event.action == 'closed' && github.event.pull_request.merged == true)))
+  release-build:
+    if: contains(github.event.pull_request.labels.*.name, 'release') || (github.event.action == 'closed' && github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.7
@@ -76,6 +60,7 @@ jobs:
           yarn build
           cp -r ../build/html build/api
       - name: Deploy to GitHub Pages
+        if: github.event.action == 'closed' && github.event.pull_request.merged == true
         uses: peaceiris/actions-gh-pages@v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
