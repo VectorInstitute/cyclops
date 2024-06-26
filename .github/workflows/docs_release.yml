@@ -34,14 +34,17 @@ jobs:
         with:
           python-version: '3.10'
           cache: 'poetry'
-      - name: Install dependencies
+      - name: Install dependencies, build docs with notebooks
         run: |
           python3 -m pip install --upgrade pip && python3 -m pip install poetry
+
+          # Install Pandoc
+          PANDOC_VERSION="2.19"
+          curl -sLo- "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-linux-amd64.tar.gz" | tar xzf - --strip-components 2 -C /usr/local/bin --exclude="share"
+
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
           poetry install --with docs,test --all-extras
-      - name: Build docs with notebooks
-        run: |
           cd docs
           rm -rf source/reference/api/_autosummary
           make html
