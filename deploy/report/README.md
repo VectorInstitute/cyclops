@@ -6,18 +6,11 @@
 poetry install --with deploy_report
 ```
 
-2. Run the evaluation server (development).
+2. Run the evaluation server.
 
 ```bash
 cd api/
-fastapi dev main.py --host <host_ip> --port <port>
-```
-
-If running in production,
-
-```bash
-cd api/
-fastapi run main.py --host <host_ip> --port <port>
+uvicorn api.main:app --reload --host <host_ip> --port <port>
 ```
 
 The end points you can access are:

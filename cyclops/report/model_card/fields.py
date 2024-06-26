@@ -17,8 +17,8 @@ from pydantic import (
     StrictFloat,
     StrictInt,
     StrictStr,
-    field_validator,
-    model_validator,
+    root_validator,
+    validator,
 )
 
 from cyclops.report.model_card.base import BaseModelCardField
@@ -90,8 +90,7 @@ class License(
     )
     text_url: Optional[AnyUrl] = Field(None, description="A URL to the license text.")
 
-    @model_validator(skip_on_failure=True)
-    @classmethod
+    @root_validator(skip_on_failure=True)
     def validate_spdx_identifier(
         cls: "License",  # noqa: N805
         values: Dict[str, StrictStr],
@@ -155,8 +154,7 @@ class Citation(
         description="The citation content in BibTeX format.",
     )
 
-    @field_validator("content")
-    @classmethod
+    @validator("content")
     def parse_content(
         cls: "Citation",  # noqa: N805
         value: StrictStr,
@@ -416,8 +414,7 @@ class UseCase(
         ),
     )
 
-    @field_validator("kind")
-    @classmethod
+    @validator("kind")
     def kind_must_be_valid(
         cls: "UseCase",  # noqa: N805
         value: str,
