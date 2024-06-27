@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pycyclops"
-version = "0.2.9"
+version = "0.2.10"
 description = "Framework for healthcare ML implementation"
 authors = ["Vector AI Engineering <cyclops@vectorinstitute.ai>"]
 license = "Apache-2.0"
@@ -123,6 +123,7 @@ nbsphinx = "^0.9.3"
 ipython = "^8.8.0"
 ipykernel = "^6.23.0"
 kaggle = "^1.5.13"
+imbalanced-learn = "^0.12.0"
 furo = "^2024.01.29"
 
 [tool.poetry.group.dev]
