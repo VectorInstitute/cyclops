@@ -22,7 +22,7 @@ on:
 jobs:
   release-build:
     if: contains(github.event.pull_request.labels.*.name, 'release') || (github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'release'))
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, db, cyclops]
     steps:
       - uses: actions/checkout@v4.1.7
         with:
