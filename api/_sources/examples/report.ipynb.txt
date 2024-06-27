@@ -1,0 +1,900 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import copy\n",
+    "import inspect\n",
+    "import os\n",
+    "import shutil\n",
+    "from datetime import date\n",
+    "\n",
+    "import numpy as np\n",
+    "import pandas as pd\n",
+    "import plotly.express as px\n",
+    "from datasets import Dataset\n",
+    "from kaggle.api.kaggle_api_extended import KaggleApi\n",
+    "from sklearn.linear_model import LogisticRegression\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "from sklearn.preprocessing import MinMaxScaler\n",
+    "from tqdm import tqdm\n",
+    "\n",
+    "from cyclops.data.slicer import SliceSpec\n",
+    "from cyclops.evaluate.metrics import create_metric\n",
+    "from cyclops.evaluate.metrics.experimental.metric_dict import MetricDict\n",
+    "from cyclops.report import ModelCardReport\n",
+    "from cyclops.report.plot.classification import ClassificationPlotter\n",
+    "from cyclops.report.utils import flatten_results_dict"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Report Generation for Heart Failure Prediction\n",
+    "Here's an example to demonstrate how we can generate a report as we proceed through all the steps to train and evaluate a model. For this purpose, we are going to use Kaggle's heart prediction failure dataset and gradually populate the report with information about dataset, model and results."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Create Model Card Report\n",
+    "First, we should create a `ModelCardReport` object to fill in the fields and sections after training."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "report = ModelCardReport()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Constants\n",
+    "DATA_DIR = \"./data\"\n",
+    "RANDOM_SEED = 21"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Data Loading\n",
+    "Before starting, make sure to install the Kaggle API by running pip install kaggle. To use the Kaggle API, you need to sign up for a Kaggle account at https://www.kaggle.com. Then go to the ‘Account’ tab of your user profile (https://www.kaggle.com/<username>/account) and select ‘Create API Token’. This will trigger the download of kaggle.json, a file containing your API credentials. Place this file in the location ~/.kaggle/kaggle.json on your machine."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "api = KaggleApi()\n",
+    "api.authenticate()\n",
+    "api.dataset_download_files(\n",
+    "    \"fedesoriano/heart-failure-prediction\",\n",
+    "    path=DATA_DIR,\n",
+    "    unzip=True,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df = pd.read_csv(os.path.join(DATA_DIR, \"heart.csv\"))\n",
+    "df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df.describe().T"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig = px.pie(df, names=\"Sex\")\n",
+    "\n",
+    "fig.update_layout(\n",
+    "    title=\"Sex Distribution\",\n",
+    ")\n",
+    "\n",
+    "fig.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Adding figures to report\n",
+    "We can add figures and diagrams to report. We can define caption and the section of the report that this figure belongs to. Since we are exploring the distribution of different features in the dataset, we add it to `datasets` section:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "report.log_plotly_figure(\n",
+    "    fig=fig,\n",
+    "    caption=\"Sex Distribution\",\n",
+    "    section_name=\"datasets\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Age distribution figure\n",
+    "We plot a histogram of ages similarly and add the figure to our report. This will appear under **Dataset** section:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig = px.histogram(df, x=\"Age\")\n",
+    "fig.update_layout(\n",
+    "    title=\"Age Distribution\",\n",
+    "    xaxis_title=\"Age\",\n",
+    "    yaxis_title=\"Count\",\n",
+    "    bargap=0.2,\n",
+    ")\n",
+    "\n",
+    "fig.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Outcome distribution\n",
+    "Plot outcome distribution and add it to report. Similarly, we also place it under **Dataset** section:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df[\"outcome\"] = df[\"HeartDisease\"].astype(\"int\")\n",
+    "df = df.drop(columns=[\"HeartDisease\"])"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig = px.pie(df, names=\"outcome\")\n",
+    "fig.update_traces(textinfo=\"percent+label\")\n",
+    "fig.update_layout(title_text=\"Outcome Distribution\")\n",
+    "fig.update_traces(\n",
+    "    hovertemplate=\"Outcome: %{label}<br>Count: \\\n",
+    "    %{value}<br>Percent: %{percent}\",\n",
+    ")\n",
+    "fig.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "report.log_plotly_figure(\n",
+    "    fig=fig,\n",
+    "    caption=\"Outcome Distribution\",\n",
+    "    section_name=\"datasets\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "class_counts = df[\"outcome\"].value_counts()\n",
+    "class_ratio = class_counts[0] / class_counts[1]\n",
+    "print(class_ratio, class_counts)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Data Preprocessing"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "This dataset does not have any null values, so we can jump to feature scaling. The string data in the dataframe is in the form of object, we need to convert it back to string to work on it:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "string_col = df.select_dtypes(include=\"object\").columns\n",
+    "df[string_col] = df[string_col].astype(\"string\")\n",
+    "string_col = df.select_dtypes(\"string\").columns.to_list()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We are going to apply tree-based models to our data, so we use `LabelEncoder`:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "target = \"outcome\"\n",
+    "\n",
+    "df_processed = pd.get_dummies(df, columns=string_col, drop_first=False)\n",
+    "df_processed.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "feature_cols = df_processed.columns.to_list()\n",
+    "feature_cols.remove(target)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Before training, let's document dataset in the model card.\n",
+    "This can be done using the log_dataset method, which takes the following arguments: \n",
+    "\n",
+    "- `description`: A description of the dataset. \n",
+    "- `citation`: The citation for the dataset. \n",
+    "- `link`: A link to a resource for the dataset. \n",
+    "- `license_id`: The SPDX license identifier for the dataset. \n",
+    "- `version`: The version of the dataset. \n",
+    "- `features`: A list of features in the dataset. \n",
+    "- `split`: The split of the dataset (train, test, validation, etc.). \n",
+    "- `sensitive_features`: A list of sensitive features used to train/evaluate the model. \n",
+    "- `sensitive_feature_justification`: A justification for the sensitive features used to train/evaluate the model.\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "report.log_dataset(\n",
+    "    description=\"\"\"This dataset was created by combining different datasets\n",
+    "    already available independently but not combined before. In this dataset,\n",
+    "    5 heart datasets are combined over 11 common features. Every dataset used\n",
+    "    can be found under the Index of heart disease datasets from UCI\n",
+    "    Machine Learning Repository on the following link:\n",
+    "    https://archive.ics.uci.edu/ml/machine-learning-databases/heart-disease/.\"\"\",\n",
+    "    citation=inspect.cleandoc(\n",
+    "        \"\"\"\n",
+    "        @misc{fedesoriano,\n",
+    "          title={Heart Failure Prediction Dataset.},\n",
+    "          author={Fedesoriano, F},\n",
+    "          year={2021},\n",
+    "          publisher={Kaggle}\n",
+    "        }\n",
+    "    \"\"\",\n",
+    "    ),\n",
+    "    link=\"\"\"\n",
+    "    https://www.kaggle.com/datasets/fedesoriano/heart-failure-prediction\n",
+    "    \"\"\",\n",
+    "    license_id=\"CC0-1.0\",\n",
+    "    version=\"Version 1\",\n",
+    "    features=df.columns.to_list().remove(target),\n",
+    "    sensitive_features=[\"Sex\", \"Age\"],\n",
+    "    sensitive_feature_justification=\"Demographic information like age and gender \\\n",
+    "        often have a strong correlation with health outcomes. For example, older \\\n",
+    "        patients are more likely to have a higher risk of heart disease.\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Create HuggingFace Dataset\n",
+    "We convert our processed Pandas dataframe into a Hugging Face dataset, for later evaluation by Cyclop metrics."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dataset = Dataset.from_pandas(df_processed)\n",
+    "dataset.cleanup_cache_files()\n",
+    "print(dataset)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Split dataframe into inputs and outputs\n",
+    "X, y = df_processed[feature_cols], df_processed[target]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Training"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Splitting into train and test\n",
+    "X_train, X_test, y_train, y_test = train_test_split(\n",
+    "    X,\n",
+    "    y,\n",
+    "    test_size=0.2,\n",
+    "    random_state=RANDOM_SEED,\n",
+    ")\n",
+    "classifier = LogisticRegression()\n",
+    "scaler = MinMaxScaler()\n",
+    "X_train = scaler.fit_transform(X_train)\n",
+    "X_test = scaler.fit_transform(X_test)\n",
+    "classifier.fit(X_train, y_train)\n",
+    "y_pred = classifier.predict(X_test)\n",
+    "y_pred_prob = classifier.predict_proba(X_test)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Evaluation\n",
+    "As demonstrated in evaluation tutorial, we define a metric dict:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "metric_names = [\n",
+    "    \"binary_accuracy\",\n",
+    "    \"binary_precision\",\n",
+    "    \"binary_recall\",\n",
+    "    \"binary_f1_score\",\n",
+    "    \"binary_roc_curve\",\n",
+    "    \"binary_auroc\",\n",
+    "]\n",
+    "metrics = [\n",
+    "    create_metric(metric_name, experimental=True) for metric_name in metric_names\n",
+    "]\n",
+    "metric_collection = MetricDict(metrics)\n",
+    "metric_collection(y_test.values, np.float64(y_pred))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Data Slicing\n",
+    "In addition to overall metrics, it might be useful to see how the model performs on certain subpopulation or subsets. We can define these subsets using SliceSpec objects."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "spec_list = [\n",
+    "    {\n",
+    "        \"Age\": {\n",
+    "            \"min_value\": 30,\n",
+    "            \"max_value\": 50,\n",
+    "            \"min_inclusive\": True,\n",
+    "            \"max_inclusive\": False,\n",
+    "        },\n",
+    "    },\n",
+    "    {\n",
+    "        \"Age\": {\n",
+    "            \"min_value\": 50,\n",
+    "            \"max_value\": 70,\n",
+    "            \"min_inclusive\": True,\n",
+    "            \"max_inclusive\": False,\n",
+    "        },\n",
+    "    },\n",
+    "]\n",
+    "slice_spec = SliceSpec(spec_list)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Below, we are combining the raw features of the test data and the predictions so that we use them later for slice-specific evaluations."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Get positions of matching indices in df\n",
+    "matching_positions = y_test.index.get_indexer(df.index)\n",
+    "\n",
+    "# Select rows from df using matching positions (valid positions are non-negative)\n",
+    "df_test = df.iloc[matching_positions[matching_positions >= 0]]\n",
+    "df_test[\"preds\"] = y_pred\n",
+    "df_test[\"preds_prob\"] = y_pred_prob[:, 1]\n",
+    "df_test.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Age distribution in test data"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig = px.histogram(df_test, x=\"Age\")\n",
+    "fig.update_layout(\n",
+    "    title=\"Age Distribution in Test Data\",\n",
+    "    xaxis_title=\"Age\",\n",
+    "    yaxis_title=\"Count\",\n",
+    "    bargap=0.2,\n",
+    ")\n",
+    "\n",
+    "fig.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Logging metrics and results to report\n",
+    "Here, we gather evalutaions and add them to the report.\n",
+    "\n",
+    "We can add a performance metric to the model card using the `log_performance_metric` method, which expects a dictionary where the keys are in the following format: `slice_name/metric_name`. For instance, `overall/accuracy` or `Age:[30 - 50)/BinaryPrecision`.\n",
+    "\n",
+    "We first need to process the evaluation results to get the metrics in the right format."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from cyclops.evaluate import evaluator\n",
+    "\n",
+    "\n",
+    "# Create Dataset object\n",
+    "heart_failure_data = Dataset.from_pandas(df_test)\n",
+    "\n",
+    "result = evaluator.evaluate(\n",
+    "    dataset=heart_failure_data,\n",
+    "    metrics=metric_collection,  # type: ignore[list-item]\n",
+    "    target_columns=target,\n",
+    "    prediction_columns=\"preds_prob\",\n",
+    "    slice_spec=slice_spec,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "results_flat = flatten_results_dict(\n",
+    "    results=result, remove_metrics=[\"BinaryROC\"], model_name=\"model_for_preds_prob\"\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "result"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "results_flat"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We first need to process the evaluation results to get the metrics in the right format. The descriptions dictionary will appear as you hover on metrics in the report, so feel free to change them as it's appropriate for your usage."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "for name, metric in results_flat.items():\n",
+    "    split, name = name.split(\"/\")  # noqa: PLW2901\n",
+    "    descriptions = {\n",
+    "        \"BinaryPrecision\": \"The proportion of predicted positive instances that are correctly predicted.\",\n",
+    "        \"BinaryRecall\": \"The proportion of actual positive instances that are correctly predicted. Also known as recall or true positive rate.\",\n",
+    "        \"BinaryAccuracy\": \"The proportion of all instances that are correctly predicted.\",\n",
+    "        \"BinaryAUROC\": \"The area under the receiver operating characteristic curve (AUROC) is a measure of the performance of a binary classification model.\",\n",
+    "        \"BinaryAveragePrecision\": \"The area under the precision-recall curve (AUPRC) is a measure of the performance of a binary classification model.\",\n",
+    "        \"BinaryF1Score\": \"The harmonic mean of precision and recall.\",\n",
+    "    }\n",
+    "    report.log_quantitative_analysis(\n",
+    "        \"performance\",\n",
+    "        name=name,\n",
+    "        value=metric.tolist(),\n",
+    "        description=descriptions[name],\n",
+    "        metric_slice=split,\n",
+    "        pass_fail_thresholds=0.7,\n",
+    "        pass_fail_threshold_fns=lambda x, threshold: bool(x >= threshold),\n",
+    "    )"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can also use the `ClassificationPlotter`(as demonstrated in Evaluation example) to plot the performance metrics and the add the figure to the model card using the log_plotly_figure method."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "plotter = ClassificationPlotter(task_type=\"binary\", class_names=[\"0\", \"1\"])\n",
+    "plotter.set_template(\"plotly_white\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# extracting the ROC curves and AUROC results for all the slices\n",
+    "model_name = \"model_for_preds_prob\"\n",
+    "roc_curves = {\n",
+    "    slice_name: slice_results[\"BinaryROC\"]\n",
+    "    for slice_name, slice_results in result[model_name].items()\n",
+    "}\n",
+    "aurocs = {\n",
+    "    slice_name: slice_results[\"BinaryAUROC\"]\n",
+    "    for slice_name, slice_results in result[model_name].items()\n",
+    "}\n",
+    "\n",
+    "# plotting the ROC curves for all the slices\n",
+    "roc_plot = plotter.roc_curve_comparison(roc_curves, aurocs=aurocs)\n",
+    "report.log_plotly_figure(\n",
+    "    fig=roc_plot,\n",
+    "    caption=\"ROC Curve for All Patients\",\n",
+    "    section_name=\"quantitative analysis\",\n",
+    ")\n",
+    "roc_plot.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Extracting the overall classification metric values.\n",
+    "overall_performance = {\n",
+    "    metric_name: metric_value\n",
+    "    for metric_name, metric_value in result[model_name][\"overall\"].items()\n",
+    "    if metric_name not in [\"BinaryROC\", \"BinaryPrecisionRecallCurve\"]\n",
+    "}\n",
+    "# Plotting the overall classification metric values.\n",
+    "overall_performance_plot = plotter.metrics_value(\n",
+    "    overall_performance,\n",
+    "    title=\"Overall Performance\",\n",
+    ")\n",
+    "report.log_plotly_figure(\n",
+    "    fig=overall_performance_plot,\n",
+    "    caption=\"Overall Performance\",\n",
+    "    section_name=\"quantitative analysis\",\n",
+    ")\n",
+    "overall_performance_plot.show()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Extracting the metric values for all the slices.\n",
+    "slice_metrics = {\n",
+    "    slice_name: {\n",
+    "        metric_name: metric_value\n",
+    "        for metric_name, metric_value in slice_results.items()\n",
+    "        if metric_name not in [\"BinaryROC\", \"BinaryPrecisionRecallCurve\"]\n",
+    "    }\n",
+    "    for slice_name, slice_results in result[model_name].items()\n",
+    "}\n",
+    "# Plotting the metric values for all the slices.\n",
+    "slice_metrics_plot = plotter.metrics_comparison_bar(slice_metrics)\n",
+    "report.log_plotly_figure(\n",
+    "    fig=slice_metrics_plot,\n",
+    "    caption=\"Slice Metric Comparison\",\n",
+    "    section_name=\"quantitative analysis\",\n",
+    ")\n",
+    "slice_metrics_plot.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Report Generation\n",
+    "\n",
+    "### ModelCard\n",
+    "First, let's document the model details section. A **ModelCard** has several **Sections** and each **Section** includes multiple **Fields**. Model details could be one of the sections in our model card, and it has the following fields by default:\n",
+    "\n",
+    "- **`description`**: A high-level description of the model and its usage for a general audience. \n",
+    "- **`version`**: The version of the model. \n",
+    "- **`owners`**: The individuals or organizations that own the model. \n",
+    "- **`license`**: The license under which the model is made available. \n",
+    "- **`citation`**: The citation for the model. \n",
+    "- **`references`**: Links to resources that are relevant to the model. \n",
+    "- **`path`**: The path to where the model is stored. \n",
+    "- **`regulatory_requirements`**: The regulatory requirements that are relevant to the model.\n",
+    "\n",
+    "We can add additional fields to the model details section by passing a dictionary to the `log_from_dict` method and specifying the section name as `model_details`. You can also use the `log_descriptor` method to add a new field object with a description attribute to any section of the model card."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "report.log_from_dict(\n",
+    "    data={\n",
+    "        \"name\": \"Heart Failure Prediction Model\",\n",
+    "        \"description\": \"The model was trained on the Kaggle Heart Failure \\\n",
+    "        Prediction Dataset to predict risk of heart failure.\",\n",
+    "    },\n",
+    "    section_name=\"model_details\",\n",
+    ")\n",
+    "\n",
+    "report.log_version(\n",
+    "    version_str=\"0.0.1\",\n",
+    "    date=str(date.today()),\n",
+    "    description=\"Initial Release\",\n",
+    ")\n",
+    "report.log_owner(\n",
+    "    name=\"CyclOps Team\",\n",
+    "    contact=\"vectorinstitute.github.io/cyclops/\",\n",
+    "    email=\"cyclops@vectorinstitute.ai\",\n",
+    ")\n",
+    "report.log_license(identifier=\"Apache-2.0\")\n",
+    "report.log_reference(\n",
+    "    link=\"https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html\",  # noqa: E501\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Considerations\n",
+    "\n",
+    "Next, let’s populate the considerations section, which includes the following fields by default: \n",
+    "- **`users`**: The intended users of the model. \n",
+    "- **`use_cases`**: The use cases for the model. These could be primary, downstream or out-of-scope use cases. \n",
+    "- **`fairness_assessment`**: A description of the benefits and harms of the model for different groups as well as the steps taken to mitigate the harms. \n",
+    "- **`ethical_considerations`**: The risks associated with using the model and the steps taken to mitigate them. This can be populated using the log_risk method."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "report.log_from_dict(\n",
+    "    data={\n",
+    "        \"users\": [\n",
+    "            {\"description\": \"Hospitals\"},\n",
+    "            {\"description\": \"Clinicians\"},\n",
+    "        ],\n",
+    "    },\n",
+    "    section_name=\"considerations\",\n",
+    ")\n",
+    "report.log_user(description=\"ML Engineers\")\n",
+    "report.log_use_case(\n",
+    "    description=\"Predicting risk of heart failure.\",\n",
+    "    kind=\"primary\",\n",
+    ")\n",
+    "report.log_use_case(\n",
+    "    description=\"Predicting risk of pathologies and conditions other\\\n",
+    "    than heart failure.\",\n",
+    "    kind=\"out-of-scope\",\n",
+    ")\n",
+    "report.log_fairness_assessment(\n",
+    "    affected_group=\"sex, age\",\n",
+    "    benefit=\"Improved health outcomes for patients.\",\n",
+    "    harm=\"Biased predictions for patients in certain groups (e.g. older patients) \\\n",
+    "        may lead to worse health outcomes.\",\n",
+    "    mitigation_strategy=\"We will monitor the performance of the model on these groups \\\n",
+    "        and retrain the model if the performance drops below a certain threshold.\",\n",
+    ")\n",
+    "report.log_risk(\n",
+    "    risk=\"The model may be used to make decisions that affect the health of patients.\",\n",
+    "    mitigation_strategy=\"The model should be continuously monitored for performance \\\n",
+    "        and retrained if the performance drops below a certain threshold.\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Exporting report\n",
+    "Once the model card is populated, you can generate the report using the `export` method. The report is generated in the form of an HTML file. A JSON file containing the model card data will also be generated along with the HTML file. By default, the files will be saved in a folder named `cyclops_reports` in the current working directory. You can change the path by passing a `output_dir` argument when instantiating the `ModelCardReport` class."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "np.random.seed(42)\n",
+    "\n",
+    "synthetic_timestamps = pd.date_range(\n",
+    "    start=\"1/1/2020\", periods=10, freq=\"D\"\n",
+    ").values.astype(str)\n",
+    "\n",
+    "\n",
+    "report._model_card.overview = None\n",
+    "report_path = report.export(\n",
+    "    output_filename=\"heart_failure_report_periodic.html\",\n",
+    "    synthetic_timestamp=synthetic_timestamps[0],\n",
+    "    last_n_evals=3,\n",
+    ")\n",
+    "\n",
+    "shutil.copy(f\"{report_path}\", \".\")\n",
+    "metric_save = None\n",
+    "for i in tqdm(range(len(synthetic_timestamps[1:]))):\n",
+    "    if i == 3:\n",
+    "        report._model_card.quantitative_analysis.performance_metrics.append(\n",
+    "            metric_save,\n",
+    "        )\n",
+    "    report._model_card.overview = None\n",
+    "    for metric in report._model_card.quantitative_analysis.performance_metrics:\n",
+    "        metric.value = np.clip(\n",
+    "            metric.value + np.random.normal(0, 0.1),\n",
+    "            0,\n",
+    "            1,\n",
+    "        )\n",
+    "        metric.tests[0].passed = bool(metric.value >= 0.7)\n",
+    "    if i == 2:\n",
+    "        metrics = []\n",
+    "        for metric in report._model_card.quantitative_analysis.performance_metrics:\n",
+    "            if metric.type == \"BinaryAccuracy\" and metric.slice == \"Age:[30 - 50)\":\n",
+    "                metric_save = copy.deepcopy(metric)\n",
+    "            else:\n",
+    "                metrics.append(metric)\n",
+    "        report._model_card.quantitative_analysis.performance_metrics = metrics\n",
+    "    report_path = report.export(\n",
+    "        output_filename=\"heart_failure_report_periodic.html\",\n",
+    "        synthetic_timestamp=synthetic_timestamps[i + 1],\n",
+    "        last_n_evals=3,\n",
+    "    )\n",
+    "    shutil.copy(f\"{report_path}\", \".\")\n",
+    "shutil.rmtree(\"./cyclops_report\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "You're now able to view the report [report](./heart_failure_report_periodic.html)."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "cyclops",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.11"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

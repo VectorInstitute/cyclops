@@ -1,0 +1,301 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "6b2520a8-d4ad-4941-8ea7-71fdd631225f",
+   "metadata": {},
+   "source": [
+    "# NIHCXR Clinical Drift Experiments Tutorial"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "275fdb05",
+   "metadata": {},
+   "source": [
+    "## Import Libraries and Load NIHCXR Dataset"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "8aa3302d",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "\"\"\"NIHCXR Clinical Drift Experiments Tutorial.\"\"\"\n",
+    "\n",
+    "\n",
+    "import random\n",
+    "\n",
+    "import numpy as np\n",
+    "import torch\n",
+    "from torchvision.transforms import Compose\n",
+    "from torchxrayvision.models import DenseNet\n",
+    "\n",
+    "from cyclops.data.loader import load_nihcxr\n",
+    "from cyclops.data.slicer import SliceSpec\n",
+    "from cyclops.data.transforms import Lambdad, Resized\n",
+    "from cyclops.monitor import ClinicalShiftApplicator, Detector, Reductor, TSTester\n",
+    "from cyclops.monitor.plotter import plot_drift_experiment, plot_drift_timeseries\n",
+    "\n",
+    "\n",
+    "nih_ds = load_nihcxr(\"/mnt/data/clinical_datasets/NIHCXR\")[\"test\"]\n",
+    "\n",
+    "random.seed(42)\n",
+    "np.random.seed(42)\n",
+    "torch.manual_seed(42)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ebcc72bb",
+   "metadata": {},
+   "source": [
+    "## Example 1. Generate Source/Target Dataset for Experiments (1-2)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "e11920db",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "shifter = ClinicalShiftApplicator(\n",
+    "    \"sex\",\n",
+    "    source=None,\n",
+    "    target=\"F\",\n",
+    "    shift_id=\"Patient Gender\",\n",
+    ")\n",
+    "source_ds, target_ds = shifter.apply_shift(nih_ds, num_proc=6)\n",
+    "\n",
+    "transforms = Compose(\n",
+    "    [\n",
+    "        Resized(\n",
+    "            spatial_size=(224, 224),\n",
+    "            keys=(\"image\",),\n",
+    "            allow_missing_keys=True,\n",
+    "        ),\n",
+    "        Lambdad(\n",
+    "            func=lambda x: ((2 * (x / 255.0)) - 1.0) * 1024,\n",
+    "            keys=(\"image\",),\n",
+    "            allow_missing_keys=True,\n",
+    "        ),\n",
+    "        Lambdad(\n",
+    "            func=lambda x: x[0][np.newaxis, :] if x.shape[0] != 1 else x,\n",
+    "            keys=(\"image\",),\n",
+    "            allow_missing_keys=True,\n",
+    "        ),\n",
+    "    ],\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ab403dc5",
+   "metadata": {},
+   "source": [
+    "## Example 2. Sensitivity test experiment with 3 dimensionality reduction techniques\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "54a3523a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "model = DenseNet(weights=\"densenet121-res224-all\")\n",
+    "dr_methods = {\n",
+    "    \"BBSE\": \"bbse-soft\",\n",
+    "    \"BBSE + TXRV-AE\": \"bbse-soft+txrv-ae\",\n",
+    "    \"TXRV-AE\": \"txrv-ae\",\n",
+    "}\n",
+    "results = {}\n",
+    "\n",
+    "for name, dr_method in dr_methods.items():\n",
+    "    if name == \"TXRV-AE\":\n",
+    "        reductor = Reductor(\n",
+    "            dr_method=dr_method,\n",
+    "            transforms=transforms,\n",
+    "            feature_columns=[\"image\"],\n",
+    "        )\n",
+    "    else:\n",
+    "        reductor = Reductor(\n",
+    "            dr_method=dr_method,\n",
+    "            model=model,\n",
+    "            transforms=transforms,\n",
+    "            feature_columns=[\"image\"],\n",
+    "        )\n",
+    "    detector = Detector(\n",
+    "        \"sensitivity_test\",\n",
+    "        reductor=reductor,\n",
+    "        tester=TSTester(tester_method=\"ks\"),\n",
+    "        source_sample_size=50,\n",
+    "        target_sample_size=[10, 25, 50],\n",
+    "        num_runs=1,\n",
+    "    )\n",
+    "    result = detector.detect_shift(source_ds, target_ds)\n",
+    "    results[name] = result\n",
+    "plot_drift_experiment(results)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ec20a728",
+   "metadata": {},
+   "source": [
+    "## Example 3. Sensitivity test experiment with models trained on different datasets"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "40b5a90f",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "models = {\n",
+    "    \"MODEL: NIH\": \"densenet121-res224-nih\",\n",
+    "    \"MODEL: CHEXPERT\": \"densenet121-res224-chex\",\n",
+    "    \"MODEL: PADCHEST\": \"densenet121-res224-pc\",\n",
+    "}\n",
+    "results = {}\n",
+    "\n",
+    "for model_name, model in models.items():\n",
+    "    detector = Detector(\n",
+    "        \"sensitivity_test\",\n",
+    "        reductor=Reductor(\n",
+    "            dr_method=\"bbse-soft\",\n",
+    "            model=DenseNet(weights=model),\n",
+    "            transforms=transforms,\n",
+    "            feature_columns=[\"image\"],\n",
+    "        ),\n",
+    "        tester=TSTester(tester_method=\"ks\"),\n",
+    "        source_sample_size=50,\n",
+    "        target_sample_size=[10, 25, 50],\n",
+    "        num_runs=1,\n",
+    "    )\n",
+    "    results[model_name] = detector.detect_shift(source_ds, target_ds)\n",
+    "plot_drift_experiment(results)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0e8ebcf1",
+   "metadata": {},
+   "source": [
+    "## Example 4. Sensitivity test experiment with different clinical shifts"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "9ba03fac",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "model = DenseNet(weights=\"densenet121-res224-all\")\n",
+    "source_slice = None\n",
+    "target_slices = {\n",
+    "    \"SEX: MALE\": SliceSpec(spec_list=[{\"Patient Gender\": {\"value\": \"M\"}}]),\n",
+    "    \"SEX: FEMALE\": SliceSpec(spec_list=[{\"Patient Gender\": {\"value\": \"F\"}}]),\n",
+    "    \"AGE: 18-35\": SliceSpec(\n",
+    "        spec_list=[{\"Patient Age\": {\"min_value\": 18, \"max_value\": 35}}],\n",
+    "    ),\n",
+    "    \"AGE: 35-65\": SliceSpec(\n",
+    "        spec_list=[{\"Patient Age\": {\"min_value\": 35, \"max_value\": 65}}],\n",
+    "    ),\n",
+    "}\n",
+    "results = {}\n",
+    "\n",
+    "for name, target_slice in target_slices.items():\n",
+    "    source_slice = None\n",
+    "    shifter = ClinicalShiftApplicator(\n",
+    "        \"custom\",\n",
+    "        source=source_slice,\n",
+    "        target=target_slice,\n",
+    "    )\n",
+    "    ds_source, ds_target = shifter.apply_shift(nih_ds, num_proc=6)\n",
+    "\n",
+    "    detector = Detector(\n",
+    "        \"sensitivity_test\",\n",
+    "        reductor=Reductor(\n",
+    "            dr_method=\"bbse-soft\",\n",
+    "            model=model,\n",
+    "            transforms=transforms,\n",
+    "            feature_columns=[\"image\"],\n",
+    "        ),\n",
+    "        tester=TSTester(tester_method=\"ks\"),\n",
+    "        source_sample_size=50,\n",
+    "        target_sample_size=[10, 25, 50],\n",
+    "        num_runs=1,\n",
+    "    )\n",
+    "    results[name] = detector.detect_shift(ds_source, ds_target)\n",
+    "plot_drift_experiment(results)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7571bc9f",
+   "metadata": {},
+   "source": [
+    "## Example 5. Rolling window experiment with synthetic timestamps using biweekly window"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "77e4b383",
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "model = DenseNet(weights=\"densenet121-res224-all\")\n",
+    "detector = Detector(\n",
+    "    \"rolling_window_drift\",\n",
+    "    reductor=Reductor(\n",
+    "        dr_method=\"bbse-soft\",\n",
+    "        model=model,\n",
+    "        transforms=transforms,\n",
+    "        feature_columns=[\"image\"],\n",
+    "    ),\n",
+    "    tester=TSTester(tester_method=\"ks\"),\n",
+    "    source_sample_size=50,\n",
+    "    target_sample_size=10,\n",
+    "    timestamp_column=\"timestamp\",\n",
+    "    window_size=\"4W\",\n",
+    ")\n",
+    "\n",
+    "results = detector.detect_shift(source_ds, target_ds)\n",
+    "plot_drift_timeseries(results)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.12"
+  },
+  "nbsphinx": {
+   "execute": "never"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
