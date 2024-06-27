@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: '3.10'
           cache: 'poetry'
-      - name: Install dependencies, build docs without running notebooks
+      - name: Install dependencies, build docs with running notebooks
         env:
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
@@ -54,7 +54,7 @@ jobs:
 
           cd docs
           rm -rf source/reference/api/_autosummary
-          make html
+          make html-with-notebooks
       - name: Set up Node.js
         uses: actions/setup-node@v4.0.2
         with:
