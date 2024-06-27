@@ -1,0 +1,83 @@
+name: docs
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .pre-commit-config.yaml
+      - .github/workflows/docs.yml
+      - '**.py'
+      - '**.ipynb'
+      - '**.html'
+      - '**.jinja'
+      - '**.js'
+      - poetry.lock
+      - pyproject.toml
+      - '**.rst'
+      - '**.md'
+      - docs/cyclops-webpage
+    types: [opened, synchronize, closed]
+  push:
+    branches:
+      - main
+    paths:
+      - .pre-commit-config.yaml
+      - .github/workflows/docs.yml
+      - '**.py'
+      - '**.ipynb'
+      - '**.html'
+      - '**.jinja'
+      - '**.js'
+      - poetry.lock
+      - pyproject.toml
+      - '**.rst'
+      - '**.md'
+      - docs/cyclops-webpage
+
+jobs:
+  build:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize' || (github.event.action == 'closed' && github.event.pull_request.merged == true)))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.7
+        with:
+          submodules: 'true'
+      - name: Install poetry
+        run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
+      - uses: actions/setup-python@v5.1.0
+        with:
+          python-version: '3.10'
+          cache: 'poetry'
+      - name: Install dependencies, build docs without running notebooks
+        run: |
+          python3 -m pip install --upgrade pip && python3 -m pip install poetry
+          poetry env use '3.10'
+          source $(poetry env info --path)/bin/activate
+          poetry install --with docs,test --all-extras
+
+          # Install Pandoc
+          PANDOC_VERSION="2.19"
+          curl -sLo- "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-linux-amd64.tar.gz" | tar xzf - --strip-components 2 -C /usr/local/bin --exclude="share"
+
+          cd docs
+          rm -rf source/reference/api/_autosummary
+          make html
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.0.2
+        with:
+          node-version: 18
+          cache: yarn
+          cache-dependency-path: '**/yarn.lock'
+      - name: Build webpage
+        run: |
+          cd docs/cyclops-webpage
+          yarn install --frozen-lockfile
+          yarn build
+          cp -r ../build/html build/api
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4.0.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: github_pages
+          publish_dir: docs/cyclops-webpage/build
