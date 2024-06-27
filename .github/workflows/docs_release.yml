@@ -17,12 +17,12 @@ on:
         - '**.rst'
         - '**.md'
         - docs/cyclops-webpage
-      types: [labeled, closed]
+      types: [labeled, closed, synchronize]
 
 jobs:
   release-build:
-    if: contains(github.event.pull_request.labels.*.name, 'release') || (github.event.action == 'closed' && github.event.pull_request.merged == true)
-    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'release') || (github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'release'))
+    runs-on: [self-hosted, db, cyclops]
     steps:
       - uses: actions/checkout@v4.1.7
         with:
@@ -33,28 +33,15 @@ jobs:
         with:
           python-version: '3.10'
           cache: 'poetry'
-      - name: Install dependencies, build docs without running notebooks
-        env:
-          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
-          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+      - name: Install dependencies, build docs with running notebooks
         run: |
           python3 -m pip install --upgrade pip && python3 -m pip install poetry
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
           poetry install --with docs,test --all-extras
-
-          # Set up Kaggle credentials
-          mkdir -p ~/.kaggle
-          echo "{\"username\":\"$KAGGLE_USERNAME\",\"key\":\"$KAGGLE_KEY\"}" > ~/.kaggle/kaggle.json
-          chmod 600 ~/.kaggle/kaggle.json
-
-          # Install Pandoc
-          PANDOC_VERSION="2.19"
-          curl -sLo- "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-linux-amd64.tar.gz" | tar xzf - --strip-components 2 -C /usr/local/bin --exclude="share"
-
           cd docs
           rm -rf source/reference/api/_autosummary
-          make html
+          make html-with-notebooks
       - name: Set up Node.js
         uses: actions/setup-node@v4.0.2
         with:
