@@ -17,11 +17,11 @@ on:
         - '**.rst'
         - '**.md'
         - docs/cyclops-webpage
-      types: [labeled, closed]
+      types: [labeled, closed, synchronize]
 
 jobs:
   release-build:
-    if: contains(github.event.pull_request.labels.*.name, 'release') || (github.event.action == 'closed' && github.event.pull_request.merged == true)
+    if: contains(github.event.pull_request.labels.*.name, 'release') || (github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event.action == 'synchronize' && contains(github.event.pull_request.labels.*.name, 'release'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.7
