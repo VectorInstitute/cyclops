@@ -9,7 +9,6 @@ poetry install --with deploy_report
 2. Run the evaluation server.
 
 ```bash
-cd api/
 uvicorn api.main:app --reload --host <host_ip> --port <port>
 ```
 
