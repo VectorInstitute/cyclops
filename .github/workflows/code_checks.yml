@@ -18,7 +18,6 @@ on:
     paths:
       - .pre-commit-config.yaml
       - .github/workflows/code_checks.yml
-      - .github/workflows/integration_tests.yml
       - '**.py'
       - poetry.lock
       - pyproject.toml

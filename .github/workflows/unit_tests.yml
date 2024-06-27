@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - .github/workflows/unit_tests.yml
+      - .github/workflows/integration_tests.yml
       - '**.py'
       - '**.html'
       - '**.jinja'
@@ -17,6 +18,7 @@ on:
       - main
     paths:
       - .github/workflows/unit_tests.yml
+      - .github/workflows/integration_tests.yml
       - '**.py'
       - '**.html'
       - '**.jinja'
