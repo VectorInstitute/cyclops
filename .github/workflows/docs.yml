@@ -36,9 +36,25 @@ on:
       - docs/cyclops-webpage
 
 jobs:
-  build:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize' || (github.event.action == 'closed' && github.event.pull_request.merged == true)))
+  check_release:
     runs-on: ubuntu-latest
+    outputs:
+      is_release: ${{ steps.check_release.outputs.is_release }}
+    steps:
+      - name: Check if release PR
+        id: check_release
+        if: github.event_name == 'pull_request'
+        run: |
+          if [[ ${{ contains(github.event.pull_request.labels.*.name, 'release') }} == 'true' ]]; then
+            echo "is_release=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_release=false" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    needs: check_release
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize' || (github.event.action == 'closed' && github.event.pull_request.merged == true)))
+    runs-on: ${{ needs.check_release.outputs.is_release == 'true' && fromJSON('["self-hosted", "db", "cyclops"]') || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4.1.7
         with:
@@ -49,20 +65,23 @@ jobs:
         with:
           python-version: '3.10'
           cache: 'poetry'
-      - name: Install dependencies, build docs without running notebooks
+      - name: Install dependencies, build docs
         run: |
           python3 -m pip install --upgrade pip && python3 -m pip install poetry
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
           poetry install --with docs,test --all-extras
 
-          # Install Pandoc
-          PANDOC_VERSION="2.19"
-          curl -sLo- "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-linux-amd64.tar.gz" | tar xzf - --strip-components 2 -C /usr/local/bin --exclude="share"
-
           cd docs
           rm -rf source/reference/api/_autosummary
-          make html
+          if [[ "${{ needs.check_release.outputs.is_release }}" == "true" ]]; then
+            make html-with-notebooks
+          else
+            # Install Pandoc
+            PANDOC_VERSION="2.19"
+            curl -sLo- "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-linux-amd64.tar.gz" | tar xzf - --strip-components 2 -C /usr/local/bin --exclude="share"
+            make html
+          fi
       - name: Set up Node.js
         uses: actions/setup-node@v4.0.2
         with:
@@ -75,6 +94,14 @@ jobs:
           yarn install --frozen-lockfile
           yarn build
           cp -r ../build/html build/api
+      - name: Fetch existing gh-pages branch
+        if: needs.check_release.outputs.is_release != 'true'
+        run: |
+          git fetch origin github_pages:github_pages
+          git checkout github_pages
+          git checkout ${{ github.sha }} -- docs/cyclops-webpage/build
+          git checkout github_pages -- docs/cyclops-webpage/build/api/*.html
+          git checkout ${{ github.sha }}
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4.0.0
         with:
