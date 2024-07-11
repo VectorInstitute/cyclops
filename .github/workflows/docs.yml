@@ -95,16 +95,21 @@ jobs:
           yarn build
           cp -r ../build/html build/api
       - name: Fetch existing gh-pages branch
-        if: needs.check_release.outputs.is_release != 'true'
         run: |
           git fetch origin github_pages:github_pages
-          git checkout github_pages
-          git checkout ${{ github.sha }} -- docs/cyclops-webpage/build
-          git checkout github_pages -- docs/cyclops-webpage/build/api/*.html
+          git checkout github_pages || git checkout -b github_pages
+          mkdir -p docs/cyclops-webpage/build/api
+          if [[ "${{ needs.check_release.outputs.is_release }}" != "true" ]]; then
+            git checkout github_pages -- docs/cyclops-webpage/build/api/*.html || true
+          fi
           git checkout ${{ github.sha }}
+      - name: Copy built files
+        run: |
+          cp -R docs/cyclops-webpage/build/* .
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: github_pages
-          publish_dir: docs/cyclops-webpage/build
+          publish_dir: .
+          keep_files: ${{ needs.check_release.outputs.is_release != 'true' }}
