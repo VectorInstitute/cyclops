@@ -59,6 +59,7 @@ jobs:
       - uses: actions/checkout@v4.1.7
         with:
           submodules: 'true'
+          fetch-depth: 0
       - name: Install poetry
         run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
       - uses: actions/setup-python@v5.1.0
@@ -94,17 +95,30 @@ jobs:
           yarn install --frozen-lockfile
           yarn build
           cp -r ../build/html build/api
-      - name: Fetch existing gh-pages branch
-        if: needs.check_release.outputs.is_release != 'true'
+      - name: Prepare github_pages branch
         run: |
-          git fetch origin github_pages:github_pages
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git fetch origin github_pages:github_pages || git checkout --orphan github_pages
           git checkout github_pages
-          git checkout ${{ github.sha }} -- docs/cyclops-webpage/build
-          git checkout github_pages -- docs/cyclops-webpage/build/api/*.html
-          git checkout ${{ github.sha }}
+          git rm -rf .
+          git clean -fxd
+      - name: Copy built files
+        run: |
+          cp -R docs/cyclops-webpage/build/* .
+          if [[ "${{ needs.check_release.outputs.is_release }}" != "true" ]]; then
+            mkdir -p docs/cyclops-webpage/build/api
+            git checkout github_pages -- docs/cyclops-webpage/build/api/*.html || true
+          fi
+      - name: Commit and push to github_pages
+        run: |
+          git add .
+          git commit -m "Update documentation" || echo "No changes to commit"
+          git push -f origin github_pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4.0.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: github_pages
-          publish_dir: docs/cyclops-webpage/build
+          publish_dir: .
+          keep_files: ${{ needs.check_release.outputs.is_release != 'true' }}
