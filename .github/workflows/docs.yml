@@ -34,7 +34,7 @@ jobs:
           source $(poetry env info --path)/bin/activate
           cd docs
           rm -rf source/reference/api/_autosummary
-          if [[ "${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'release') }}" == "true" ]]; then
+          if [[ "${{ github.event_name == 'pull_request' && github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release') }}" == "true" ]]; then
             make html-with-notebooks
           else
             make html
