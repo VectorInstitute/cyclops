@@ -98,6 +98,7 @@ jobs:
         if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: github_pages
           publish_dir: ./docs/cyclops-webpage/build
           keep_files: ${{ needs.check_release.outputs.is_release != 'true' }}
           force_orphan: true
