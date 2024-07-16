@@ -3,13 +3,11 @@ name: docs
 on:
   pull_request:
     branches: [main]
-    types: [opened, synchronize, labeled, unlabeled, closed]
-  push:
-    branches: [main]
+    types: [opened, synchronize, closed]
 
 jobs:
   build:
-    runs-on: ${{ github.event_name == 'pull_request' && github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release') && fromJSON('["self-hosted", "db", "cyclops"]') || 'ubuntu-latest' }}
+    runs-on: ${{ (github.event_name == 'pull_request' && github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release')) && fromJSON('["self-hosted", "db", "cyclops"]') || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4.1.7
         with:
@@ -41,7 +39,7 @@ jobs:
           fi
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4.0.2
+        uses: actions/setup-node@v4.0.3
         with:
           node-version: 18
           cache: yarn
@@ -53,6 +51,9 @@ jobs:
           yarn install --frozen-lockfile
           yarn build
           cp -r ../build/html build/api
+
+      - name: Create .nojekyll file
+        run: touch ./docs/cyclops-webpage/build/.nojekyll
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
