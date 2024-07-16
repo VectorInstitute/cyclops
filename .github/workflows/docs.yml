@@ -2,123 +2,64 @@ name: docs
 
 on:
   pull_request:
-    branches:
-      - main
-    paths:
-      - .pre-commit-config.yaml
-      - .github/workflows/docs.yml
-      - '**.py'
-      - '**.ipynb'
-      - '**.html'
-      - '**.jinja'
-      - '**.js'
-      - poetry.lock
-      - pyproject.toml
-      - '**.rst'
-      - '**.md'
-      - docs/cyclops-webpage
+    branches: [main]
     types: [opened, synchronize, closed]
-  push:
-    branches:
-      - main
-    paths:
-      - .pre-commit-config.yaml
-      - .github/workflows/docs.yml
-      - '**.py'
-      - '**.ipynb'
-      - '**.html'
-      - '**.jinja'
-      - '**.js'
-      - poetry.lock
-      - pyproject.toml
-      - '**.rst'
-      - '**.md'
-      - docs/cyclops-webpage
 
 jobs:
-  check_release:
-    runs-on: ubuntu-latest
-    outputs:
-      is_release: ${{ steps.check_release.outputs.is_release }}
-    steps:
-      - name: Check if release PR
-        id: check_release
-        if: github.event_name == 'pull_request'
-        run: |
-          if [[ ${{ contains(github.event.pull_request.labels.*.name, 'release') }} == 'true' ]]; then
-            echo "is_release=true" >> $GITHUB_OUTPUT
-          else
-            echo "is_release=false" >> $GITHUB_OUTPUT
-          fi
-
   build:
-    needs: check_release
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && (github.event.action == 'opened' || github.event.action == 'synchronize' || (github.event.action == 'closed' && github.event.pull_request.merged == true)))
-    runs-on: ${{ needs.check_release.outputs.is_release == 'true' && fromJSON('["self-hosted", "db", "cyclops"]') || 'ubuntu-latest' }}
+    runs-on: ${{ (github.event_name == 'pull_request' && github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release')) && fromJSON('["self-hosted", "db", "cyclops"]') || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4.1.7
         with:
           submodules: 'true'
           fetch-depth: 0
+
       - name: Install poetry
         run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
+
       - uses: actions/setup-python@v5.1.0
         with:
           python-version: '3.10'
           cache: 'poetry'
-      - name: Install dependencies, build docs
+
+      - name: Install dependencies
         run: |
-          python3 -m pip install --upgrade pip && python3 -m pip install poetry
           poetry env use '3.10'
-          source $(poetry env info --path)/bin/activate
           poetry install --with docs,test --all-extras
 
+      - name: Build docs
+        run: |
+          source $(poetry env info --path)/bin/activate
           cd docs
           rm -rf source/reference/api/_autosummary
-          if [[ "${{ needs.check_release.outputs.is_release }}" == "true" ]]; then
+          if [[ "${{ github.event_name == 'pull_request' && github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release') }}" == "true" ]]; then
             make html-with-notebooks
           else
-            # Install Pandoc
-            PANDOC_VERSION="2.19"
-            curl -sLo- "https://github.com/jgm/pandoc/releases/download/${PANDOC_VERSION}/pandoc-${PANDOC_VERSION}-linux-amd64.tar.gz" | tar xzf - --strip-components 2 -C /usr/local/bin --exclude="share"
             make html
           fi
+
       - name: Set up Node.js
         uses: actions/setup-node@v4.0.2
         with:
           node-version: 18
           cache: yarn
           cache-dependency-path: '**/yarn.lock'
+
       - name: Build webpage
         run: |
           cd docs/cyclops-webpage
           yarn install --frozen-lockfile
           yarn build
           cp -r ../build/html build/api
-      - name: Prepare github_pages branch
-        run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'actions@github.com'
-          git fetch origin github_pages:github_pages || git checkout --orphan github_pages
-          git checkout github_pages
-          git rm -rf .
-          git clean -fxd
-      - name: Copy built files
-        run: |
-          cp -R docs/cyclops-webpage/build/* .
-          if [[ "${{ needs.check_release.outputs.is_release }}" != "true" ]]; then
-            mkdir -p docs/cyclops-webpage/build/api
-            git checkout github_pages -- docs/cyclops-webpage/build/api/*.html || true
-          fi
-      - name: Commit and push to github_pages
-        run: |
-          git add .
-          git commit -m "Update documentation" || echo "No changes to commit"
-          git push -f origin github_pages
+
+      - name: Create .nojekyll file
+        run: touch ./docs/cyclops-webpage/build/.nojekyll
+
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4.0.0
+        uses: peaceiris/actions-gh-pages@v4
+        if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'release')
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: github_pages
-          publish_dir: .
-          keep_files: ${{ needs.check_release.outputs.is_release != 'true' }}
+          publish_dir: ./docs/cyclops-webpage/build
+          force_orphan: true
