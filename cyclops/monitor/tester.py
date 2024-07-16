@@ -717,19 +717,26 @@ class Detectron:
                 batch_size=batch_size,
             )
             self.base_model.initialize()
-            self.transforms = partial(apply_transforms, transforms=transforms)
-            model_transforms = transforms
-            model_transforms.transforms = model_transforms.transforms + (
-                Lambdad(
-                    keys=("mask", "labels"),
-                    func=lambda x: np.array(x),
-                    allow_missing_keys=True,
-                ),
+            self.base_model.save_model(
+                "saved_models/DetectronModule/pretrained_model.pt", log=False
             )
-            self.model_transforms = partial(
-                apply_transforms,
-                transforms=model_transforms,
-            )
+            if transforms:
+                self.transforms = partial(apply_transforms, transforms=transforms)
+                model_transforms = transforms
+                model_transforms.transforms = model_transforms.transforms + (
+                    Lambdad(
+                        keys=("mask", "labels"),
+                        func=lambda x: np.array(x),
+                        allow_missing_keys=True,
+                    ),
+                )
+                self.model_transforms = partial(
+                    apply_transforms,
+                    transforms=model_transforms,
+                )
+            else:
+                self.transforms = None
+                self.model_transforms = None
         elif is_sklearn_model(base_model):
             self.base_model = wrap_model(base_model)
             self.base_model.save_model(
@@ -737,13 +744,18 @@ class Detectron:
             )
             self.transforms = transforms
             self.model_transforms = transforms
-        elif isinstance(base_model, (PTModel, SKModel)):
+        elif isinstance(base_model, SKModel):
             self.base_model = base_model
             self.base_model.save_model(
                 "saved_models/DetectronModule/pretrained_model.pkl", log=False
             )
             self.transforms = transforms
             self.model_transforms = transforms
+        elif isinstance(base_model, PTModel):
+            self.base_model = base_model
+            self.base_model.save_model(
+                "saved_models/DetectronModule/pretrained_model.pt", log=False
+            )
         else:
             raise ValueError("base_model must be a PyTorch or sklearn model.")
 
@@ -774,9 +786,14 @@ class Detectron:
         for seed in range(self.num_runs):
             # train ensemble of for split 'p*'
             for e in range(1, self.ensemble_size + 1):
-                self.base_model.load_model(
-                    "saved_models/DetectronModule/pretrained_model.pkl", log=False
-                )
+                if is_pytorch_model(self.base_model.model):
+                    self.base_model.load_model(
+                        "saved_models/DetectronModule/pretrained_model.pt", log=False
+                    )
+                elif is_sklearn_model(self.base_model.model):
+                    self.base_model.load_model(
+                        "saved_models/DetectronModule/pretrained_model.pkl", log=False
+                    )
                 alpha = 1 / (len(X_s) * self.sample_size + 1)
                 if is_pytorch_model(self.base_model.model):
                     model = wrap_model(
@@ -896,9 +913,14 @@ class Detectron:
         for seed in range(self.num_runs):
             # train ensemble of for split 'p*'
             for e in range(1, self.ensemble_size + 1):
-                self.base_model.load_model(
-                    "saved_models/DetectronModule/pretrained_model.pkl", log=False
-                )
+                if is_pytorch_model(self.base_model.model):
+                    self.base_model.load_model(
+                        "saved_models/DetectronModule/pretrained_model.pt", log=False
+                    )
+                elif is_sklearn_model(self.base_model.model):
+                    self.base_model.load_model(
+                        "saved_models/DetectronModule/pretrained_model.pkl", log=False
+                    )
                 alpha = 1 / (len(X_t) * self.sample_size + 1)
                 if is_pytorch_model(self.base_model.model):
                     model = wrap_model(
