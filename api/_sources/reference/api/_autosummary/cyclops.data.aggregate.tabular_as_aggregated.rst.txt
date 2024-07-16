@@ -1,0 +1,6 @@
+cyclops.data.aggregate.tabular\_as\_aggregated
+==============================================
+
+.. currentmodule:: cyclops.data.aggregate
+
+.. autofunction:: tabular_as_aggregated

@@ -1,0 +1,1036 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark">
+    <meta name="google-site-verification" content="i0qQRaR9OA3tSz_9tDocdcXGY27Ox_cy4FrvTHD2C_0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    
+      <meta name="description" content="CyclOps Python API documentation">
+    <link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="prev" title="cyclops.report.report" href="cyclops.report.report.html" />
+
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/><meta name="generator" content="sphinx-7.2.6, furo 2024.01.29"/>
+
+    
+    <meta name="msvalidate.01" content="8D2A5032F006424CAF54C0DDCD16F666" />
+      
+        <title>cyclops.report.report.ModelCardReport - cyclops documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/cyclops.css?v=9f20b50b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --color-card-background: #5e88f2;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #faad1a;
+  --color-brand-content: #eb088a;
+  --color-foreground-secondary: #52c7de;
+  --color-card-background: #3b0e28;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #faad1a;
+  --color-brand-content: #eb088a;
+  --color-foreground-secondary: #52c7de;
+  --color-card-background: #3b0e28;
+  
+      }
+    }
+  }
+</style><script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=ccdb6887"></script>
+    <script src="../../../_static/design-tabs.js?v=36754332"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/require.min.js?v=53367eec"></script>
+    <script src="../../../_static/custom.js?v=275847af"></script>
+    
+    <script src="https://kit.fontawesome.com/2c1f516901.js" crossorigin="anonymous"></script>
+
+  </head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../index.html"><div class="brand">cyclops  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../../_static/cyclops_logo-dark.png" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../user_guide.html">User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of User Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../evaluation.html">Evaluation</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Evaluation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples/metrics.html">Breast Cancer Classification and Evaluation</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../model_report.html">Model Report</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Model Report</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples/report.html">Report Generation for Heart Failure Prediction</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../monitoring.html">Monitoring</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../tutorials.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../tutorials_use_cases.html">Example use cases</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Example use cases</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/kaggle/heart_failure_prediction.html">Heart Failure Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/mimiciv/mortality_prediction.html">Mortality Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/synthea/los_prediction.html">Prolonged Length of Stay Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/diabetes_130/readmission_prediction.html">Readmission Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/nihcxr/cxr_classification.html">Chest X-Ray Disease Classification</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developing.html">🧑🏿‍💻 Developing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing to cyclops</a></li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="../../../api.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="../cyclops.data.html">cyclops.data</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of cyclops.data</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="cyclops.data.slicer.html">cyclops.data.slicer</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of cyclops.data.slicer</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.data.slicer.compound_filter.html">cyclops.data.slicer.compound_filter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.data.slicer.filter_datetime.html">cyclops.data.slicer.filter_datetime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.data.slicer.filter_non_null.html">cyclops.data.slicer.filter_non_null</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.data.slicer.filter_range.html">cyclops.data.slicer.filter_range</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.data.slicer.filter_string_contains.html">cyclops.data.slicer.filter_string_contains</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.data.slicer.filter_value.html">cyclops.data.slicer.filter_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.data.slicer.is_datetime.html">cyclops.data.slicer.is_datetime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.data.slicer.overall.html">cyclops.data.slicer.overall</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.data.slicer.SliceSpec.html">cyclops.data.slicer.SliceSpec</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="cyclops.data.aggregate.html">cyclops.data.aggregate</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of cyclops.data.aggregate</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.data.aggregate.tabular_as_aggregated.html">cyclops.data.aggregate.tabular_as_aggregated</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.data.aggregate.timestamp_ffill_agg.html">cyclops.data.aggregate.timestamp_ffill_agg</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.data.aggregate.Aggregator.html">cyclops.data.aggregate.Aggregator</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="cyclops.data.features.medical_image.html">cyclops.data.features.medical_image</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of cyclops.data.features.medical_image</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.data.features.medical_image.MedicalImage.html">cyclops.data.features.medical_image.MedicalImage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../cyclops.tasks.html">cyclops.tasks</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of cyclops.tasks</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="cyclops.tasks.classification.html">cyclops.tasks.classification</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of cyclops.tasks.classification</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.tasks.classification.BinaryTabularClassificationTask.html">cyclops.tasks.classification.BinaryTabularClassificationTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.tasks.classification.MultilabelImageClassificationTask.html">cyclops.tasks.classification.MultilabelImageClassificationTask</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../evaluator.html">Evaluator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../fairness_evaluator.html">Fairness Evaluator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../metrics.html">Evaluation Metrics</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Evaluation Metrics</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../metrics/accuracy.html">Accuracy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../metrics/auroc.html">AUROC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../metrics/average_precision.html">Average Precision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../metrics/f1score.html">F1-Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../metrics/f_beta.html">F-beta Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../metrics/precision.html">Precision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../metrics/precision_recall_curve.html">PrecisionRecallCurve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../metrics/recall.html">Recall</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../metrics/roc.html">ROC Curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../metrics/sensitivity.html">Sensitivity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../metrics/specificity.html">Specificity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../metrics/stat_scores.html">StatScores</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../cyclops.monitor.html">cyclops.monitor</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of cyclops.monitor</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="cyclops.monitor.clinical_applicator.html">cyclops.monitor.clinical_applicator</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of cyclops.monitor.clinical_applicator</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.html">cyclops.monitor.clinical_applicator.ClinicalShiftApplicator</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="cyclops.monitor.synthetic_applicator.html">cyclops.monitor.synthetic_applicator</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of cyclops.monitor.synthetic_applicator</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.monitor.synthetic_applicator.binary_noise_shift.html">cyclops.monitor.synthetic_applicator.binary_noise_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.monitor.synthetic_applicator.feature_association_shift.html">cyclops.monitor.synthetic_applicator.feature_association_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.monitor.synthetic_applicator.feature_swap_shift.html">cyclops.monitor.synthetic_applicator.feature_swap_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.monitor.synthetic_applicator.gaussian_noise_shift.html">cyclops.monitor.synthetic_applicator.gaussian_noise_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.monitor.synthetic_applicator.knockout_shift.html">cyclops.monitor.synthetic_applicator.knockout_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="cyclops.monitor.synthetic_applicator.SyntheticShiftApplicator.html">cyclops.monitor.synthetic_applicator.SyntheticShiftApplicator</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="../cyclops.report.html">cyclops.report</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of cyclops.report</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3 current has-children"><a class="reference internal" href="cyclops.report.report.html">cyclops.report.report</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of cyclops.report.report</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">cyclops.report.report.ModelCardReport</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <section id="cyclops-report-report-modelcardreport">
+<h1>cyclops.report.report.ModelCardReport<a class="headerlink" href="#cyclops-report-report-modelcardreport" title="Link to this heading">#</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ModelCardReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.9/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Model card report.</p>
+<p>This class serves as an interface to populate a <cite>ModelCard</cite> object and generate
+an HTML report from it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>output_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – Path to the directory where the model card report will be saved. If not
+provided, the report will be saved in the current working directory.</p>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="table-wrapper autosummary longtable docutils container">
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.export" title="cyclops.report.report.ModelCardReport.export"><code class="xref py py-obj docutils literal notranslate"><span class="pre">export</span></code></a></p></td>
+<td><p>Export the model card report to an HTML file.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.from_json_file" title="cyclops.report.report.ModelCardReport.from_json_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_json_file</span></code></a></p></td>
+<td><p>Load a model card from a file.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_citation" title="cyclops.report.report.ModelCardReport.log_citation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_citation</span></code></a></p></td>
+<td><p>Add a citation to a section of the report.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_dataset" title="cyclops.report.report.ModelCardReport.log_dataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_dataset</span></code></a></p></td>
+<td><p>Log information about the dataset used to train/evaluate the model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_descriptor" title="cyclops.report.report.ModelCardReport.log_descriptor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_descriptor</span></code></a></p></td>
+<td><p>Add a descriptor to a section of the report.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_fairness_assessment" title="cyclops.report.report.ModelCardReport.log_fairness_assessment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_fairness_assessment</span></code></a></p></td>
+<td><p>Add a fairness assessment to a section of the report.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_from_dict" title="cyclops.report.report.ModelCardReport.log_from_dict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_from_dict</span></code></a></p></td>
+<td><p>Populate fields in the model card from a dictionary.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_image" title="cyclops.report.report.ModelCardReport.log_image"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_image</span></code></a></p></td>
+<td><p>Add an image to a section of the report.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_license" title="cyclops.report.report.ModelCardReport.log_license"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_license</span></code></a></p></td>
+<td><p>Add a license to a section of the report.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_model_parameters" title="cyclops.report.report.ModelCardReport.log_model_parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_model_parameters</span></code></a></p></td>
+<td><p>Log model parameters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_owner" title="cyclops.report.report.ModelCardReport.log_owner"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_owner</span></code></a></p></td>
+<td><p>Add an owner to a section of the report.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_performance_metrics" title="cyclops.report.report.ModelCardReport.log_performance_metrics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_performance_metrics</span></code></a></p></td>
+<td><p>Add a performance metric to the <cite>Quantitative Analysis</cite> section.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_plotly_figure" title="cyclops.report.report.ModelCardReport.log_plotly_figure"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_plotly_figure</span></code></a></p></td>
+<td><p>Add a plotly figure to a section of the report.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_quantitative_analysis" title="cyclops.report.report.ModelCardReport.log_quantitative_analysis"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_quantitative_analysis</span></code></a></p></td>
+<td><p>Add a quantitative analysis to the report.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_reference" title="cyclops.report.report.ModelCardReport.log_reference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_reference</span></code></a></p></td>
+<td><p>Add a reference to a section of the report.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_regulation" title="cyclops.report.report.ModelCardReport.log_regulation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_regulation</span></code></a></p></td>
+<td><p>Add a regulatory requirement to a section of the report.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_risk" title="cyclops.report.report.ModelCardReport.log_risk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_risk</span></code></a></p></td>
+<td><p>Add a risk to a section of the report.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_use_case" title="cyclops.report.report.ModelCardReport.log_use_case"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_use_case</span></code></a></p></td>
+<td><p>Add a use case to a section of the report.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_user" title="cyclops.report.report.ModelCardReport.log_user"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_user</span></code></a></p></td>
+<td><p>Add a user description to a section of the report.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_version" title="cyclops.report.report.ModelCardReport.log_version"><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_version</span></code></a></p></td>
+<td><p>Add a version to a section of the report.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.export">
+<span class="sig-name descname"><span class="pre">export</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">template_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_json</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_n_evals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean_std_min_evals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">synthetic_timestamp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.export"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.export" title="Link to this definition">#</a></dt>
+<dd><p>Export the model card report to an HTML file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output_filename</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The name of the output file. If not provided, the file will be named
+with the current date and time.</p></li>
+<li><p><strong>template_path</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The path to the jinja2 template to use. The default is None, which uses
+the default template provided by CyclOps.</p></li>
+<li><p><strong>interactive</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to create an interactive HTML report. The default is True.</p></li>
+<li><p><strong>save_json</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to save the model card as a JSON file. The default is True.</p></li>
+<li><p><strong>last_n_evals</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><em>optional</em>) – The number of most recent evaluations to include in the report and
+calculate trends for. If not provided, all evaluations will be included.</p></li>
+<li><p><strong>mean_std_min_evals</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The minimum number of evaluations required to calculate the mean and
+standard deviation for the performance over time plot in the overview
+section. The default is 3.</p></li>
+<li><p><strong>synthetic_timestamp</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – A synthetic timestamp to use for the report. This is useful for
+generating back-dated reports. The default is None, which uses the
+current date and time.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path of the saved HTML report file.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.from_json_file">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_json_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.from_json_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.from_json_file" title="Link to this definition">#</a></dt>
+<dd><p>Load a model card from a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The path to a JSON file containing model card data.</p></li>
+<li><p><strong>output_dir</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The directory to save the report to. If not provided, the report will
+be saved in a directory called <cite>cyclops_report</cite> in the current working
+directory.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The model card report.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#cyclops.report.report.ModelCardReport" title="cyclops.report.report.ModelCardReport">ModelCardReport</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_citation">
+<span class="sig-name descname"><span class="pre">log_citation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">citation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model_details'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_citation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_citation" title="Link to this definition">#</a></dt>
+<dd><p>Add a citation to a section of the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>citation</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The citation content.</p></li>
+<li><p><strong>section_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The section of the report to add the citation to. If not provided,
+the citation will be added to the <cite>model_details</cite> section, representing
+the citation for the model.</p></li>
+<li><p><strong>**extra</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#KeyError" title="(in Python v3.9)"><strong>KeyError</strong></a> – If the given section name is not valid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If the citation content is a valid BibTeX entry, the citation will be
+formatted as plain text and added to the report.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_dataset">
+<span class="sig-name descname"><span class="pre">log_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">citation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">license_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensitive_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sensitive_feature_justification</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_dataset" title="Link to this definition">#</a></dt>
+<dd><p>Log information about the dataset used to train/evaluate the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – A description of the dataset.</p></li>
+<li><p><strong>citation</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – A citation for the dataset. This can be a BibTeX entry or a plain-text
+citation.</p></li>
+<li><p><strong>link</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – A link to a resource that provides relevant context e.g. the homepage
+of the dataset.</p></li>
+<li><p><strong>license_id</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The SPDX identifier of the license, e.g. “Apache-2.0”.
+See <a class="reference external" href="https://spdx.org/licenses/">https://spdx.org/licenses/</a> for a list of valid identifiers.
+For custom licenses, set the <cite>identifier</cite> to “unknown”, “unlicensed”,
+or “proprietary”.</p></li>
+<li><p><strong>version</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The version of the dataset.</p></li>
+<li><p><strong>features</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The names of the features used to train/evaluate the model.</p></li>
+<li><p><strong>split</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The name of the split used to train/evaluate the model.</p></li>
+<li><p><strong>sensitive_features</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The names of the sensitive features used to train/evaluate the model.</p></li>
+<li><p><strong>sensitive_feature_justification</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – A justification for the sensitive features used to train/evaluate the
+model.</p></li>
+<li><p><strong>**extra</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – Any extra fields to add to the Dataset.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#AssertionError" title="(in Python v3.9)"><strong>AssertionError</strong></a> – If the sensitive features are not in the features list.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_descriptor">
+<span class="sig-name descname"><span class="pre">log_descriptor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_descriptor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_descriptor" title="Link to this definition">#</a></dt>
+<dd><p>Add a descriptor to a section of the report.</p>
+<p>This method will create a new pydantic <cite>BaseModel</cite> subclass with the given
+name, which has a field named <cite>description</cite> of type <cite>str</cite>. As long as the
+descriptor name does not conflict with a defined class in the <cite>model_card</cite>
+module, the descriptor can be added to any section of the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The name of the descriptor.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A description of the descriptor.</p></li>
+<li><p><strong>section_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The section of the report to add the descriptor to.</p></li>
+<li><p><strong>**extra</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – Any extra fields to add to the descriptor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#KeyError" title="(in Python v3.9)"><strong>KeyError</strong></a> – If the given section name is not valid.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#ValueError" title="(in Python v3.9)"><strong>ValueError</strong></a> – If the given name conflicts with a defined class in the <cite>model_card</cite> module.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cyclops.report</span> <span class="kn">import</span> <span class="n">ModelCardReport</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">report</span> <span class="o">=</span> <span class="n">ModelCardReport</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">report</span><span class="o">.</span><span class="n">log_descriptor</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;tradeoff&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;We trade off performance for interpretability.&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">section_name</span><span class="o">=</span><span class="s2">&quot;considerations&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_fairness_assessment">
+<span class="sig-name descname"><span class="pre">log_fairness_assessment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">affected_group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">benefit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">harm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mitigation_strategy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'considerations'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_fairness_assessment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_fairness_assessment" title="Link to this definition">#</a></dt>
+<dd><p>Add a fairness assessment to a section of the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>affected_group</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A description of the affected group.</p></li>
+<li><p><strong>benefit</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A description of the benefit(s) to the affected group.</p></li>
+<li><p><strong>harm</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A description of the harm(s) to the affected group.</p></li>
+<li><p><strong>mitigation_strategy</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A description of the mitigation strategy.</p></li>
+<li><p><strong>section_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The section of the report to add the fairness assessment to. If not
+provided, the fairness assessment will be added to the <cite>considerations</cite>
+section.</p></li>
+<li><p><strong>**extra</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – Any extra information to add in relation to the fairness assessment.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#KeyError" title="(in Python v3.9)"><strong>KeyError</strong></a> – If the given section name is not valid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_from_dict">
+<span class="sig-name descname"><span class="pre">log_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_from_dict" title="Link to this definition">#</a></dt>
+<dd><p>Populate fields in the model card from a dictionary.</p>
+<p>The keys of the dictionary serve as the field names in the specified section.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>) – Dictionary of data to populate the fields with.</p></li>
+<li><p><strong>section_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Name of the section to populate.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_image">
+<span class="sig-name descname"><span class="pre">log_image</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">img_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">caption</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_image"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_image" title="Link to this definition">#</a></dt>
+<dd><p>Add an image to a section of the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>img_path</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The path to the image file.</p></li>
+<li><p><strong>caption</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The caption for the image.</p></li>
+<li><p><strong>section_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The section of the report to add the image to.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#KeyError" title="(in Python v3.9)"><strong>KeyError</strong></a> – If the given section name is not valid.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#ValueError" title="(in Python v3.9)"><strong>ValueError</strong></a> – If the given image path does not exist.</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_license">
+<span class="sig-name descname"><span class="pre">log_license</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">identifier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model_details'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_license"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_license" title="Link to this definition">#</a></dt>
+<dd><p>Add a license to a section of the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>identifier</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The SPDX identifier of the license, e.g. “Apache-2.0”.
+See <a class="reference external" href="https://spdx.org/licenses/">https://spdx.org/licenses/</a> for a list of valid identifiers.
+For custom licenses, set the <cite>identifier</cite> to “unknown”, “unlicensed”,
+or “proprietary” and provide the full license text in the <cite>text</cite> field,
+if available.</p></li>
+<li><p><strong>text</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The full text of the license. This is useful for custom licenses
+that are not in the SPDX list.</p></li>
+<li><p><strong>section_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The section of the report to add the license to. If not provided,
+the license will be added to the <cite>model_details</cite> section, representing
+the license for the model as a whole.</p></li>
+<li><p><strong>**extra</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – Any extra fields to add to the License.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#KeyError" title="(in Python v3.9)"><strong>KeyError</strong></a> – If the given section name is not valid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>If the license is not found in the SPDX list, the license text will be
+left blank. If the license text is provided, it will be used instead.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_model_parameters">
+<span class="sig-name descname"><span class="pre">log_model_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_model_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_model_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Log model parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>) – A dictionary of model parameters.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_owner">
+<span class="sig-name descname"><span class="pre">log_owner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contact</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">role</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model_details'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_owner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_owner" title="Link to this definition">#</a></dt>
+<dd><p>Add an owner to a section of the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The name of the owner.</p></li>
+<li><p><strong>contact</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The contact information for the owner.</p></li>
+<li><p><strong>role</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The role of the owner.</p></li>
+<li><p><strong>section_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The name of the section of the report to log the owner to. If not provided,
+the owner will be added to the <cite>model_details</cite> section, representing
+the model owner.</p></li>
+<li><p><strong>**extra</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – Any extra fields to add to the Owner.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#KeyError" title="(in Python v3.9)"><strong>KeyError</strong></a> – If the given section name is not valid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_performance_metrics">
+<span class="sig-name descname"><span class="pre">log_performance_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_performance_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_performance_metrics" title="Link to this definition">#</a></dt>
+<dd><p>Add a performance metric to the <cite>Quantitative Analysis</cite> section.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>metrics</strong> (<em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>Any</em><em>]</em>) – A dictionary of performance metrics. The keys should be the name of the
+metric, and the values should be the value of the metric. If the metric
+is a slice metric, the key should be the slice name followed by a slash
+and then the metric name (e.g. “slice_name/metric_name”). If no slice
+name is provided, the slice name will be “overall”.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#TypeError" title="(in Python v3.9)"><strong>TypeError</strong></a> – If the given metrics are not a dictionary with string keys.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_plotly_figure">
+<span class="sig-name descname"><span class="pre">log_plotly_figure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">caption</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interactive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_plotly_figure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_plotly_figure" title="Link to this definition">#</a></dt>
+<dd><p>Add a plotly figure to a section of the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fig</strong> (<em>Figure</em>) – The plotly figure to add.</p></li>
+<li><p><strong>caption</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The caption for the figure.</p></li>
+<li><p><strong>section_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The section of the report to add the figure to.</p></li>
+<li><p><strong>interactive</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>, </em><em>optional</em><em>, </em><em>default=True</em>) – Whether or not the figure should be an interactive plot.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#KeyError" title="(in Python v3.9)"><strong>KeyError</strong></a> – If the given section name is not valid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_quantitative_analysis">
+<span class="sig-name descname"><span class="pre">log_quantitative_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">analysis_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_slice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decision_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pass_fail_thresholds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pass_fail_threshold_fns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_quantitative_analysis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_quantitative_analysis" title="Link to this definition">#</a></dt>
+<dd><p>Add a quantitative analysis to the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>analysis_type</strong> (<em>Literal</em><em>[</em><em>&quot;performance&quot;</em><em>, </em><em>&quot;fairness&quot;</em><em>, </em><em>&quot;explainability&quot;</em><em>]</em>) – The type of analysis to log.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The name of the metric.</p></li>
+<li><p><strong>value</strong> (<em>Any</em>) – The value of the metric.</p></li>
+<li><p><strong>metric_slice</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The name of the slice. If not provided, the slice name will be “overall”.</p></li>
+<li><p><strong>decision_threshold</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>optional</em>) – The decision threshold for the metric.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – A description of the metric.</p></li>
+<li><p><strong>pass_fail_thresholds</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>, </em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>]</em><em>]</em><em>, </em><em>optional</em>) – The pass/fail threshold(s) for the metric. If a single threshold is
+provided, a single test will be created. If multiple thresholds are
+provided, multiple tests will be created.</p></li>
+<li><p><strong>pass_fail_threshold_fns</strong> (<em>Union</em><em>[</em><em>Callable</em><em>[</em><em>[</em><em>Any</em><em>, </em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#bool" title="(in Python v3.9)"><em>bool</em></a><em>]</em><em>,</em>) – List[Callable[[Any, float], bool]]], optional
+The pass/fail threshold function(s) for the metric. If a single function
+is provided, a single test will be created. If multiple functions are
+provided, multiple tests will be created.</p></li>
+<li><p><strong>**extra</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – Any extra fields to add to the metric.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#ValueError" title="(in Python v3.9)"><strong>ValueError</strong></a> – If the given metric type is not valid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_reference">
+<span class="sig-name descname"><span class="pre">log_reference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">link</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model_details'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_reference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_reference" title="Link to this definition">#</a></dt>
+<dd><p>Add a reference to a section of the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>link</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A link to a resource that provides relevant context.</p></li>
+<li><p><strong>section_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The section of the report to add the reference to. If not provided,
+the reference will be added to the <cite>model_details</cite> section, representing
+the reference for the model.</p></li>
+<li><p><strong>**extra</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – Any extra fields to add to the Reference.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#KeyError" title="(in Python v3.9)"><strong>KeyError</strong></a> – If the given section name is not valid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_regulation">
+<span class="sig-name descname"><span class="pre">log_regulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">regulation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model_details'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_regulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_regulation" title="Link to this definition">#</a></dt>
+<dd><p>Add a regulatory requirement to a section of the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>regulation</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The regulatory requirement that must be complied with.</p></li>
+<li><p><strong>section_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The section of the report to add the regulatory requirement to.
+If not provided, the regulatory requirement will be added to the
+<cite>model_details</cite> section.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#KeyError" title="(in Python v3.9)"><strong>KeyError</strong></a> – If the given section name is not valid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_risk">
+<span class="sig-name descname"><span class="pre">log_risk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">risk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mitigation_strategy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'considerations'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_risk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_risk" title="Link to this definition">#</a></dt>
+<dd><p>Add a risk to a section of the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>risk</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A description of the risk.</p></li>
+<li><p><strong>mitigation_strategy</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A description of the mitigation strategy.</p></li>
+<li><p><strong>section_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The section of the report to add the risk to. If not provided, the
+risk will be added to the <cite>considerations</cite> section.</p></li>
+<li><p><strong>**extra</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – Any extra information to add in relation to the risk.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#KeyError" title="(in Python v3.9)"><strong>KeyError</strong></a> – If the given section name is not valid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_use_case">
+<span class="sig-name descname"><span class="pre">log_use_case</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'considerations'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_use_case"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_use_case" title="Link to this definition">#</a></dt>
+<dd><p>Add a use case to a section of the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A description of the use case.</p></li>
+<li><p><strong>kind</strong> (<em>Literal</em><em>[</em><em>&quot;primary&quot;</em><em>, </em><em>&quot;out-of-scope&quot;</em><em>]</em>) – The kind of use case - either “primary” or “out-of-scope”.</p></li>
+<li><p><strong>section_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The section of the report to add the use case to. If not provided,
+the use case will be added to the <cite>considerations</cite> section.</p></li>
+<li><p><strong>**extra</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – Any extra fields to add to the UseCase.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#KeyError" title="(in Python v3.9)"><strong>KeyError</strong></a> – If the given section name is not valid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_user">
+<span class="sig-name descname"><span class="pre">log_user</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">description</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'considerations'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_user"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_user" title="Link to this definition">#</a></dt>
+<dd><p>Add a user description to a section of the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – A description of the user.</p></li>
+<li><p><strong>section_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The section of the report to add the user to. If not provided, the user
+will be added to the <cite>considerations</cite> section.</p></li>
+<li><p><strong>**extra</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – Any extra fields to add to the User.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#KeyError" title="(in Python v3.9)"><strong>KeyError</strong></a> – If the given section name is not valid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="cyclops.report.report.ModelCardReport.log_version">
+<span class="sig-name descname"><span class="pre">log_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">version_str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">description</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">section_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model_details'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">extra</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/cyclops/report/report.html#ModelCardReport.log_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#cyclops.report.report.ModelCardReport.log_version" title="Link to this definition">#</a></dt>
+<dd><p>Add a version to a section of the report.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>version_str</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The version number or identifier as a string. This can be a semantic
+version number, e.g. “1.0.0”, or a custom identifier, e.g. “v1”.</p></li>
+<li><p><strong>date</strong> (<em>Union</em><em>[</em><em>dt_date</em><em>, </em><em>dt_datetime</em><em>, </em><a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3.9/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a><em>]</em><em>, </em><em>optional</em>) – The date of the version. This can be a datetime/date object, an integer
+or float representing a UNIX timestamp, or a string in the format
+<cite>YYYY-MM-DD[T]HH:MM[:SS[.ffffff]][Z or [±]HH[:]MM]]</cite> or <cite>YYYY-MM-DD</cite>.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – A description of the version. This can be used to summarize the changes
+made in the version or to provide additional context.</p></li>
+<li><p><strong>section_name</strong> (<a class="reference external" href="https://docs.python.org/3.9/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a><em>, </em><em>optional</em>) – The section of the report to add the version to. If not provided,
+the version will be added to the <cite>model_details</cite> section, representing
+the version of the model as a whole.</p></li>
+<li><p><strong>**extra</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/typing.html#typing.Any" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – Any extra fields to add to the Version.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.9/library/exceptions.html#KeyError" title="(in Python v3.9)"><strong>KeyError</strong></a> – If the given section name is not valid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3.9/library/constants.html#None" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          <a class="prev-page" href="cyclops.report.report.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">cyclops.report.report</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Vector AI Engineering
+            </div>
+            <!--
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+            -->
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link " href="https://github.com/VectorInstitute/cyclops" aria-label="GitHub">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+              
+            </div>
+          </div>
+        </div>
+        <div class="footer-container" style="text-align: center;">
+          <div class="footer-small-text">
+              <br> All <a href="https://github.com/VectorInstitute/cyclops">source code for cyclops</a> is freely available under the terms of an <a href="https://opensource.org/licenses/Apache-2.0">Apache-2.0</a> license.
+          </div>
+
+          <div class="footer-small-text">
+            This work is made possible due to the data obtained from the <a href="https://www.geminimedicine.ca/">GEMINI study</a>.
+          </div>
+
+          <div class="logo">
+            <a class="logo" href="https://vectorinstitute.ai/">
+              <span class="logo"></span>
+              <img alt="Logo of the Vector Institute" style="width:90px; max-width:90px;" src="../../../_static/logos/vector_logo.png" />
+            </a>
+            <a class="logo" href="https://www.geminimedicine.ca/">
+              <span class="logo"></span>
+              <img alt="Logo of GEMINI" style="width:90px; max-width:90px;" src="../../../_static/logos/gemini_logo.png" />
+            </a>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">cyclops.report.report.ModelCardReport</a><ul>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport"><code class="docutils literal notranslate"><span class="pre">ModelCardReport</span></code></a><ul>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.export"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.export()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.from_json_file"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.from_json_file()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_citation"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_citation()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_dataset"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_dataset()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_descriptor"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_descriptor()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_fairness_assessment"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_fairness_assessment()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_from_dict"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_from_dict()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_image"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_image()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_license"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_license()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_model_parameters"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_model_parameters()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_owner"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_owner()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_performance_metrics"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_performance_metrics()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_plotly_figure"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_plotly_figure()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_quantitative_analysis"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_quantitative_analysis()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_reference"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_reference()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_regulation"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_regulation()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_risk"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_risk()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_use_case"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_use_case()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_user"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_user()</span></code></a></li>
+<li><a class="reference internal" href="#cyclops.report.report.ModelCardReport.log_version"><code class="docutils literal notranslate"><span class="pre">ModelCardReport.log_version()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div></body>
+</html>

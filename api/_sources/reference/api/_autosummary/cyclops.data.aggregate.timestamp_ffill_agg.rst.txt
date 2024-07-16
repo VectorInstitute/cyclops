@@ -1,0 +1,6 @@
+cyclops.data.aggregate.timestamp\_ffill\_agg
+============================================
+
+.. currentmodule:: cyclops.data.aggregate
+
+.. autofunction:: timestamp_ffill_agg

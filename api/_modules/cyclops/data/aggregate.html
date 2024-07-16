@@ -1,0 +1,1175 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark">
+    <meta name="google-site-verification" content="i0qQRaR9OA3tSz_9tDocdcXGY27Ox_cy4FrvTHD2C_0" />
+    
+      <meta name="description" content="CyclOps Python API documentation">
+    <link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
+
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/><meta name="generator" content="sphinx-7.2.6, furo 2024.01.29"/>
+
+    
+    <meta name="msvalidate.01" content="8D2A5032F006424CAF54C0DDCD16F666" />
+      
+        <title>cyclops.data.aggregate - cyclops documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/cyclops.css?v=9f20b50b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --color-card-background: #5e88f2;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #faad1a;
+  --color-brand-content: #eb088a;
+  --color-foreground-secondary: #52c7de;
+  --color-card-background: #3b0e28;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #faad1a;
+  --color-brand-content: #eb088a;
+  --color-foreground-secondary: #52c7de;
+  --color-card-background: #3b0e28;
+  
+      }
+    }
+  }
+</style><script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=ccdb6887"></script>
+    <script src="../../../_static/design-tabs.js?v=36754332"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/require.min.js?v=53367eec"></script>
+    <script src="../../../_static/custom.js?v=275847af"></script>
+    
+    <script src="https://kit.fontawesome.com/2c1f516901.js" crossorigin="anonymous"></script>
+
+  </head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../index.html"><div class="brand">cyclops  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../../_static/cyclops_logo-dark.png" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../user_guide.html">User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of User Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../evaluation.html">Evaluation</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Evaluation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples/metrics.html">Breast Cancer Classification and Evaluation</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../model_report.html">Model Report</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Model Report</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples/report.html">Report Generation for Heart Failure Prediction</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../monitoring.html">Monitoring</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../tutorials.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../tutorials_use_cases.html">Example use cases</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Example use cases</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/kaggle/heart_failure_prediction.html">Heart Failure Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/mimiciv/mortality_prediction.html">Mortality Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/synthea/los_prediction.html">Prolonged Length of Stay Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/diabetes_130/readmission_prediction.html">Readmission Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/nihcxr/cxr_classification.html">Chest X-Ray Disease Classification</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developing.html">🧑🏿‍💻 Developing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing to cyclops</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../api.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/api/cyclops.data.html">cyclops.data</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of cyclops.data</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.html">cyclops.data.slicer</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of cyclops.data.slicer</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.compound_filter.html">cyclops.data.slicer.compound_filter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.filter_datetime.html">cyclops.data.slicer.filter_datetime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.filter_non_null.html">cyclops.data.slicer.filter_non_null</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.filter_range.html">cyclops.data.slicer.filter_range</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.filter_string_contains.html">cyclops.data.slicer.filter_string_contains</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.filter_value.html">cyclops.data.slicer.filter_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.is_datetime.html">cyclops.data.slicer.is_datetime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.overall.html">cyclops.data.slicer.overall</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html">cyclops.data.slicer.SliceSpec</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.aggregate.html">cyclops.data.aggregate</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of cyclops.data.aggregate</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.aggregate.tabular_as_aggregated.html">cyclops.data.aggregate.tabular_as_aggregated</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.aggregate.timestamp_ffill_agg.html">cyclops.data.aggregate.timestamp_ffill_agg</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.aggregate.Aggregator.html">cyclops.data.aggregate.Aggregator</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.features.medical_image.html">cyclops.data.features.medical_image</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of cyclops.data.features.medical_image</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.features.medical_image.MedicalImage.html">cyclops.data.features.medical_image.MedicalImage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/api/cyclops.tasks.html">cyclops.tasks</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of cyclops.tasks</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.tasks.classification.html">cyclops.tasks.classification</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of cyclops.tasks.classification</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html">cyclops.tasks.classification.BinaryTabularClassificationTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html">cyclops.tasks.classification.MultilabelImageClassificationTask</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/api/evaluator.html">Evaluator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/api/fairness_evaluator.html">Fairness Evaluator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/api/metrics.html">Evaluation Metrics</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Evaluation Metrics</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/accuracy.html">Accuracy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/auroc.html">AUROC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/average_precision.html">Average Precision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/f1score.html">F1-Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/f_beta.html">F-beta Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/precision.html">Precision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/precision_recall_curve.html">PrecisionRecallCurve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/recall.html">Recall</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/roc.html">ROC Curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/sensitivity.html">Sensitivity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/specificity.html">Specificity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/stat_scores.html">StatScores</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/api/cyclops.monitor.html">cyclops.monitor</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of cyclops.monitor</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.clinical_applicator.html">cyclops.monitor.clinical_applicator</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of cyclops.monitor.clinical_applicator</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.html">cyclops.monitor.clinical_applicator.ClinicalShiftApplicator</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.html">cyclops.monitor.synthetic_applicator</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of cyclops.monitor.synthetic_applicator</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.binary_noise_shift.html">cyclops.monitor.synthetic_applicator.binary_noise_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.feature_association_shift.html">cyclops.monitor.synthetic_applicator.feature_association_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.feature_swap_shift.html">cyclops.monitor.synthetic_applicator.feature_swap_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.gaussian_noise_shift.html">cyclops.monitor.synthetic_applicator.gaussian_noise_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.knockout_shift.html">cyclops.monitor.synthetic_applicator.knockout_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.SyntheticShiftApplicator.html">cyclops.monitor.synthetic_applicator.SyntheticShiftApplicator</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/api/cyclops.report.html">cyclops.report</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of cyclops.report</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.report.report.html">cyclops.report.report</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of cyclops.report.report</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html">cyclops.report.report.ModelCardReport</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <h1>Source code for cyclops.data.aggregate</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Aggregation functions.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">TransformerMixin</span>
+
+<span class="kn">from</span> <span class="nn">cyclops.data.clean</span> <span class="kn">import</span> <span class="n">dropna_rows</span>
+<span class="kn">from</span> <span class="nn">cyclops.data.constants</span> <span class="kn">import</span> <span class="n">ALL</span><span class="p">,</span> <span class="n">FIRST</span><span class="p">,</span> <span class="n">LAST</span>
+<span class="kn">from</span> <span class="nn">cyclops.data.df.vectorized</span> <span class="kn">import</span> <span class="n">Vectorized</span>
+<span class="kn">from</span> <span class="nn">cyclops.data.impute</span> <span class="kn">import</span> <span class="n">AggregatedImputer</span><span class="p">,</span> <span class="n">numpy_2d_ffill</span>
+<span class="kn">from</span> <span class="nn">cyclops.data.utils</span> <span class="kn">import</span> <span class="n">has_columns</span><span class="p">,</span> <span class="n">is_timestamp_series</span>
+<span class="kn">from</span> <span class="nn">cyclops.utils.common</span> <span class="kn">import</span> <span class="n">to_list</span><span class="p">,</span> <span class="n">to_list_optional</span>
+<span class="kn">from</span> <span class="nn">cyclops.utils.log</span> <span class="kn">import</span> <span class="n">setup_logging</span>
+<span class="kn">from</span> <span class="nn">cyclops.utils.profile</span> <span class="kn">import</span> <span class="n">time_function</span>
+
+
+<span class="c1"># Logging.</span>
+<span class="n">LOGGER</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">setup_logging</span><span class="p">(</span><span class="n">print_level</span><span class="o">=</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">LOGGER</span><span class="p">)</span>
+
+
+<span class="n">RESTRICT_TIMESTAMP</span> <span class="o">=</span> <span class="s2">&quot;restrict_timestamp&quot;</span>
+<span class="n">WINDOW_START_TIMESTAMP</span> <span class="o">=</span> <span class="s2">&quot;window_start_timestamp&quot;</span>
+<span class="n">WINDOW_STOP_TIMESTAMP</span> <span class="o">=</span> <span class="s2">&quot;window_stop_timestamp&quot;</span>
+<span class="n">START_TIMESTEP</span> <span class="o">=</span> <span class="s2">&quot;start_timestep&quot;</span>
+<span class="n">TIMESTEP</span> <span class="o">=</span> <span class="s2">&quot;timestep&quot;</span>
+
+
+<div class="viewcode-block" id="Aggregator">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.data.aggregate.Aggregator.html#cyclops.data.aggregate.Aggregator">[docs]</a>
+<span class="k">class</span> <span class="nc">Aggregator</span><span class="p">(</span><span class="n">TransformerMixin</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Equal-spaced aggregation, or binning, of time-series data.</span>
+
+<span class="sd">    Computing aggregation metadata is expensive and should be done sparingly.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    aggfuncs: dict</span>
+<span class="sd">        Aggregation functions mapped from column to aggregation type.</span>
+<span class="sd">        Each value is either function or string, e.g., {col_name: MEAN}.</span>
+<span class="sd">        If a function, it should accept a series and return a single value.</span>
+<span class="sd">    timestamp_col: str</span>
+<span class="sd">        Name of the timestamp column in the data provided.</span>
+<span class="sd">    time_by: list of str</span>
+<span class="sd">        Name of columns by which to group to determine the bucket times.</span>
+<span class="sd">    agg_by: list of str</span>
+<span class="sd">        Name of columns by which to group to perform aggregation.</span>
+<span class="sd">    timestep_size: float</span>
+<span class="sd">        Time in hours for a single timestep, or bin.</span>
+<span class="sd">    window_duration: float or None</span>
+<span class="sd">        Time in hours for the aggregation window. If None, the latest timestamp</span>
+<span class="sd">        for each time_by group is used as the window stop time.</span>
+<span class="sd">    window_start_time: pd.DataFrame or None</span>
+<span class="sd">        An optionally provided window start time for each time_by group.</span>
+<span class="sd">    window_stop_time: pd.DataFrame or None</span>
+<span class="sd">        An optionally provided window stop time for each time_by group.</span>
+<span class="sd">    agg_meta_for: list of str or None</span>
+<span class="sd">        Columns for which to compute aggregation metadata.</span>
+<span class="sd">    window_times: pd.DataFrame or None</span>
+<span class="sd">        The start/stop time windows used to aggregate the data.</span>
+<span class="sd">    imputer: AggregatedImputer or None</span>
+<span class="sd">        An imputer to perform aggregation.</span>
+<span class="sd">    num_timesteps: int or None</span>
+<span class="sd">        The number of timesteps in the aggregation window.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    aggfuncs is a dictionary of aggregation functions mapped from column to</span>
+<span class="sd">    aggregation type. Each value is either function or string, e.g.,</span>
+<span class="sd">    {col_name: MEAN}. If a function, it should accept a series and return a</span>
+<span class="sd">    single value. If a string, it should be one of the following:</span>
+
+<span class="sd">    - ``mean``</span>
+<span class="sd">    - ``median``</span>
+<span class="sd">    - ``std``</span>
+<span class="sd">    - ``var``</span>
+<span class="sd">    - ``min``</span>
+<span class="sd">    - ``max``</span>
+<span class="sd">    - ``count``</span>
+<span class="sd">    - ``sum``</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Aggregator.__init__">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.data.aggregate.Aggregator.html#cyclops.data.aggregate.Aggregator.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">aggfuncs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]],</span>
+        <span class="n">timestamp_col</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">time_by</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">agg_by</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">timestep_size</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">window_duration</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">window_start_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">window_stop_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">imputer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AggregatedImputer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">agg_meta_for</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Init.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">agg_meta_for</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Calculation of aggregation metadata slows aggregation.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggfuncs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_aggfuncs</span><span class="p">(</span><span class="n">aggfuncs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col</span> <span class="o">=</span> <span class="n">timestamp_col</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_by</span> <span class="o">=</span> <span class="n">to_list</span><span class="p">(</span><span class="n">time_by</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agg_by</span> <span class="o">=</span> <span class="n">to_list</span><span class="p">(</span><span class="n">agg_by</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agg_meta_for</span> <span class="o">=</span> <span class="n">to_list_optional</span><span class="p">(</span><span class="n">agg_meta_for</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timestep_size</span> <span class="o">=</span> <span class="n">timestep_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_duration</span> <span class="o">=</span> <span class="n">window_duration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_start_time</span> <span class="o">=</span> <span class="n">window_start_time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_stop_time</span> <span class="o">=</span> <span class="n">window_stop_time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_times</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>  <span class="c1"># Calculated when given the data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">imputer</span> <span class="o">=</span> <span class="n">imputer</span>
+        <span class="c1"># Parameter checking</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">agg_meta_for</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agg_meta_for</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span>
+            <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aggfuncs</span><span class="p">),</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot compute meta for a column not being aggregated.&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">window_duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">timestep_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">divided</span> <span class="o">=</span> <span class="n">window_duration</span> <span class="o">/</span> <span class="n">timestep_size</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_timesteps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">divided</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">divided</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">divided</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Window duration be divisible by bucket size.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">timestep_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_timesteps</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_timesteps</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_process_aggfuncs</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">aggfuncs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process aggregation functions for respective columns.</span>
+
+<span class="sd">        Given a dict of values as functions or strings, convert a string to an</span>
+<span class="sd">        aggfunc if recognized. Otherwise, simply return the functions.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            The processed aggregation function dictionary.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">aggfunc</span> <span class="ow">in</span> <span class="n">aggfuncs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">aggfunc</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">callable</span><span class="p">(</span><span class="n">aggfunc</span><span class="p">):</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Aggfunc must be a string or callable.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="n">aggfuncs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_check_start_stop_window_ts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">window_time</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check whether a window start/stop time have the correct format.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            Window start/stop time.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">window_time</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_by</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Window start/stop times must have index: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">time_by</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">has_columns</span><span class="p">(</span>
+            <span class="n">window_time</span><span class="p">,</span>
+            <span class="p">[</span><span class="n">RESTRICT_TIMESTAMP</span><span class="p">],</span>
+            <span class="n">exactly</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">raise_error</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_restrict_by_timestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Restrict events by the window start/stop times.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pandas.DataFrame</span>
+<span class="sd">            Input data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            The appropriately restricted data.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window_times</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">time_by</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
+        <span class="n">cond</span> <span class="o">=</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">data</span><span class="p">[</span><span class="n">WINDOW_START_TIMESTAMP</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span>
+            <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">data</span><span class="p">[</span><span class="n">WINDOW_STOP_TIMESTAMP</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="c1"># Keep if no match was made (i.e., no restriction performed)</span>
+        <span class="n">cond</span> <span class="o">=</span> <span class="n">cond</span> <span class="o">|</span> <span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col</span><span class="p">]</span><span class="o">.</span><span class="n">isnull</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="n">cond</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_use_provided_window</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">window_time</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">default_time</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">warning_args</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Process a window start/stop time.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        window_time: pandas.DataFrame</span>
+<span class="sd">            The provided window start/stop time.</span>
+<span class="sd">        default_time: pandas.DataFrame</span>
+<span class="sd">            A default window start/stop time if the provided version is missing values.</span>
+<span class="sd">        warning_args: tuple</span>
+<span class="sd">            Tuple of strings used to format a warning message.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            The processed provided window start/stop time.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_start_stop_window_ts</span><span class="p">(</span><span class="n">window_time</span><span class="p">)</span>
+        <span class="n">index_missing</span> <span class="o">=</span> <span class="n">default_time</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">window_time</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">index_missing</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">LOGGER</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="s2">&quot;Not all time_by groups have a specified window </span><span class="si">%s</span><span class="s2"> time. &quot;</span>
+                    <span class="s2">&quot;Defaulting missing to </span><span class="si">%s</span><span class="s2"> time.&quot;</span>
+                <span class="p">),</span>
+                <span class="o">*</span><span class="n">warning_args</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="c1"># Default non-existent to earliest time.</span>
+            <span class="n">window_time</span> <span class="o">=</span> <span class="n">default_time</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">window_time</span><span class="p">)</span>
+            <span class="n">inds</span> <span class="o">=</span> <span class="n">window_time</span><span class="p">[</span><span class="n">RESTRICT_TIMESTAMP</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span>
+            <span class="n">window_time</span><span class="p">[</span><span class="n">RESTRICT_TIMESTAMP</span><span class="p">][</span><span class="n">inds</span><span class="p">]</span> <span class="o">=</span> <span class="n">window_time</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col</span><span class="p">][</span>
+                <span class="n">inds</span>
+            <span class="p">]</span>
+            <span class="n">window_time</span> <span class="o">=</span> <span class="n">window_time</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">window_time</span>
+
+    <span class="k">def</span> <span class="nf">_compute_window_start</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">window_start_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the start timestamp for each time_by window.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pandas.DataFrame</span>
+<span class="sd">            Data before aggregation.</span>
+<span class="sd">        window_start_time: pd.DataFrame, optional</span>
+<span class="sd">            An optionally provided window start time.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            Start timestamps for each time_by window.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Take the earliest timestamp for each time_by group</span>
+        <span class="n">earliest_time</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_by</span> <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col</span><span class="p">]]</span>
+            <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_by</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">agg</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col</span><span class="p">:</span> <span class="s2">&quot;min&quot;</span><span class="p">})</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">window_start_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Use earliest times</span>
+            <span class="n">earliest_time</span> <span class="o">=</span> <span class="n">earliest_time</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+                <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col</span><span class="p">:</span> <span class="n">RESTRICT_TIMESTAMP</span><span class="p">},</span>
+                <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">window_start_time</span> <span class="o">=</span> <span class="n">earliest_time</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Use provided start - with earliest times acting as default</span>
+            <span class="n">window_start_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_provided_window</span><span class="p">(</span>
+                <span class="n">window_start_time</span><span class="p">,</span>
+                <span class="n">earliest_time</span><span class="p">,</span>
+                <span class="p">(</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;earliest&quot;</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_start_stop_window_ts</span><span class="p">(</span><span class="n">window_start_time</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">window_start_time</span>
+
+    <span class="k">def</span> <span class="nf">_compute_window_stop</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">window_start_time</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">window_stop_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the stop timestamp for each time_by window.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pandas.DataFrame</span>
+<span class="sd">            Data before aggregation.</span>
+<span class="sd">        window_start_time: pd.DataFrame</span>
+<span class="sd">            The window start time, which is necessary to compute the</span>
+<span class="sd">            stop time when window_duration is set.</span>
+<span class="sd">        window_stop_time: pd.DataFrame, optional</span>
+<span class="sd">            An optionally provided window stop time.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            Stop timestamps for each time_by group.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Use provided stop</span>
+        <span class="k">if</span> <span class="n">window_stop_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot provide window_stop_time if window_duration was set.&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Use window duration to compute the stop times for each group</span>
+            <span class="n">window_stop_time</span> <span class="o">=</span> <span class="n">window_start_time</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">window_stop_time</span><span class="p">[</span><span class="n">RESTRICT_TIMESTAMP</span><span class="p">]</span> <span class="o">+=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span>
+                <span class="n">hours</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_duration</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Take the latest timestamp for each time_by group</span>
+            <span class="n">latest_time</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_by</span> <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col</span><span class="p">]]</span>
+                <span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_by</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="o">.</span><span class="n">agg</span><span class="p">({</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col</span><span class="p">:</span> <span class="s2">&quot;max&quot;</span><span class="p">})</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">window_stop_time</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Use latest times</span>
+                <span class="n">latest_time</span> <span class="o">=</span> <span class="n">latest_time</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+                    <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col</span><span class="p">:</span> <span class="n">RESTRICT_TIMESTAMP</span><span class="p">},</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">window_stop_time</span> <span class="o">=</span> <span class="n">latest_time</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Use provided stop - with latest times acting as default</span>
+                <span class="n">window_stop_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_provided_window</span><span class="p">(</span>
+                    <span class="n">window_stop_time</span><span class="p">,</span>
+                    <span class="n">latest_time</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s2">&quot;stop&quot;</span><span class="p">,</span> <span class="s2">&quot;latest&quot;</span><span class="p">),</span>
+                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_start_stop_window_ts</span><span class="p">(</span><span class="n">window_stop_time</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">window_stop_time</span>
+
+    <span class="k">def</span> <span class="nf">_compute_window_times</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the start/stop timestamps for each time_by window.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pandas.DataFrame</span>
+<span class="sd">            Data before aggregation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            The start/stop timestamps for each time_by window.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Compute window start time</span>
+        <span class="n">window_start_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_window_start</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span>
+            <span class="n">window_start_time</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_start_time</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># Compute window stop time</span>
+        <span class="n">window_stop_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_window_stop</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span>
+            <span class="n">window_start_time</span><span class="p">,</span>
+            <span class="n">window_stop_time</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_stop_time</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># Combine and compute additional information</span>
+        <span class="n">window_start_time</span> <span class="o">=</span> <span class="n">window_start_time</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+            <span class="p">{</span><span class="n">RESTRICT_TIMESTAMP</span><span class="p">:</span> <span class="n">WINDOW_START_TIMESTAMP</span><span class="p">},</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">window_stop_time</span> <span class="o">=</span> <span class="n">window_stop_time</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span>
+            <span class="p">{</span><span class="n">RESTRICT_TIMESTAMP</span><span class="p">:</span> <span class="n">WINDOW_STOP_TIMESTAMP</span><span class="p">},</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">window_start_time</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">window_stop_time</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_compute_timestep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute which timestep, or bin, each occurrence falls into.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        group: pandas.DataFrame</span>
+<span class="sd">            A time_by group.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            The inputted group with an additional TIMESTEP column.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">loc</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">time_by</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_times</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">loc</span><span class="p">][</span><span class="n">WINDOW_START_TIMESTAMP</span><span class="p">]</span>
+        <span class="n">group</span><span class="p">[</span><span class="n">TIMESTEP</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">group</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col</span><span class="p">]</span> <span class="o">-</span> <span class="n">start</span><span class="p">)</span> <span class="o">/</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span>
+            <span class="n">hours</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timestep_size</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">group</span><span class="p">[</span><span class="n">TIMESTEP</span><span class="p">]</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="n">TIMESTEP</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">group</span>
+
+    <span class="k">def</span> <span class="nf">_compute_agg_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the aggregation metadata for an agg_by group.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        group: pandas.DataFrame</span>
+<span class="sd">            An agg_by group.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            The aggergation metadata information.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Note: .counts() returns the number of non-null values in the Series.</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="n">col</span><span class="p">:</span> <span class="p">[</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">count</span><span class="p">(),</span> <span class="nb">len</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agg_meta_for</span>  <span class="c1"># type: ignore</span>
+            <span class="p">},</span>
+            <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">keep</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">agg_meta_for</span><span class="p">:</span>  <span class="c1"># type: ignore</span>
+            <span class="n">meta</span><span class="p">[</span><span class="n">col</span> <span class="o">+</span> <span class="s2">&quot;_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[(</span><span class="n">col</span><span class="p">,</span> <span class="s2">&quot;len&quot;</span><span class="p">)]</span>
+            <span class="n">meta</span><span class="p">[</span><span class="n">col</span> <span class="o">+</span> <span class="s2">&quot;_null_fraction&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span>
+                <span class="n">meta</span><span class="p">[(</span><span class="n">col</span><span class="p">,</span> <span class="s2">&quot;&lt;lambda_0&gt;&quot;</span><span class="p">)]</span> <span class="o">/</span> <span class="n">meta</span><span class="p">[(</span><span class="n">col</span><span class="p">,</span> <span class="s2">&quot;len&quot;</span><span class="p">)]</span>
+            <span class="p">)</span>
+            <span class="n">keep</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">col</span> <span class="o">+</span> <span class="s2">&quot;_count&quot;</span><span class="p">,</span> <span class="n">col</span> <span class="o">+</span> <span class="s2">&quot;_null_fraction&quot;</span><span class="p">])</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">meta</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span>
+        <span class="n">meta</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">meta</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">meta</span>
+
+    <span class="k">def</span> <span class="nf">_compute_aggregation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the aggregation for an agg_by group by timestep.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        group: pandas.DataFrame</span>
+<span class="sd">            An agg_by group.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            The aggregated group.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">TIMESTEP</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1"># Compute aggregation meta</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">agg_meta_for</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">agg_meta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_agg_meta</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">agg_meta</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imputer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">imputer</span><span class="o">.</span><span class="n">intra</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">imputer</span><span class="o">.</span><span class="n">intra</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+        <span class="n">AggregatedImputer</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aggfuncs</span><span class="p">)</span>
+        <span class="c1"># Include aggregation meta</span>
+        <span class="k">if</span> <span class="n">agg_meta</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">agg_meta</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">group</span>
+
+    <span class="k">def</span> <span class="nf">_aggregate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">include_timestep_start</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+        <span class="c1"># Get the timestep according to the timestep for each event</span>
+        <span class="n">data_with_timesteps</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time_by</span><span class="p">,</span>
+            <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">group_keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_compute_timestep</span><span class="p">)</span>
+        <span class="c1"># Aggregate</span>
+        <span class="n">has_inter_imputer</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">imputer</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">imputer</span><span class="o">.</span><span class="n">intra</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">has_inter_imputer</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">agg_meta_for</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">has_inter_imputer</span><span class="p">:</span>
+            <span class="c1"># EFFICIENT - Can perform if no imputation or metadata calculation is done</span>
+            <span class="n">grouped</span> <span class="o">=</span> <span class="n">data_with_timesteps</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agg_by</span> <span class="o">+</span> <span class="p">[</span><span class="n">TIMESTEP</span><span class="p">],</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">aggregated</span> <span class="o">=</span> <span class="n">grouped</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aggfuncs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># INEFFICIENT - Perform with a custom function to allow added functionality</span>
+            <span class="n">grouped</span> <span class="o">=</span> <span class="n">data_with_timesteps</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agg_by</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">aggregated</span> <span class="o">=</span> <span class="n">grouped</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_compute_aggregation</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">include_timestep_start</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">aggregated</span>
+        <span class="c1"># Get the start timestamp for each timestep</span>
+        <span class="n">aggregated</span> <span class="o">=</span> <span class="n">aggregated</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_by</span><span class="p">)</span>
+        <span class="n">aggregated</span> <span class="o">=</span> <span class="n">aggregated</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window_times</span><span class="p">[</span><span class="n">WINDOW_START_TIMESTAMP</span><span class="p">])</span>
+        <span class="n">aggregated</span><span class="p">[</span><span class="n">START_TIMESTEP</span><span class="p">]</span> <span class="o">=</span> <span class="n">aggregated</span><span class="p">[</span>
+            <span class="n">WINDOW_START_TIMESTAMP</span>
+        <span class="p">]</span> <span class="o">+</span> <span class="n">pd</span><span class="o">.</span><span class="n">to_timedelta</span><span class="p">(</span>
+            <span class="n">aggregated</span><span class="p">[</span><span class="n">TIMESTEP</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_size</span><span class="p">,</span>
+            <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;h&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">aggregated</span> <span class="o">=</span> <span class="n">aggregated</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">WINDOW_START_TIMESTAMP</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">aggregated</span> <span class="o">=</span> <span class="n">aggregated</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">aggregated</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agg_by</span> <span class="o">+</span> <span class="p">[</span><span class="n">TIMESTEP</span><span class="p">])</span>
+
+    <span class="nd">@time_function</span>
+    <span class="k">def</span> <span class="nf">vectorize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">aggregated</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vectorized</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Vectorize aggregated data.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        aggregated: pandas.DataFrame</span>
+<span class="sd">            Aggregated data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        numpy.ndarray</span>
+<span class="sd">            Vectorized aggregated data of shape:</span>
+<span class="sd">            (# of aggfuncs, *# of unique in each agg_by, window_duration/timestep_size)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">window_duration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot currently vectorize data aggregated with no window duration.&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot currently vectorize data aggregated with no timestep size.&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">num_timesteps</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">window_duration</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestep_size</span><span class="p">)</span>
+        <span class="c1"># Parameter checking</span>
+        <span class="n">has_columns</span><span class="p">(</span><span class="n">aggregated</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aggfuncs</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span> <span class="n">raise_error</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">aggregated</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">agg_by</span> <span class="o">+</span> <span class="p">[</span><span class="n">TIMESTEP</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Index must be: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">agg_by</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="p">[</span><span class="n">TIMESTEP</span><span class="p">]</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Reindex to add missing groups/timesteps</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agg_by</span> <span class="o">+</span> <span class="p">[</span><span class="n">TIMESTEP</span><span class="p">]</span>
+        <span class="n">aggregated</span> <span class="o">=</span> <span class="n">aggregated</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">aggregated</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agg_by</span><span class="p">))]</span>
+            <span class="o">+</span> <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">num_timesteps</span><span class="p">)],</span>
+            <span class="n">names</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">vectorized</span> <span class="o">=</span> <span class="n">aggregated</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="c1"># Calculate new shape and indexes</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">vectorized</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vectorized</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">))</span>
+        <span class="p">]</span>
+        <span class="n">indexes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aggfuncs</span><span class="o">.</span><span class="n">keys</span><span class="p">())]</span>
+        <span class="n">indexes</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">ind</span><span class="o">.</span><span class="n">values</span> <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">vectorized</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">])</span>
+        <span class="c1"># Reshape and vectorize</span>
+        <span class="n">vectorized</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">vectorized</span><span class="p">[</span><span class="n">aggfunc</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="k">for</span> <span class="n">aggfunc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggfuncs</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Vectorized</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">vectorized</span><span class="p">,</span>
+            <span class="n">indexes</span><span class="o">=</span><span class="n">indexes</span><span class="p">,</span>
+            <span class="n">axis_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;aggfuncs&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">agg_by</span> <span class="o">+</span> <span class="p">[</span><span class="n">TIMESTEP</span><span class="p">],</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Aggregator.fit">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.data.aggregate.Aggregator.html#cyclops.data.aggregate.Aggregator.fit">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit the aggregator.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pandas.DataFrame</span>
+<span class="sd">            Input data.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Parameter checking</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Data to aggregate must be a DataFrame.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_times</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_window_times</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Aggregator.transform">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.data.aggregate.Aggregator.html#cyclops.data.aggregate.Aggregator.transform">[docs]</a>
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">y</span><span class="p">:</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">include_timestep_start</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform the data by aggregating.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pandas.DataFrame</span>
+<span class="sd">            Input data.</span>
+<span class="sd">        y: None</span>
+<span class="sd">            Placeholder for sklearn compatibility.</span>
+<span class="sd">        include_timestep_start: bool, default = True</span>
+<span class="sd">            Whether to include the window start timestamps for each timestep.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            The aggregated data.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">has_columns</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span>
+            <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_by</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">agg_by</span><span class="p">)),</span>
+            <span class="n">raise_error</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_columns</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">TIMESTEP</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input data cannot have a column called </span><span class="si">{</span><span class="n">TIMESTEP</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="c1"># Ensure the timestamp column is a timestamp. Drop null times (NaT).</span>
+        <span class="n">is_timestamp_series</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col</span><span class="p">],</span> <span class="n">raise_error</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">dropna_rows</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp_col</span><span class="p">)</span>
+        <span class="c1"># Restrict the data according to the start/stop</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_restrict_by_timestamp</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">grouped</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agg_by</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_timesteps</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">grouped</span><span class="o">.</span><span class="n">agg</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aggfuncs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_timesteps</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_timesteps</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregate</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">include_timestep_start</span><span class="o">=</span><span class="n">include_timestep_start</span><span class="p">)</span>
+
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;num_timesteps must be greater than 0.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Aggregator.fit_transform">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.data.aggregate.Aggregator.html#cyclops.data.aggregate.Aggregator.fit_transform">[docs]</a>
+    <span class="k">def</span> <span class="nf">fit_transform</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit the aggregator and transform the data by aggregating.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: pandas.DataFrame</span>
+<span class="sd">            Input data.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            The aggregated data.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="tabular_as_aggregated">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.data.aggregate.tabular_as_aggregated.html#cyclops.data.aggregate.tabular_as_aggregated">[docs]</a>
+<span class="k">def</span> <span class="nf">tabular_as_aggregated</span><span class="p">(</span>
+    <span class="n">tab</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">index</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">var_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">value_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">ALL</span><span class="p">,</span>
+    <span class="n">num_timesteps</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sort</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pose tabular (static, non-timeseries) data as timeseries data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tab: pd.DataFrame</span>
+<span class="sd">        Tabular data.</span>
+<span class="sd">    index: str</span>
+<span class="sd">        Index column name.</span>
+<span class="sd">    var_name: str</span>
+<span class="sd">        The name of the resultant column containing the original tabular column names.</span>
+<span class="sd">    value_name: str</span>
+<span class="sd">        The name of the resultant column containing the tabular values.</span>
+<span class="sd">    strategy: str</span>
+<span class="sd">        Strategy to fake aggregation. E.g., FIRST sets a first timestep to the value,</span>
+<span class="sd">        LAST sets the last timestep to the value, and ALL sets all timesteps to</span>
+<span class="sd">        the value.</span>
+<span class="sd">    num_timesteps: int, optional</span>
+<span class="sd">        The max number of timesteps in the aggregation. This is required by strategies</span>
+<span class="sd">        such as LAST and ALL.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pandas.DataFrame</span>
+<span class="sd">        Tabular data processed as if it is aggregated temporal data.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">supported</span> <span class="o">=</span> <span class="p">[</span><span class="n">FIRST</span><span class="p">,</span> <span class="n">LAST</span><span class="p">,</span> <span class="n">ALL</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">strategy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">supported</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Strategy not recognized. Must be in: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">supported</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_timesteps</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="p">[</span><span class="n">LAST</span><span class="p">,</span> <span class="n">ALL</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must specify num_timesteps for this strategy.&quot;</span><span class="p">)</span>
+    <span class="n">tab</span> <span class="o">=</span> <span class="n">tab</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">tab</span> <span class="o">=</span> <span class="n">tab</span><span class="o">.</span><span class="n">melt</span><span class="p">(</span><span class="n">var_name</span><span class="o">=</span><span class="n">var_name</span><span class="p">,</span> <span class="n">value_name</span><span class="o">=</span><span class="n">value_name</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">tab</span> <span class="o">=</span> <span class="n">tab</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+    <span class="c1"># Set value in the first timestep</span>
+    <span class="k">if</span> <span class="n">strategy</span> <span class="o">==</span> <span class="n">FIRST</span><span class="p">:</span>
+        <span class="n">tab</span><span class="p">[</span><span class="n">TIMESTEP</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># Set value in the last timestep</span>
+    <span class="k">elif</span> <span class="n">strategy</span> <span class="o">==</span> <span class="n">LAST</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">num_timesteps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">tab</span><span class="p">[</span><span class="n">TIMESTEP</span><span class="p">]</span> <span class="o">=</span> <span class="n">num_timesteps</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="c1"># Repeat value across all timesteps</span>
+    <span class="k">elif</span> <span class="n">strategy</span> <span class="o">==</span> <span class="n">ALL</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">num_timesteps</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">tab</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">TIMESTEP</span><span class="p">:</span> <span class="n">i</span><span class="p">})</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="n">tab</span><span class="p">]</span> <span class="o">*</span> <span class="n">num_timesteps</span><span class="p">)],</span>
+        <span class="p">)</span>
+    <span class="n">tab</span> <span class="o">=</span> <span class="n">tab</span><span class="o">.</span><span class="n">set_index</span><span class="p">([</span><span class="n">index</span><span class="p">,</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">TIMESTEP</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">sort</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tab</span><span class="o">.</span><span class="n">sort_index</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">tab</span></div>
+
+
+
+<div class="viewcode-block" id="timestamp_ffill_agg">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.data.aggregate.timestamp_ffill_agg.html#cyclops.data.aggregate.timestamp_ffill_agg">[docs]</a>
+<span class="k">def</span> <span class="nf">timestamp_ffill_agg</span><span class="p">(</span>
+    <span class="n">timesteps</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span>
+    <span class="n">num_timesteps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">val</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="n">fill_nan</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">typing</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Perform single-value aggregation with fill forward functionality given timesteps.</span>
+
+<span class="sd">    If a timestep is negative, it is treated as occurring before the regular window and</span>
+<span class="sd">    is &quot;filled forward&quot; through all the timesteps.</span>
+
+<span class="sd">    If a timestep is between 0 and num_timesteps, it is bucketed accordingly and then</span>
+<span class="sd">    forward filled.</span>
+
+<span class="sd">    The timesteps can be nan.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    timesteps: pandas.Series</span>
+<span class="sd">        A series of integer timesteps</span>
+<span class="sd">    num_timesteps: int</span>
+<span class="sd">        The total number of timesteps to consider in the aggregation window.</span>
+<span class="sd">    val: float, default = 1</span>
+<span class="sd">        The value with which to fill.</span>
+<span class="sd">    fill_nan: float, optional</span>
+<span class="sd">        Optionally fill any remaining nan with a value.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    numpy.ndarray</span>
+<span class="sd">        The filled forward aggregated data in the form of a 2-dimensional array.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">timesteps</span><span class="p">),</span> <span class="n">num_timesteps</span><span class="p">)</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">arr</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">NaN</span>
+    <span class="n">before</span> <span class="o">=</span> <span class="p">(</span><span class="n">timesteps</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">after</span> <span class="o">=</span> <span class="p">(</span><span class="n">timesteps</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+    <span class="c1"># Predict 1 from beginning to end</span>
+    <span class="n">arr</span><span class="p">[</span><span class="n">before</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+    <span class="c1"># Predict 1 in a specific timestep</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">after</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="n">timesteps</span><span class="p">[</span><span class="n">after</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">before_end</span> <span class="o">=</span> <span class="n">cols</span> <span class="o">&lt;</span> <span class="n">num_timesteps</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="n">before_end</span><span class="p">]</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="n">cols</span><span class="p">[</span><span class="n">before_end</span><span class="p">]</span>
+    <span class="n">arr</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">numpy_2d_ffill</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fill_nan</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">nan</span><span class="o">=</span><span class="n">fill_nan</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">arr</span></div>
+
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Vector AI Engineering
+            </div>
+            <!--
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+            -->
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link " href="https://github.com/VectorInstitute/cyclops" aria-label="GitHub">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+              
+            </div>
+          </div>
+        </div>
+        <div class="footer-container" style="text-align: center;">
+          <div class="footer-small-text">
+              <br> All <a href="https://github.com/VectorInstitute/cyclops">source code for cyclops</a> is freely available under the terms of an <a href="https://opensource.org/licenses/Apache-2.0">Apache-2.0</a> license.
+          </div>
+
+          <div class="footer-small-text">
+            This work is made possible due to the data obtained from the <a href="https://www.geminimedicine.ca/">GEMINI study</a>.
+          </div>
+
+          <div class="logo">
+            <a class="logo" href="https://vectorinstitute.ai/">
+              <span class="logo"></span>
+              <img alt="Logo of the Vector Institute" style="width:90px; max-width:90px;" src="../../../_static/logos/vector_logo.png" />
+            </a>
+            <a class="logo" href="https://www.geminimedicine.ca/">
+              <span class="logo"></span>
+              <img alt="Logo of GEMINI" style="width:90px; max-width:90px;" src="../../../_static/logos/gemini_logo.png" />
+            </a>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div></body>
+</html>

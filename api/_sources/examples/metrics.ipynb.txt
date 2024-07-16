@@ -1,0 +1,351 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Breast Cancer Classification and Evaluation\n",
+    "\n",
+    "The Breast Cancer dataset is a well-suited example for demonstrating CyclOps features due to its two distinct classes (binary classification) and complete absence of missing values. This clean and organized structure makes it an ideal starting point for exploring CyclOps Evaluator."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "import pandas as pd\n",
+    "from datasets.arrow_dataset import Dataset\n",
+    "from sklearn import datasets\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "from sklearn.svm import SVC\n",
+    "\n",
+    "from cyclops.data.slicer import SliceSpec\n",
+    "from cyclops.evaluate import evaluator\n",
+    "from cyclops.evaluate.fairness import evaluate_fairness\n",
+    "from cyclops.evaluate.metrics import BinaryAccuracy, create_metric\n",
+    "from cyclops.evaluate.metrics.experimental import BinaryAUROC, BinaryAveragePrecision\n",
+    "from cyclops.evaluate.metrics.experimental.metric_dict import MetricDict\n",
+    "from cyclops.report.plot.classification import ClassificationPlotter"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Loading the data\n",
+    "breast_cancer_data = datasets.load_breast_cancer(as_frame=True)\n",
+    "X, y = breast_cancer_data.data, breast_cancer_data.target"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Features\n",
+    "Just taking a quick look at features and their stats..."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df = breast_cancer_data.frame\n",
+    "df.describe().T"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Splitting into train and test\n",
+    "X_train, X_test, y_train, y_test = train_test_split(\n",
+    "    X,\n",
+    "    y,\n",
+    "    test_size=0.1,\n",
+    "    random_state=13,\n",
+    ")\n",
+    "\n",
+    "# Use SVM classifier for binary classification\n",
+    "svc = SVC(C=10, gamma=0.01, probability=True)\n",
+    "svc.fit(X_train, y_train)\n",
+    "\n",
+    "# model predictions\n",
+    "y_pred = svc.predict(X_test)\n",
+    "y_pred_prob = svc.predict_proba(X_test)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Now we can use CyclOps evaluation metrics to evaluate our model's performance. You can either use each metric individually by calling them, or define a ``MetricDict`` object.\n",
+    "Here, we show both methods."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Individual Metrics\n",
+    "In case you need only a single metric, you can create an object of the desired metric and call it on your ground truth and predictions:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "bin_acc_metric = BinaryAccuracy()\n",
+    "bin_acc_metric(y_test.values, np.float64(y_pred))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Using ``MetricDict``\n",
+    "You may define a collection of metrics in case you need more metrics. It also speeds up the metric calculation."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "metric_names = [\n",
+    "    \"binary_accuracy\",\n",
+    "    \"binary_precision\",\n",
+    "    \"binary_recall\",\n",
+    "    \"binary_f1_score\",\n",
+    "    \"binary_roc_curve\",\n",
+    "]\n",
+    "metrics = [\n",
+    "    create_metric(metric_name, experimental=True) for metric_name in metric_names\n",
+    "]\n",
+    "metric_collection = MetricDict(metrics)\n",
+    "metric_collection(y_test.values, np.float64(y_pred))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "You may reset the metrics collection and add other metrics:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "metric_collection.reset()\n",
+    "metric_collection.add_metrics(BinaryAveragePrecision(), BinaryAUROC())\n",
+    "metric_collection(y_test.values, np.float64(y_pred))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Data Slicing\n",
+    "\n",
+    "In addition to overall metrics, it might be interesting to see how the model performs on certain subpopulation or subsets. We can define these subsets using ``SliceSpec`` objects."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "spec_list = [\n",
+    "    {\n",
+    "        \"worst radius\": {\n",
+    "            \"min_value\": 14.0,\n",
+    "            \"max_value\": 15.0,\n",
+    "            \"min_inclusive\": True,\n",
+    "            \"max_inclusive\": False,\n",
+    "        },\n",
+    "    },\n",
+    "    {\n",
+    "        \"worst radius\": {\n",
+    "            \"min_value\": 15.0,\n",
+    "            \"max_value\": 17.0,\n",
+    "            \"min_inclusive\": True,\n",
+    "            \"max_inclusive\": False,\n",
+    "        },\n",
+    "    },\n",
+    "    {\n",
+    "        \"worst texture\": {\n",
+    "            \"min_value\": 23.1,\n",
+    "            \"max_value\": 28.7,\n",
+    "            \"min_inclusive\": True,\n",
+    "            \"max_inclusive\": False,\n",
+    "        },\n",
+    "    },\n",
+    "]\n",
+    "slice_spec = SliceSpec(spec_list)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Intersectional slicing"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "When subpopulation slices are specified using the ``SliceSpec``, sometimes we wish create combinations of intersectional slices. We can use the ``intersections`` argument to specify this."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "tags": []
+   },
+   "outputs": [],
+   "source": [
+    "slice_spec = SliceSpec(spec_list, intersections=2)\n",
+    "slice_spec"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Preparing Result\n",
+    "\n",
+    "CyclOps Evaluator takes data as a HuggingFace Dataset object, so we combine predictions and features in a dataframe, and create a `Dataset` object:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Combine result and features for test data\n",
+    "df = pd.concat([X_test, pd.DataFrame(y_test, columns=[\"target\"])], axis=1)\n",
+    "df[\"preds\"] = y_pred\n",
+    "df[\"preds_prob\"] = y_pred_prob[:, 1]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Create Dataset object\n",
+    "breast_cancer_data = Dataset.from_pandas(df)\n",
+    "breast_cancer_sliced_result = evaluator.evaluate(\n",
+    "    dataset=breast_cancer_data,\n",
+    "    metrics=metric_collection,  # type: ignore[list-item]\n",
+    "    target_columns=\"target\",\n",
+    "    prediction_columns=\"preds_prob\",\n",
+    "    slice_spec=slice_spec,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We can visualize the ``BinaryF1Score`` and ``BinaryPrecision`` for the different slices"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Extracting the metric values for all the slices.\n",
+    "slice_metrics = {\n",
+    "    slice_name: {\n",
+    "        metric_name: metric_value\n",
+    "        for metric_name, metric_value in slice_results.items()\n",
+    "        if metric_name in [\"BinaryF1Score\", \"BinaryPrecision\"]\n",
+    "    }\n",
+    "    for slice_name, slice_results in breast_cancer_sliced_result[\n",
+    "        \"model_for_preds_prob\"\n",
+    "    ].items()\n",
+    "}\n",
+    "# Plotting the metric values for all the slices.\n",
+    "plotter = ClassificationPlotter(task_type=\"binary\", class_names=[\"0\", \"1\"])\n",
+    "plotter.set_template(\"plotly_white\")\n",
+    "slice_metrics_plot = plotter.metrics_comparison_bar(slice_metrics)\n",
+    "slice_metrics_plot.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Fairness Evaluator\n",
+    "\n",
+    "The Breast Cancer dataset may not be a very good example to apply fairness, but to demonstrate how you can use our fairness evaluator, we apply it to `mean texture` feature. It's recommended to use it on features with discrete values. For optimal results, the feature should have less than 50 unique categories."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fairness_result = evaluate_fairness(\n",
+    "    dataset=breast_cancer_data,\n",
+    "    metrics=\"binary_precision\",  # type: ignore[list-item]\n",
+    "    groups=\"mean texture\",\n",
+    "    target_columns=\"target\",\n",
+    "    prediction_columns=\"preds_prob\",\n",
+    ")\n",
+    "fairness_result"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.12"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}

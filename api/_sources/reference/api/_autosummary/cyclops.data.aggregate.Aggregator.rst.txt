@@ -1,0 +1,29 @@
+cyclops.data.aggregate.Aggregator
+=================================
+
+.. currentmodule:: cyclops.data.aggregate
+
+.. autoclass:: Aggregator
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+   
+      ~Aggregator.fit
+      ~Aggregator.fit_transform
+      ~Aggregator.set_output
+      ~Aggregator.transform
+      ~Aggregator.vectorize
+   
+   
+
+   
+   
+   

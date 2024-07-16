@@ -1,0 +1,1637 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark">
+    <meta name="google-site-verification" content="i0qQRaR9OA3tSz_9tDocdcXGY27Ox_cy4FrvTHD2C_0" />
+    
+      <meta name="description" content="CyclOps Python API documentation">
+    <link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
+
+    <link rel="shortcut icon" href="../../../_static/favicon.ico"/><meta name="generator" content="sphinx-7.2.6, furo 2024.01.29"/>
+
+    
+    <meta name="msvalidate.01" content="8D2A5032F006424CAF54C0DDCD16F666" />
+      
+        <title>cyclops.report.report - cyclops documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/cyclops.css?v=9f20b50b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  --color-card-background: #5e88f2;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #faad1a;
+  --color-brand-content: #eb088a;
+  --color-foreground-secondary: #52c7de;
+  --color-card-background: #3b0e28;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  --color-brand-primary: #faad1a;
+  --color-brand-content: #eb088a;
+  --color-foreground-secondary: #52c7de;
+  --color-card-background: #3b0e28;
+  
+      }
+    }
+  }
+</style><script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=ccdb6887"></script>
+    <script src="../../../_static/design-tabs.js?v=36754332"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="../../../_static/require.min.js?v=53367eec"></script>
+    <script src="../../../_static/custom.js?v=275847af"></script>
+    
+    <script src="https://kit.fontawesome.com/2c1f516901.js" crossorigin="anonymous"></script>
+
+  </head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../index.html"><div class="brand">cyclops  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../../_static/cyclops_logo-dark.png" alt="Logo"/>
+  </div>
+  
+  
+</a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../user_guide.html">User Guide</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of User Guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../evaluation.html">Evaluation</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Evaluation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples/metrics.html">Breast Cancer Classification and Evaluation</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../model_report.html">Model Report</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Model Report</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../examples/report.html">Report Generation for Heart Failure Prediction</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../monitoring.html">Monitoring</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../tutorials.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../tutorials_use_cases.html">Example use cases</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Example use cases</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/kaggle/heart_failure_prediction.html">Heart Failure Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/mimiciv/mortality_prediction.html">Mortality Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/synthea/los_prediction.html">Prolonged Length of Stay Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/diabetes_130/readmission_prediction.html">Readmission Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../tutorials/nihcxr/cxr_classification.html">Chest X-Ray Disease Classification</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developing.html">🧑🏿‍💻 Developing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../contributing.html">Contributing to cyclops</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../api.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/api/cyclops.data.html">cyclops.data</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of cyclops.data</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.html">cyclops.data.slicer</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of cyclops.data.slicer</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.compound_filter.html">cyclops.data.slicer.compound_filter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.filter_datetime.html">cyclops.data.slicer.filter_datetime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.filter_non_null.html">cyclops.data.slicer.filter_non_null</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.filter_range.html">cyclops.data.slicer.filter_range</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.filter_string_contains.html">cyclops.data.slicer.filter_string_contains</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.filter_value.html">cyclops.data.slicer.filter_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.is_datetime.html">cyclops.data.slicer.is_datetime</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.overall.html">cyclops.data.slicer.overall</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.slicer.SliceSpec.html">cyclops.data.slicer.SliceSpec</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.aggregate.html">cyclops.data.aggregate</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of cyclops.data.aggregate</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.aggregate.tabular_as_aggregated.html">cyclops.data.aggregate.tabular_as_aggregated</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.aggregate.timestamp_ffill_agg.html">cyclops.data.aggregate.timestamp_ffill_agg</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.aggregate.Aggregator.html">cyclops.data.aggregate.Aggregator</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.features.medical_image.html">cyclops.data.features.medical_image</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of cyclops.data.features.medical_image</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.data.features.medical_image.MedicalImage.html">cyclops.data.features.medical_image.MedicalImage</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/api/cyclops.tasks.html">cyclops.tasks</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of cyclops.tasks</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.tasks.classification.html">cyclops.tasks.classification</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of cyclops.tasks.classification</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.tasks.classification.BinaryTabularClassificationTask.html">cyclops.tasks.classification.BinaryTabularClassificationTask</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.tasks.classification.MultilabelImageClassificationTask.html">cyclops.tasks.classification.MultilabelImageClassificationTask</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/api/evaluator.html">Evaluator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../reference/api/fairness_evaluator.html">Fairness Evaluator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/api/metrics.html">Evaluation Metrics</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Evaluation Metrics</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/accuracy.html">Accuracy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/auroc.html">AUROC</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/average_precision.html">Average Precision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/f1score.html">F1-Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/f_beta.html">F-beta Score</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/precision.html">Precision</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/precision_recall_curve.html">PrecisionRecallCurve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/recall.html">Recall</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/roc.html">ROC Curve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/sensitivity.html">Sensitivity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/specificity.html">Specificity</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../reference/api/metrics/stat_scores.html">StatScores</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/api/cyclops.monitor.html">cyclops.monitor</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of cyclops.monitor</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.clinical_applicator.html">cyclops.monitor.clinical_applicator</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of cyclops.monitor.clinical_applicator</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.clinical_applicator.ClinicalShiftApplicator.html">cyclops.monitor.clinical_applicator.ClinicalShiftApplicator</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.html">cyclops.monitor.synthetic_applicator</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of cyclops.monitor.synthetic_applicator</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.binary_noise_shift.html">cyclops.monitor.synthetic_applicator.binary_noise_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.feature_association_shift.html">cyclops.monitor.synthetic_applicator.feature_association_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.feature_swap_shift.html">cyclops.monitor.synthetic_applicator.feature_swap_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.gaussian_noise_shift.html">cyclops.monitor.synthetic_applicator.gaussian_noise_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.knockout_shift.html">cyclops.monitor.synthetic_applicator.knockout_shift</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.monitor.synthetic_applicator.SyntheticShiftApplicator.html">cyclops.monitor.synthetic_applicator.SyntheticShiftApplicator</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../reference/api/cyclops.report.html">cyclops.report</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of cyclops.report</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.report.report.html">cyclops.report.report</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of cyclops.report.report</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html">cyclops.report.report.ModelCardReport</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <h1>Source code for cyclops.report.report</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Cyclops model report module.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span> <span class="k">as</span> <span class="n">dt_date</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span> <span class="k">as</span> <span class="n">dt_datetime</span>
+<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BytesIO</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">jinja2</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">plotly.graph_objects</span> <span class="kn">import</span> <span class="n">Figure</span>
+<span class="kn">from</span> <span class="nn">plotly.io</span> <span class="kn">import</span> <span class="n">write_image</span>
+<span class="kn">from</span> <span class="nn">plotly.offline</span> <span class="kn">import</span> <span class="n">get_plotlyjs</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">create_model</span>
+<span class="kn">from</span> <span class="nn">scour</span> <span class="kn">import</span> <span class="n">scour</span>
+
+<span class="kn">from</span> <span class="nn">cyclops.report.model_card</span> <span class="kn">import</span> <span class="n">ModelCard</span>  <span class="c1"># type: ignore[attr-defined]</span>
+<span class="kn">from</span> <span class="nn">cyclops.report.model_card.base</span> <span class="kn">import</span> <span class="n">BaseModelCardField</span>
+<span class="kn">from</span> <span class="nn">cyclops.report.model_card.fields</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Citation</span><span class="p">,</span>
+    <span class="n">Dataset</span><span class="p">,</span>
+    <span class="n">ExplainabilityReport</span><span class="p">,</span>
+    <span class="n">FairnessAssessment</span><span class="p">,</span>
+    <span class="n">FairnessReport</span><span class="p">,</span>
+    <span class="n">Graphic</span><span class="p">,</span>
+    <span class="n">GraphicsCollection</span><span class="p">,</span>
+    <span class="n">License</span><span class="p">,</span>
+    <span class="n">MetricCard</span><span class="p">,</span>
+    <span class="n">MetricCardCollection</span><span class="p">,</span>
+    <span class="n">Owner</span><span class="p">,</span>
+    <span class="n">PerformanceMetric</span><span class="p">,</span>
+    <span class="n">Reference</span><span class="p">,</span>
+    <span class="n">RegulatoryRequirement</span><span class="p">,</span>
+    <span class="n">Risk</span><span class="p">,</span>
+    <span class="n">SensitiveData</span><span class="p">,</span>
+    <span class="n">Test</span><span class="p">,</span>
+    <span class="n">UseCase</span><span class="p">,</span>
+    <span class="n">User</span><span class="p">,</span>
+    <span class="n">Version</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">cyclops.report.utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_object_is_in_model_card_module</span><span class="p">,</span>
+    <span class="n">_raise_if_not_dict_with_str_keys</span><span class="p">,</span>
+    <span class="n">create_metric_cards</span><span class="p">,</span>
+    <span class="n">empty</span><span class="p">,</span>
+    <span class="n">get_histories</span><span class="p">,</span>
+    <span class="n">get_names</span><span class="p">,</span>
+    <span class="n">get_passed</span><span class="p">,</span>
+    <span class="n">get_slices</span><span class="p">,</span>
+    <span class="n">get_thresholds</span><span class="p">,</span>
+    <span class="n">get_timestamps</span><span class="p">,</span>
+    <span class="n">regex_replace</span><span class="p">,</span>
+    <span class="n">regex_search</span><span class="p">,</span>
+    <span class="n">str_to_snake_case</span><span class="p">,</span>
+    <span class="n">sweep_graphics</span><span class="p">,</span>
+    <span class="n">sweep_metric_cards</span><span class="p">,</span>
+    <span class="n">sweep_metrics</span><span class="p">,</span>
+    <span class="n">sweep_tests</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="n">_TEMPLATE_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;templates&quot;</span><span class="p">,</span> <span class="s2">&quot;model_report&quot;</span><span class="p">)</span>
+<span class="n">_DEFAULT_TEMPLATE_FILENAME</span> <span class="o">=</span> <span class="s2">&quot;model_report.jinja&quot;</span>
+
+
+<div class="viewcode-block" id="ModelCardReport">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport">[docs]</a>
+<span class="k">class</span> <span class="nc">ModelCardReport</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Model card report.</span>
+
+<span class="sd">    This class serves as an interface to populate a `ModelCard` object and generate</span>
+<span class="sd">    an HTML report from it.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    output_dir : str, optional</span>
+<span class="sd">        Path to the directory where the model card report will be saved. If not</span>
+<span class="sd">        provided, the report will be saved in the current working directory.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="n">output_dir</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span> <span class="o">=</span> <span class="n">ModelCard</span><span class="p">()</span>  <span class="c1"># type: ignore[call-arg]</span>
+
+<div class="viewcode-block" id="ModelCardReport.from_json_file">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.from_json_file">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_json_file</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">output_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ModelCardReport&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a model card from a file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : str</span>
+<span class="sd">            The path to a JSON file containing model card data.</span>
+<span class="sd">        output_dir : str, optional</span>
+<span class="sd">            The directory to save the report to. If not provided, the report will</span>
+<span class="sd">            be saved in a directory called `cyclops_report` in the current working</span>
+<span class="sd">            directory.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ModelCardReport</span>
+<span class="sd">            The model card report.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">model_card</span> <span class="o">=</span> <span class="n">ModelCard</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">report</span> <span class="o">=</span> <span class="n">ModelCardReport</span><span class="p">(</span><span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">)</span>
+        <span class="n">report</span><span class="o">.</span><span class="n">_model_card</span> <span class="o">=</span> <span class="n">model_card</span>
+        <span class="k">return</span> <span class="n">report</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_log_field</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">field_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseModel</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Populate a field in the model card.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : Dict[str, Any]</span>
+<span class="sd">            Data to populate the field with.</span>
+<span class="sd">        section_name : str</span>
+<span class="sd">            Name of the section to populate.</span>
+<span class="sd">        field_name : str</span>
+<span class="sd">            Name of the field to populate. If the field does not exist, it will be</span>
+<span class="sd">            created and added to the section.</span>
+<span class="sd">        field_type : BaseModel</span>
+<span class="sd">            Type of the field to populate.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">section_name</span> <span class="o">=</span> <span class="n">str_to_snake_case</span><span class="p">(</span><span class="n">section_name</span><span class="p">)</span>
+        <span class="n">section</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="o">.</span><span class="n">get_section</span><span class="p">(</span><span class="n">section_name</span><span class="p">)</span>
+        <span class="n">field_value</span> <span class="o">=</span> <span class="n">field_type</span><span class="o">.</span><span class="n">parse_obj</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">field_name</span> <span class="ow">in</span> <span class="n">section</span><span class="o">.</span><span class="n">__fields__</span><span class="p">:</span>
+            <span class="n">section</span><span class="o">.</span><span class="n">update_field</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="n">field_value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">field_name</span> <span class="o">=</span> <span class="n">str_to_snake_case</span><span class="p">(</span><span class="n">field_name</span><span class="p">)</span>
+            <span class="n">section</span><span class="o">.</span><span class="n">add_field</span><span class="p">(</span><span class="n">field_name</span><span class="p">,</span> <span class="n">field_value</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ModelCardReport.log_from_dict">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_from_dict">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_from_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Populate fields in the model card from a dictionary.</span>
+
+<span class="sd">        The keys of the dictionary serve as the field names in the specified section.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : Dict[str, Any]</span>
+<span class="sd">            Dictionary of data to populate the fields with.</span>
+<span class="sd">        section_name : str</span>
+<span class="sd">            Name of the section to populate.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_raise_if_not_dict_with_str_keys</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">section_name</span> <span class="o">=</span> <span class="n">str_to_snake_case</span><span class="p">(</span><span class="n">section_name</span><span class="p">)</span>
+        <span class="n">section</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="o">.</span><span class="n">get_section</span><span class="p">(</span><span class="n">section_name</span><span class="p">)</span>
+
+        <span class="c1"># get data already in section and update with new data</span>
+        <span class="n">section_data</span> <span class="o">=</span> <span class="n">section</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
+        <span class="n">section_data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="n">populated_section</span> <span class="o">=</span> <span class="n">section</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">parse_obj</span><span class="p">(</span><span class="n">section_data</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="p">,</span> <span class="n">section_name</span><span class="p">,</span> <span class="n">populated_section</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelCardReport.log_descriptor">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_descriptor">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_descriptor</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a descriptor to a section of the report.</span>
+
+<span class="sd">        This method will create a new pydantic `BaseModel` subclass with the given</span>
+<span class="sd">        name, which has a field named `description` of type `str`. As long as the</span>
+<span class="sd">        descriptor name does not conflict with a defined class in the `model_card`</span>
+<span class="sd">        module, the descriptor can be added to any section of the report.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            The name of the descriptor.</span>
+<span class="sd">        description : str</span>
+<span class="sd">            A description of the descriptor.</span>
+<span class="sd">        section_name : str</span>
+<span class="sd">            The section of the report to add the descriptor to.</span>
+<span class="sd">        **extra</span>
+<span class="sd">            Any extra fields to add to the descriptor.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If the given section name is not valid.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the given name conflicts with a defined class in the `model_card` module.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from cyclops.report import ModelCardReport</span>
+<span class="sd">        &gt;&gt;&gt; report = ModelCardReport()</span>
+<span class="sd">        &gt;&gt;&gt; report.log_descriptor(</span>
+<span class="sd">        ...     name=&quot;tradeoff&quot;,</span>
+<span class="sd">        ...     description=&quot;We trade off performance for interpretability.&quot;,</span>
+<span class="sd">        ...     section_name=&quot;considerations&quot;,</span>
+<span class="sd">        ... )</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># use `name` to create BaseModel subclass</span>
+        <span class="n">field_obj</span> <span class="o">=</span> <span class="n">create_model</span><span class="p">(</span>
+            <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">char</span> <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">name</span><span class="o">.</span><span class="n">title</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">char</span><span class="o">.</span><span class="n">isspace</span><span class="p">()),</span>  <span class="c1"># PascalCase</span>
+            <span class="n">__base__</span><span class="o">=</span><span class="n">BaseModelCardField</span><span class="p">,</span>
+            <span class="n">__cls_kwargs__</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;list_factory&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span>  <span class="c1"># all descriptors are lists</span>
+            <span class="n">description</span><span class="o">=</span><span class="p">(</span>
+                <span class="n">StrictStr</span><span class="p">,</span>
+                <span class="kc">None</span><span class="p">,</span>
+            <span class="p">),</span>  <span class="c1"># &lt;field_name&gt;=(&lt;field_type&gt;, &lt;default_value&gt;)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># make sure the field_obj doesn&#39;t conflict with any of the existing objects</span>
+        <span class="k">if</span> <span class="n">_object_is_in_model_card_module</span><span class="p">(</span><span class="n">field_obj</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Encountered name conflict when trying to create a descriptor for &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">. Please use a different name.&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">description</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">},</span>
+            <span class="n">section_name</span><span class="o">=</span><span class="n">section_name</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="n">str_to_snake_case</span><span class="p">(</span><span class="n">name</span><span class="p">),</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="n">field_obj</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">_log_graphic_collection</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">graphic</span><span class="p">:</span> <span class="n">Graphic</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># get the section</span>
+        <span class="n">section_name</span> <span class="o">=</span> <span class="n">str_to_snake_case</span><span class="p">(</span><span class="n">section_name</span><span class="p">)</span>
+        <span class="n">section</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="o">.</span><span class="n">get_section</span><span class="p">(</span><span class="n">section_name</span><span class="p">)</span>
+
+        <span class="c1"># append graphic to existing GraphicsCollection or create new one</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="s2">&quot;graphics&quot;</span> <span class="ow">in</span> <span class="n">section</span><span class="o">.</span><span class="n">__fields__</span>
+            <span class="ow">and</span> <span class="n">section</span><span class="o">.</span><span class="n">__fields__</span><span class="p">[</span><span class="s2">&quot;graphics&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">type_</span> <span class="ow">is</span> <span class="n">GraphicsCollection</span>
+            <span class="ow">and</span> <span class="n">section</span><span class="o">.</span><span class="n">graphics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>
+        <span class="p">):</span>
+            <span class="n">section</span><span class="o">.</span><span class="n">graphics</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">graphic</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+                <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">description</span><span class="p">,</span> <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">graphic</span><span class="p">]},</span>
+                <span class="n">section_name</span><span class="o">=</span><span class="n">section_name</span><span class="p">,</span>
+                <span class="n">field_name</span><span class="o">=</span><span class="s2">&quot;graphics&quot;</span><span class="p">,</span>
+                <span class="n">field_type</span><span class="o">=</span><span class="n">GraphicsCollection</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_log_metric_card_collection</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">metrics</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">tooltips</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">slices</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">values</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+        <span class="n">metric_cards</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">MetricCard</span><span class="p">],</span>
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;overview&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># get the section</span>
+        <span class="n">section_name</span> <span class="o">=</span> <span class="n">str_to_snake_case</span><span class="p">(</span><span class="n">section_name</span><span class="p">)</span>
+        <span class="n">section</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="o">.</span><span class="n">get_section</span><span class="p">(</span><span class="n">section_name</span><span class="p">)</span>
+
+        <span class="c1"># append graphic to existing GraphicsCollection or create new one</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="s2">&quot;metric_cards&quot;</span> <span class="ow">in</span> <span class="n">section</span><span class="o">.</span><span class="n">__fields__</span>
+            <span class="ow">and</span> <span class="n">section</span><span class="o">.</span><span class="n">__fields__</span><span class="p">[</span><span class="s2">&quot;metric_cards&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">type_</span> <span class="ow">is</span> <span class="n">MetricCardCollection</span>
+            <span class="ow">and</span> <span class="n">section</span><span class="o">.</span><span class="n">metric_cards</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>  <span class="c1"># type: ignore</span>
+        <span class="p">):</span>
+            <span class="n">section</span><span class="o">.</span><span class="n">metric_cards</span><span class="o">.</span><span class="n">collection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metric_cards</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+                <span class="n">data</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;metrics&quot;</span><span class="p">:</span> <span class="n">metrics</span><span class="p">,</span>
+                    <span class="s2">&quot;tooltips&quot;</span><span class="p">:</span> <span class="n">tooltips</span><span class="p">,</span>
+                    <span class="s2">&quot;slices&quot;</span><span class="p">:</span> <span class="n">slices</span><span class="p">,</span>
+                    <span class="s2">&quot;values&quot;</span><span class="p">:</span> <span class="n">values</span><span class="p">,</span>
+                    <span class="s2">&quot;collection&quot;</span><span class="p">:</span> <span class="n">metric_cards</span><span class="p">,</span>
+                <span class="p">},</span>
+                <span class="n">section_name</span><span class="o">=</span><span class="n">section_name</span><span class="p">,</span>
+                <span class="n">field_name</span><span class="o">=</span><span class="s2">&quot;metric_cards&quot;</span><span class="p">,</span>
+                <span class="n">field_type</span><span class="o">=</span><span class="n">MetricCardCollection</span><span class="p">,</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="ModelCardReport.log_image">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_image">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">caption</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an image to a section of the report.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        img_path : str</span>
+<span class="sd">            The path to the image file.</span>
+<span class="sd">        caption : str</span>
+<span class="sd">            The caption for the image.</span>
+<span class="sd">        section_name : str</span>
+<span class="sd">            The section of the report to add the image to.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If the given section name is not valid.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the given image path does not exist.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">img_path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Image path </span><span class="si">{</span><span class="n">img_path</span><span class="si">}</span><span class="s2"> does not exist.&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">img</span><span class="p">:</span>
+            <span class="n">buffered</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">()</span>
+            <span class="n">img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">buffered</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="n">img</span><span class="o">.</span><span class="n">format</span><span class="p">)</span>
+            <span class="n">img_base64</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">buffered</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+
+        <span class="n">graphic</span> <span class="o">=</span> <span class="n">Graphic</span><span class="o">.</span><span class="n">parse_obj</span><span class="p">(</span>
+            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">caption</span><span class="p">,</span> <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;data:image/</span><span class="si">{</span><span class="n">img</span><span class="o">.</span><span class="n">format</span><span class="si">}</span><span class="s2">;base64,</span><span class="si">{</span><span class="n">img_base64</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_graphic_collection</span><span class="p">(</span><span class="n">graphic</span><span class="p">,</span> <span class="s2">&quot;Images&quot;</span><span class="p">,</span> <span class="n">section_name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelCardReport.log_plotly_figure">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_plotly_figure">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_plotly_figure</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">fig</span><span class="p">:</span> <span class="n">Figure</span><span class="p">,</span>
+        <span class="n">caption</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a plotly figure to a section of the report.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        fig : Figure</span>
+<span class="sd">            The plotly figure to add.</span>
+<span class="sd">        caption : str</span>
+<span class="sd">            The caption for the figure.</span>
+<span class="sd">        section_name : str</span>
+<span class="sd">            The section of the report to add the figure to.</span>
+<span class="sd">        interactive : bool, optional, default=True</span>
+<span class="sd">            Whether or not the figure should be an interactive plot.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If the given section name is not valid.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">interactive</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">caption</span><span class="p">,</span>
+                <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="n">fig</span><span class="o">.</span><span class="n">to_html</span><span class="p">(</span><span class="n">full_html</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">include_plotlyjs</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bytes_buffer</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">()</span>
+            <span class="n">write_image</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">bytes_buffer</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;svg&quot;</span><span class="p">,</span> <span class="n">validate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="n">scour_options</span> <span class="o">=</span> <span class="n">scour</span><span class="o">.</span><span class="n">sanitizeOptions</span><span class="p">()</span>
+            <span class="n">scour_options</span><span class="o">.</span><span class="n">remove_descriptive_elements</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">svg</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">scour</span><span class="o">.</span><span class="n">scourString</span><span class="p">(</span><span class="n">bytes_buffer</span><span class="o">.</span><span class="n">getvalue</span><span class="p">(),</span> <span class="n">options</span><span class="o">=</span><span class="n">scour_options</span><span class="p">)</span>
+
+            <span class="c1"># convert svg to base64</span>
+            <span class="n">svg</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">svg</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+            <span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">caption</span><span class="p">,</span> <span class="s2">&quot;image&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;data:image/svg+xml;base64,</span><span class="si">{</span><span class="n">svg</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">}</span>
+
+        <span class="n">graphic</span> <span class="o">=</span> <span class="n">Graphic</span><span class="o">.</span><span class="n">parse_obj</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># create Graphic object from data</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_graphic_collection</span><span class="p">(</span><span class="n">graphic</span><span class="p">,</span> <span class="s2">&quot;Plots&quot;</span><span class="p">,</span> <span class="n">section_name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelCardReport.log_owner">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_owner">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_owner</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">contact</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">role</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model_details&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an owner to a section of the report.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            The name of the owner.</span>
+<span class="sd">        contact : str, optional</span>
+<span class="sd">            The contact information for the owner.</span>
+<span class="sd">        role : str, optional</span>
+<span class="sd">            The role of the owner.</span>
+<span class="sd">        section_name : str, optional</span>
+<span class="sd">            The name of the section of the report to log the owner to. If not provided,</span>
+<span class="sd">            the owner will be added to the `model_details` section, representing</span>
+<span class="sd">            the model owner.</span>
+<span class="sd">        **extra</span>
+<span class="sd">            Any extra fields to add to the Owner.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If the given section name is not valid.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s2">&quot;contact&quot;</span><span class="p">:</span> <span class="n">contact</span><span class="p">,</span> <span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="n">role</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">},</span>
+            <span class="n">section_name</span><span class="o">=</span><span class="n">section_name</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="s2">&quot;owners&quot;</span><span class="p">,</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="n">Owner</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelCardReport.log_version">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_version">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_version</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">version_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">date</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">dt_date</span><span class="p">,</span> <span class="n">dt_datetime</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model_details&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a version to a section of the report.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        version_str : str</span>
+<span class="sd">            The version number or identifier as a string. This can be a semantic</span>
+<span class="sd">            version number, e.g. &quot;1.0.0&quot;, or a custom identifier, e.g. &quot;v1&quot;.</span>
+<span class="sd">        date : Union[dt_date, dt_datetime, str, int, float], optional</span>
+<span class="sd">            The date of the version. This can be a datetime/date object, an integer</span>
+<span class="sd">            or float representing a UNIX timestamp, or a string in the format</span>
+<span class="sd">            `YYYY-MM-DD[T]HH:MM[:SS[.ffffff]][Z or [±]HH[:]MM]]` or `YYYY-MM-DD`.</span>
+<span class="sd">        description : str, optional</span>
+<span class="sd">            A description of the version. This can be used to summarize the changes</span>
+<span class="sd">            made in the version or to provide additional context.</span>
+<span class="sd">        section_name : str, optional</span>
+<span class="sd">            The section of the report to add the version to. If not provided,</span>
+<span class="sd">            the version will be added to the `model_details` section, representing</span>
+<span class="sd">            the version of the model as a whole.</span>
+<span class="sd">        **extra</span>
+<span class="sd">            Any extra fields to add to the Version.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If the given section name is not valid.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">version_str</span><span class="p">,</span>
+                <span class="s2">&quot;date&quot;</span><span class="p">:</span> <span class="n">date</span><span class="p">,</span>
+                <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">description</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">extra</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="n">section_name</span><span class="o">=</span><span class="n">section_name</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="s2">&quot;version&quot;</span><span class="p">,</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="n">Version</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelCardReport.log_license">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_license">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_license</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">text</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model_details&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a license to a section of the report.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        identifier : str</span>
+<span class="sd">            The SPDX identifier of the license, e.g. &quot;Apache-2.0&quot;.</span>
+<span class="sd">            See https://spdx.org/licenses/ for a list of valid identifiers.</span>
+<span class="sd">            For custom licenses, set the `identifier` to &quot;unknown&quot;, &quot;unlicensed&quot;,</span>
+<span class="sd">            or &quot;proprietary&quot; and provide the full license text in the `text` field,</span>
+<span class="sd">            if available.</span>
+<span class="sd">        text : str, optional</span>
+<span class="sd">            The full text of the license. This is useful for custom licenses</span>
+<span class="sd">            that are not in the SPDX list.</span>
+<span class="sd">        section_name : str, optional</span>
+<span class="sd">            The section of the report to add the license to. If not provided,</span>
+<span class="sd">            the license will be added to the `model_details` section, representing</span>
+<span class="sd">            the license for the model as a whole.</span>
+<span class="sd">        **extra</span>
+<span class="sd">            Any extra fields to add to the License.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If the given section name is not valid.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        If the license is not found in the SPDX list, the license text will be</span>
+<span class="sd">        left blank. If the license text is provided, it will be used instead.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;identifier&quot;</span><span class="p">:</span> <span class="n">identifier</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">text</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">},</span>
+            <span class="n">section_name</span><span class="o">=</span><span class="n">section_name</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="s2">&quot;licenses&quot;</span><span class="p">,</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="n">License</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelCardReport.log_citation">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_citation">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_citation</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">citation</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model_details&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a citation to a section of the report.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        citation : str</span>
+<span class="sd">            The citation content.</span>
+<span class="sd">        section_name : str, optional</span>
+<span class="sd">            The section of the report to add the citation to. If not provided,</span>
+<span class="sd">            the citation will be added to the `model_details` section, representing</span>
+<span class="sd">            the citation for the model.</span>
+<span class="sd">        **extra</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If the given section name is not valid.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        If the citation content is a valid BibTeX entry, the citation will be</span>
+<span class="sd">        formatted as plain text and added to the report.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="n">citation</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">},</span>
+            <span class="n">section_name</span><span class="o">=</span><span class="n">section_name</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="s2">&quot;citations&quot;</span><span class="p">,</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="n">Citation</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelCardReport.log_reference">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_reference">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_reference</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">link</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model_details&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a reference to a section of the report.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        link : str</span>
+<span class="sd">            A link to a resource that provides relevant context.</span>
+<span class="sd">        section_name : str, optional</span>
+<span class="sd">            The section of the report to add the reference to. If not provided,</span>
+<span class="sd">            the reference will be added to the `model_details` section, representing</span>
+<span class="sd">            the reference for the model.</span>
+<span class="sd">        **extra</span>
+<span class="sd">            Any extra fields to add to the Reference.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If the given section name is not valid.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;link&quot;</span><span class="p">:</span> <span class="n">link</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">},</span>
+            <span class="n">section_name</span><span class="o">=</span><span class="n">section_name</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="s2">&quot;references&quot;</span><span class="p">,</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="n">Reference</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelCardReport.log_regulation">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_regulation">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_regulation</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">regulation</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;model_details&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a regulatory requirement to a section of the report.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        regulation : str</span>
+<span class="sd">            The regulatory requirement that must be complied with.</span>
+<span class="sd">        section_name : str, optional</span>
+<span class="sd">            The section of the report to add the regulatory requirement to.</span>
+<span class="sd">            If not provided, the regulatory requirement will be added to the</span>
+<span class="sd">            `model_details` section.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If the given section name is not valid.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;regulation&quot;</span><span class="p">:</span> <span class="n">regulation</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">},</span>
+            <span class="n">section_name</span><span class="o">=</span><span class="n">section_name</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="s2">&quot;regulatory_requirements&quot;</span><span class="p">,</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="n">RegulatoryRequirement</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelCardReport.log_model_parameters">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_model_parameters">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_model_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Log model parameters.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        params : Dict[str, Any]</span>
+<span class="sd">            A dictionary of model parameters.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_from_dict</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">section_name</span><span class="o">=</span><span class="s2">&quot;model_parameters&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelCardReport.log_dataset">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_dataset">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_dataset</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">citation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">link</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">license_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">features</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">split</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sensitive_features</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sensitive_feature_justification</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Log information about the dataset used to train/evaluate the model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        description : str, optional</span>
+<span class="sd">            A description of the dataset.</span>
+<span class="sd">        citation : str, optional</span>
+<span class="sd">            A citation for the dataset. This can be a BibTeX entry or a plain-text</span>
+<span class="sd">            citation.</span>
+<span class="sd">        link : str, optional</span>
+<span class="sd">            A link to a resource that provides relevant context e.g. the homepage</span>
+<span class="sd">            of the dataset.</span>
+<span class="sd">        license_id : str, optional</span>
+<span class="sd">            The SPDX identifier of the license, e.g. &quot;Apache-2.0&quot;.</span>
+<span class="sd">            See https://spdx.org/licenses/ for a list of valid identifiers.</span>
+<span class="sd">            For custom licenses, set the `identifier` to &quot;unknown&quot;, &quot;unlicensed&quot;,</span>
+<span class="sd">            or &quot;proprietary&quot;.</span>
+<span class="sd">        version : str, optional</span>
+<span class="sd">            The version of the dataset.</span>
+<span class="sd">        features : list of str, optional</span>
+<span class="sd">            The names of the features used to train/evaluate the model.</span>
+<span class="sd">        split : str, optional</span>
+<span class="sd">            The name of the split used to train/evaluate the model.</span>
+<span class="sd">        sensitive_features : list of str, optional</span>
+<span class="sd">            The names of the sensitive features used to train/evaluate the model.</span>
+<span class="sd">        sensitive_feature_justification : str, optional</span>
+<span class="sd">            A justification for the sensitive features used to train/evaluate the</span>
+<span class="sd">            model.</span>
+<span class="sd">        **extra</span>
+<span class="sd">            Any extra fields to add to the Dataset.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AssertionError</span>
+<span class="sd">            If the sensitive features are not in the features list.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># sensitive features must be in features</span>
+        <span class="k">if</span> <span class="n">features</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">sensitive_features</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span>
+                <span class="n">feature</span> <span class="ow">in</span> <span class="n">features</span> <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">sensitive_features</span>
+            <span class="p">),</span> <span class="s2">&quot;All sensitive features must be in the features list.&quot;</span>
+
+        <span class="c1"># TODO: plot dataset distribution</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">description</span><span class="p">,</span>
+            <span class="s2">&quot;citation&quot;</span><span class="p">:</span> <span class="n">Citation</span><span class="p">(</span><span class="n">content</span><span class="o">=</span><span class="n">citation</span><span class="p">),</span>
+            <span class="s2">&quot;reference&quot;</span><span class="p">:</span> <span class="n">Reference</span><span class="p">(</span><span class="n">link</span><span class="o">=</span><span class="n">link</span><span class="p">),</span>  <span class="c1"># type: ignore</span>
+            <span class="s2">&quot;license&quot;</span><span class="p">:</span> <span class="n">License</span><span class="p">(</span><span class="n">identifier</span><span class="o">=</span><span class="n">license_id</span><span class="p">),</span>  <span class="c1"># type: ignore</span>
+            <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="n">Version</span><span class="p">(</span><span class="n">version_str</span><span class="o">=</span><span class="n">version</span><span class="p">),</span>  <span class="c1"># type: ignore</span>
+            <span class="s2">&quot;features&quot;</span><span class="p">:</span> <span class="n">features</span><span class="p">,</span>
+            <span class="s2">&quot;split&quot;</span><span class="p">:</span> <span class="n">split</span><span class="p">,</span>
+            <span class="s2">&quot;sensitive_data&quot;</span><span class="p">:</span> <span class="n">SensitiveData</span><span class="p">(</span>
+                <span class="n">sensitive_data_used</span><span class="o">=</span><span class="n">sensitive_features</span><span class="p">,</span>
+                <span class="n">justification</span><span class="o">=</span><span class="n">sensitive_feature_justification</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="o">**</span><span class="n">extra</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+            <span class="n">section_name</span><span class="o">=</span><span class="s2">&quot;datasets&quot;</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="n">Dataset</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelCardReport.log_user">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_user">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_user</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;considerations&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a user description to a section of the report.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        description : str</span>
+<span class="sd">            A description of the user.</span>
+<span class="sd">        section_name : str, optional</span>
+<span class="sd">            The section of the report to add the user to. If not provided, the user</span>
+<span class="sd">            will be added to the `considerations` section.</span>
+<span class="sd">        **extra</span>
+<span class="sd">            Any extra fields to add to the User.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If the given section name is not valid.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">description</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">},</span>
+            <span class="n">section_name</span><span class="o">=</span><span class="n">section_name</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="s2">&quot;users&quot;</span><span class="p">,</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="n">User</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelCardReport.log_use_case">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_use_case">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_use_case</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">kind</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;primary&quot;</span><span class="p">,</span> <span class="s2">&quot;out-of-scope&quot;</span><span class="p">],</span>
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;considerations&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a use case to a section of the report.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        description : str</span>
+<span class="sd">            A description of the use case.</span>
+<span class="sd">        kind : Literal[&quot;primary&quot;, &quot;out-of-scope&quot;]</span>
+<span class="sd">            The kind of use case - either &quot;primary&quot; or &quot;out-of-scope&quot;.</span>
+<span class="sd">        section_name : str, optional</span>
+<span class="sd">            The section of the report to add the use case to. If not provided,</span>
+<span class="sd">            the use case will be added to the `considerations` section.</span>
+<span class="sd">        **extra</span>
+<span class="sd">            Any extra fields to add to the UseCase.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If the given section name is not valid.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">description</span><span class="p">,</span> <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="n">kind</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">},</span>
+            <span class="n">section_name</span><span class="o">=</span><span class="n">section_name</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="s2">&quot;use_cases&quot;</span><span class="p">,</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="n">UseCase</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelCardReport.log_risk">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_risk">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_risk</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">risk</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">mitigation_strategy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;considerations&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a risk to a section of the report.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        risk : str</span>
+<span class="sd">            A description of the risk.</span>
+<span class="sd">        mitigation_strategy : str</span>
+<span class="sd">            A description of the mitigation strategy.</span>
+<span class="sd">        section_name : str, optional</span>
+<span class="sd">            The section of the report to add the risk to. If not provided, the</span>
+<span class="sd">            risk will be added to the `considerations` section.</span>
+<span class="sd">        **extra</span>
+<span class="sd">            Any extra information to add in relation to the risk.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If the given section name is not valid.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;risk&quot;</span><span class="p">:</span> <span class="n">risk</span><span class="p">,</span>
+                <span class="s2">&quot;mitigation_strategy&quot;</span><span class="p">:</span> <span class="n">mitigation_strategy</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">extra</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="n">section_name</span><span class="o">=</span><span class="n">section_name</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="s2">&quot;ethical_considerations&quot;</span><span class="p">,</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="n">Risk</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelCardReport.log_fairness_assessment">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_fairness_assessment">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_fairness_assessment</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">affected_group</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">benefit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">harm</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">mitigation_strategy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;considerations&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a fairness assessment to a section of the report.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        affected_group : str</span>
+<span class="sd">            A description of the affected group.</span>
+<span class="sd">        benefit : str</span>
+<span class="sd">            A description of the benefit(s) to the affected group.</span>
+<span class="sd">        harm : str</span>
+<span class="sd">            A description of the harm(s) to the affected group.</span>
+<span class="sd">        mitigation_strategy : str</span>
+<span class="sd">            A description of the mitigation strategy.</span>
+<span class="sd">        section_name : str, optional</span>
+<span class="sd">            The section of the report to add the fairness assessment to. If not</span>
+<span class="sd">            provided, the fairness assessment will be added to the `considerations`</span>
+<span class="sd">            section.</span>
+<span class="sd">        **extra</span>
+<span class="sd">            Any extra information to add in relation to the fairness assessment.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If the given section name is not valid.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="p">{</span>
+                <span class="s2">&quot;affected_group&quot;</span><span class="p">:</span> <span class="n">affected_group</span><span class="p">,</span>
+                <span class="s2">&quot;benefits&quot;</span><span class="p">:</span> <span class="n">benefit</span><span class="p">,</span>
+                <span class="s2">&quot;harms&quot;</span><span class="p">:</span> <span class="n">harm</span><span class="p">,</span>
+                <span class="s2">&quot;mitigation_strategy&quot;</span><span class="p">:</span> <span class="n">mitigation_strategy</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">extra</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="n">section_name</span><span class="o">=</span><span class="n">section_name</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="s2">&quot;fairness_assessment&quot;</span><span class="p">,</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="n">FairnessAssessment</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelCardReport.log_quantitative_analysis">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_quantitative_analysis">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_quantitative_analysis</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">analysis_type</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;performance&quot;</span><span class="p">,</span> <span class="s2">&quot;fairness&quot;</span><span class="p">,</span> <span class="s2">&quot;explainability&quot;</span><span class="p">],</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">metric_slice</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">decision_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pass_fail_thresholds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pass_fail_threshold_fns</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span>
+            <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="nb">bool</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]]]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">extra</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a quantitative analysis to the report.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        analysis_type : Literal[&quot;performance&quot;, &quot;fairness&quot;, &quot;explainability&quot;]</span>
+<span class="sd">            The type of analysis to log.</span>
+<span class="sd">        name : str</span>
+<span class="sd">            The name of the metric.</span>
+<span class="sd">        value : Any</span>
+<span class="sd">            The value of the metric.</span>
+<span class="sd">        metric_slice : str, optional</span>
+<span class="sd">            The name of the slice. If not provided, the slice name will be &quot;overall&quot;.</span>
+<span class="sd">        decision_threshold : float, optional</span>
+<span class="sd">            The decision threshold for the metric.</span>
+<span class="sd">        description : str, optional</span>
+<span class="sd">            A description of the metric.</span>
+<span class="sd">        pass_fail_thresholds : Union[float, List[float]], optional</span>
+<span class="sd">            The pass/fail threshold(s) for the metric. If a single threshold is</span>
+<span class="sd">            provided, a single test will be created. If multiple thresholds are</span>
+<span class="sd">            provided, multiple tests will be created.</span>
+<span class="sd">        pass_fail_threshold_fns : Union[Callable[[Any, float], bool],</span>
+<span class="sd">                                  List[Callable[[Any, float], bool]]], optional</span>
+<span class="sd">            The pass/fail threshold function(s) for the metric. If a single function</span>
+<span class="sd">            is provided, a single test will be created. If multiple functions are</span>
+<span class="sd">            provided, multiple tests will be created.</span>
+<span class="sd">        **extra</span>
+<span class="sd">            Any extra fields to add to the metric.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the given metric type is not valid.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">analysis_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;performance&quot;</span><span class="p">,</span> <span class="s2">&quot;fairness&quot;</span><span class="p">,</span> <span class="s2">&quot;explainability&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid metric type </span><span class="si">{</span><span class="n">analysis_type</span><span class="si">}</span><span class="s2">. Must be one of &#39;performance&#39;, &quot;</span>
+                <span class="s2">&quot;&#39;fairness&#39;, or &#39;explainability&#39;.&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">section_name</span><span class="p">:</span> <span class="nb">str</span>
+        <span class="n">field_name</span><span class="p">:</span> <span class="nb">str</span>
+        <span class="n">field_type</span><span class="p">:</span> <span class="n">Any</span>
+
+        <span class="n">section_name</span><span class="p">,</span> <span class="n">field_name</span><span class="p">,</span> <span class="n">field_type</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;performance&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;quantitative_analysis&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;performance_metrics&quot;</span><span class="p">,</span>
+                <span class="n">PerformanceMetric</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="s2">&quot;fairness&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;fairness_analysis&quot;</span><span class="p">,</span> <span class="s2">&quot;fairness_reports&quot;</span><span class="p">,</span> <span class="n">FairnessReport</span><span class="p">),</span>
+            <span class="s2">&quot;explainability&quot;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s2">&quot;explainability_analysis&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;explainability_reports&quot;</span><span class="p">,</span>
+                <span class="n">ExplainabilityReport</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">}[</span><span class="n">analysis_type</span><span class="p">]</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">,</span>
+            <span class="s2">&quot;slice&quot;</span><span class="p">:</span> <span class="n">metric_slice</span><span class="p">,</span>
+            <span class="s2">&quot;decision_threshold&quot;</span><span class="p">:</span> <span class="n">decision_threshold</span><span class="p">,</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="n">description</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">extra</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># TODO: create graphics</span>
+
+        <span class="k">if</span> <span class="n">pass_fail_thresholds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">pass_fail_threshold_fns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pass_fail_thresholds</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+                <span class="n">pass_fail_thresholds</span> <span class="o">=</span> <span class="p">[</span><span class="n">pass_fail_thresholds</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">pass_fail_threshold_fns</span><span class="p">):</span>
+                <span class="n">pass_fail_threshold_fns</span> <span class="o">=</span> <span class="p">[</span><span class="n">pass_fail_threshold_fns</span><span class="p">]</span>
+
+            <span class="c1"># create Test objects</span>
+            <span class="n">tests</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">threshold_fn</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+                <span class="n">pass_fail_thresholds</span><span class="p">,</span>
+                <span class="n">pass_fail_threshold_fns</span><span class="p">,</span>
+            <span class="p">):</span>
+                <span class="n">tests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">Test</span><span class="p">(</span>
+                        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">metric_slice</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">metric_slice</span> <span class="k">else</span> <span class="n">name</span><span class="p">,</span>
+                        <span class="n">description</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                        <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+                        <span class="n">result</span><span class="o">=</span><span class="n">value</span><span class="p">,</span>
+                        <span class="n">passed</span><span class="o">=</span><span class="n">threshold_fn</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">threshold</span><span class="p">),</span>
+                        <span class="n">graphics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+
+            <span class="n">data</span><span class="p">[</span><span class="s2">&quot;tests&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tests</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+            <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+            <span class="n">section_name</span><span class="o">=</span><span class="n">section_name</span><span class="p">,</span>
+            <span class="n">field_name</span><span class="o">=</span><span class="n">field_name</span><span class="p">,</span>
+            <span class="n">field_type</span><span class="o">=</span><span class="n">field_type</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ModelCardReport.log_performance_metrics">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.log_performance_metrics">[docs]</a>
+    <span class="k">def</span> <span class="nf">log_performance_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metrics</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a performance metric to the `Quantitative Analysis` section.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        metrics : Dict[str, Any]</span>
+<span class="sd">            A dictionary of performance metrics. The keys should be the name of the</span>
+<span class="sd">            metric, and the values should be the value of the metric. If the metric</span>
+<span class="sd">            is a slice metric, the key should be the slice name followed by a slash</span>
+<span class="sd">            and then the metric name (e.g. &quot;slice_name/metric_name&quot;). If no slice</span>
+<span class="sd">            name is provided, the slice name will be &quot;overall&quot;.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If the given metrics are not a dictionary with string keys.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_raise_if_not_dict_with_str_keys</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">metric_name</span><span class="p">,</span> <span class="n">metric_value</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">name_split</span> <span class="o">=</span> <span class="n">metric_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">name_split</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">slice_name</span> <span class="o">=</span> <span class="s2">&quot;overall&quot;</span>
+                <span class="n">metric_name</span> <span class="o">=</span> <span class="n">name_split</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># noqa: PLW2901</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># everything before the last slash is the slice name</span>
+                <span class="n">slice_name</span> <span class="o">=</span> <span class="s2">&quot;/&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">name_split</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">metric_name</span> <span class="o">=</span> <span class="n">name_split</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># noqa: PLW2901</span>
+
+            <span class="c1"># TODO: create plot</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log_field</span><span class="p">(</span>
+                <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">metric_name</span><span class="p">,</span> <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">metric_value</span><span class="p">,</span> <span class="s2">&quot;slice&quot;</span><span class="p">:</span> <span class="n">slice_name</span><span class="p">},</span>
+                <span class="n">section_name</span><span class="o">=</span><span class="s2">&quot;quantitative_analysis&quot;</span><span class="p">,</span>
+                <span class="n">field_name</span><span class="o">=</span><span class="s2">&quot;performance_metrics&quot;</span><span class="p">,</span>
+                <span class="n">field_type</span><span class="o">=</span><span class="n">PerformanceMetric</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+
+    <span class="c1"># TODO: MERGE/COMPARE MODEL CARDS</span>
+
+    <span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate the model card.&quot;&quot;&quot;</span>
+        <span class="n">ModelCard</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="o">.</span><span class="n">dict</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_write_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write a file to the given path.</span>
+
+<span class="sd">        If the path does not exist, create it.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;w+&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f_handle</span><span class="p">:</span>
+            <span class="n">f_handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_jinja_loader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">template_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">FileSystemLoader</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a jinja2 file system loader.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">FileSystemLoader</span><span class="p">(</span><span class="n">template_dir</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_jinja_template</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">template_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">Template</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a jinja2 template.&quot;&quot;&quot;</span>
+        <span class="n">_template_path</span> <span class="o">=</span> <span class="n">template_path</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">_TEMPLATE_DIR</span><span class="p">,</span>
+            <span class="n">_DEFAULT_TEMPLATE_FILENAME</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">template_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">_template_path</span><span class="p">)</span>
+        <span class="n">template_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">_template_path</span><span class="p">)</span>
+
+        <span class="n">jinja_env</span> <span class="o">=</span> <span class="n">jinja2</span><span class="o">.</span><span class="n">Environment</span><span class="p">(</span>
+            <span class="n">loader</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_jinja_loader</span><span class="p">(</span><span class="n">template_dir</span><span class="p">),</span>
+            <span class="n">autoescape</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">auto_reload</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">cache_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">jinja_env</span><span class="o">.</span><span class="n">filters</span><span class="p">[</span><span class="s2">&quot;regex_replace&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">regex_replace</span>
+        <span class="n">jinja_env</span><span class="o">.</span><span class="n">filters</span><span class="p">[</span><span class="s2">&quot;regex_search&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">regex_search</span>
+        <span class="n">jinja_env</span><span class="o">.</span><span class="n">filters</span><span class="p">[</span><span class="s2">&quot;zip&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">zip</span>
+        <span class="n">jinja_env</span><span class="o">.</span><span class="n">tests</span><span class="p">[</span><span class="s2">&quot;list&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+        <span class="n">jinja_env</span><span class="o">.</span><span class="n">tests</span><span class="p">[</span><span class="s2">&quot;empty&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">empty</span>
+        <span class="n">jinja_env</span><span class="o">.</span><span class="n">tests</span><span class="p">[</span><span class="s2">&quot;hasattr&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">hasattr</span>
+        <span class="n">jinja_env</span><span class="o">.</span><span class="n">tests</span><span class="p">[</span><span class="s2">&quot;None&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="n">jinja_env</span><span class="o">.</span><span class="n">tests</span><span class="p">[</span><span class="s2">&quot;int&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+        <span class="n">jinja_env</span><span class="o">.</span><span class="n">tests</span><span class="p">[</span><span class="s2">&quot;float&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">jinja_env</span><span class="o">.</span><span class="n">tests</span><span class="p">[</span><span class="s2">&quot;bool&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">jinja_env</span><span class="o">.</span><span class="n">get_template</span><span class="p">(</span><span class="n">template_file</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ModelCardReport.export">
+<a class="viewcode-back" href="../../../reference/api/_autosummary/cyclops.report.report.ModelCardReport.html#cyclops.report.report.ModelCardReport.export">[docs]</a>
+    <span class="k">def</span> <span class="nf">export</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">output_filename</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">template_path</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">interactive</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">save_json</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">last_n_evals</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">mean_std_min_evals</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">synthetic_timestamp</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Export the model card report to an HTML file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        output_filename : str, optional</span>
+<span class="sd">            The name of the output file. If not provided, the file will be named</span>
+<span class="sd">            with the current date and time.</span>
+<span class="sd">        template_path : str, optional</span>
+<span class="sd">            The path to the jinja2 template to use. The default is None, which uses</span>
+<span class="sd">            the default template provided by CyclOps.</span>
+<span class="sd">        interactive : bool, optional</span>
+<span class="sd">            Whether to create an interactive HTML report. The default is True.</span>
+<span class="sd">        save_json : bool, optional</span>
+<span class="sd">            Whether to save the model card as a JSON file. The default is True.</span>
+<span class="sd">        last_n_evals : int, optional</span>
+<span class="sd">            The number of most recent evaluations to include in the report and</span>
+<span class="sd">            calculate trends for. If not provided, all evaluations will be included.</span>
+<span class="sd">        mean_std_min_evals : int</span>
+<span class="sd">            The minimum number of evaluations required to calculate the mean and</span>
+<span class="sd">            standard deviation for the performance over time plot in the overview</span>
+<span class="sd">            section. The default is 3.</span>
+<span class="sd">        synthetic_timestamp : str, optional</span>
+<span class="sd">            A synthetic timestamp to use for the report. This is useful for</span>
+<span class="sd">            generating back-dated reports. The default is None, which uses the</span>
+<span class="sd">            current date and time.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            Path of the saved HTML report file.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">output_filename</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output_filename</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">output_filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.html&quot;</span><span class="p">)</span>
+        <span class="p">),</span> <span class="s2">&quot;`output_filename` must be a string ending with &#39;.html&#39;&quot;</span>
+
+        <span class="c1"># write to file</span>
+        <span class="k">if</span> <span class="n">synthetic_timestamp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">today_now</span> <span class="o">=</span> <span class="n">synthetic_timestamp</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">today_now</span> <span class="o">=</span> <span class="n">dt_datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)</span>
+
+        <span class="n">current_report_metrics</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+            <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">PerformanceMetric</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="n">PerformanceMetric</span><span class="p">]</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sweep_metrics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="p">,</span> <span class="n">current_report_metrics</span><span class="p">)</span>
+        <span class="n">current_report_metrics_set</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">current_report_metrics</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">current_report_metrics</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">)</span>
+            <span class="k">else</span> <span class="p">[</span><span class="n">current_report_metrics</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="p">)</span>
+
+        <span class="n">report_paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span>
+                <span class="s2">&quot;cyclops_report&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;*.json&quot;</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">report_paths</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">latest_report_path</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">report_paths</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">latest_report</span> <span class="o">=</span> <span class="n">ModelCard</span><span class="o">.</span><span class="n">parse_file</span><span class="p">(</span>
+                <span class="n">latest_report_path</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">latest_report_metric_cards</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">MetricCard</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">sweep_metric_cards</span><span class="p">(</span><span class="n">latest_report</span><span class="p">,</span> <span class="n">latest_report_metric_cards</span><span class="p">)</span>
+            <span class="n">latest_report_metric_cards_set</span> <span class="o">=</span> <span class="n">latest_report_metric_cards</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">latest_report_metric_cards_set</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># check if overview section exists</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="o">.</span><span class="n">overview</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># compare tests</span>
+            <span class="n">metrics</span><span class="p">,</span> <span class="n">tooltips</span><span class="p">,</span> <span class="n">slices</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">metric_cards</span> <span class="o">=</span> <span class="n">create_metric_cards</span><span class="p">(</span>
+                <span class="n">current_report_metrics_set</span><span class="p">,</span>
+                <span class="n">today_now</span><span class="p">,</span>
+                <span class="n">latest_report_metric_cards_set</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_log_metric_card_collection</span><span class="p">(</span>
+                <span class="n">metrics</span><span class="p">,</span>
+                <span class="n">tooltips</span><span class="p">,</span>
+                <span class="n">slices</span><span class="p">,</span>
+                <span class="n">values</span><span class="p">,</span>
+                <span class="n">metric_cards</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="o">.</span><span class="n">overview</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">last_n_evals</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">last_n_evals</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">last_n_evals</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="o">.</span><span class="n">overview</span><span class="o">.</span><span class="n">last_n_evals</span> <span class="o">=</span> <span class="n">last_n_evals</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="o">.</span><span class="n">overview</span><span class="o">.</span><span class="n">mean_std_min_evals</span> <span class="o">=</span> <span class="n">mean_std_min_evals</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">()</span>
+        <span class="n">template</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_jinja_template</span><span class="p">(</span><span class="n">template_path</span><span class="o">=</span><span class="n">template_path</span><span class="p">)</span>
+
+        <span class="n">func_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;sweep_tests&quot;</span><span class="p">:</span> <span class="n">sweep_tests</span><span class="p">,</span>
+            <span class="s2">&quot;sweep_graphics&quot;</span><span class="p">:</span> <span class="n">sweep_graphics</span><span class="p">,</span>
+            <span class="s2">&quot;get_slices&quot;</span><span class="p">:</span> <span class="n">get_slices</span><span class="p">,</span>
+            <span class="s2">&quot;get_thresholds&quot;</span><span class="p">:</span> <span class="n">get_thresholds</span><span class="p">,</span>
+            <span class="s2">&quot;get_passed&quot;</span><span class="p">:</span> <span class="n">get_passed</span><span class="p">,</span>
+            <span class="s2">&quot;get_names&quot;</span><span class="p">:</span> <span class="n">get_names</span><span class="p">,</span>
+            <span class="s2">&quot;get_histories&quot;</span><span class="p">:</span> <span class="n">get_histories</span><span class="p">,</span>
+            <span class="s2">&quot;get_timestamps&quot;</span><span class="p">:</span> <span class="n">get_timestamps</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">template</span><span class="o">.</span><span class="n">globals</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">func_dict</span><span class="p">)</span>
+
+        <span class="n">plotlyjs</span> <span class="o">=</span> <span class="n">get_plotlyjs</span><span class="p">()</span> <span class="k">if</span> <span class="n">interactive</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">template</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">model_card</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="p">,</span> <span class="n">plotlyjs</span><span class="o">=</span><span class="n">plotlyjs</span><span class="p">)</span>
+
+        <span class="n">report_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span>
+            <span class="s2">&quot;cyclops_report&quot;</span><span class="p">,</span>
+            <span class="n">output_filename</span> <span class="ow">or</span> <span class="s2">&quot;model_card.html&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_file</span><span class="p">(</span><span class="n">report_path</span><span class="p">,</span> <span class="n">content</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">save_json</span><span class="p">:</span>
+            <span class="n">json_path</span> <span class="o">=</span> <span class="n">report_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.html&quot;</span><span class="p">,</span> <span class="s2">&quot;.json&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_file</span><span class="p">(</span>
+                <span class="n">json_path</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_model_card</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">exclude_unset</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">report_path</span></div>
+</div>
+
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Vector AI Engineering
+            </div>
+            <!--
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+            -->
+          </div>
+          <div class="right-details">
+            <div class="icons">
+              <a class="muted-link " href="https://github.com/VectorInstitute/cyclops" aria-label="GitHub">
+                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+                </svg>
+            </a>
+              
+            </div>
+          </div>
+        </div>
+        <div class="footer-container" style="text-align: center;">
+          <div class="footer-small-text">
+              <br> All <a href="https://github.com/VectorInstitute/cyclops">source code for cyclops</a> is freely available under the terms of an <a href="https://opensource.org/licenses/Apache-2.0">Apache-2.0</a> license.
+          </div>
+
+          <div class="footer-small-text">
+            This work is made possible due to the data obtained from the <a href="https://www.geminimedicine.ca/">GEMINI study</a>.
+          </div>
+
+          <div class="logo">
+            <a class="logo" href="https://vectorinstitute.ai/">
+              <span class="logo"></span>
+              <img alt="Logo of the Vector Institute" style="width:90px; max-width:90px;" src="../../../_static/logos/vector_logo.png" />
+            </a>
+            <a class="logo" href="https://www.geminimedicine.ca/">
+              <span class="logo"></span>
+              <img alt="Logo of GEMINI" style="width:90px; max-width:90px;" src="../../../_static/logos/gemini_logo.png" />
+            </a>
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div></body>
+</html>
