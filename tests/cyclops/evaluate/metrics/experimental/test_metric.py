@@ -53,7 +53,7 @@ def test_add_state_factory():
     # default_factory is 'list'
     metric.add_state_default_factory("b", list)  # type: ignore
     assert (
-        metric._default_factories.get("b") == list
+        metric._default_factories.get("b") == list  # noqa: E721
     ), "Default factory should be 'list'."
 
     # dist_reduce_fn is "sum"
