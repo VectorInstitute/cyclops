@@ -923,7 +923,7 @@ def is_datetime(
             return False
     if isinstance(value, (list, np.ndarray)):
         return all((is_datetime(v) for v in value))
-    if isinstance(value, (datetime.datetime, np.datetime64)):
+    if isinstance(value, (datetime.datetime, np.datetime64)):  # noqa: SIM103
         return True
 
     return False
