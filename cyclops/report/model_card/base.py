@@ -118,7 +118,7 @@ class BaseModelCardSection(BaseModel):
             raise ValueError(f"Field {name} does not exist.")
 
         field = self.__fields__[name]
-        if field.default_factory == list or isinstance(getattr(self, name), list):
+        if field.default_factory == list or isinstance(getattr(self, name), list):  # noqa: E721
             # NOTE: pydantic does not trigger validation when appending to a list,
             # but if `validate_assignment` is set to `True`, then validation will
             # be triggered when the list is assigned to the field.
@@ -173,6 +173,6 @@ class BaseModelCardSection(BaseModel):
             model_config=BaseModelCardField.Config,
             default_factory=default_factory,
             field_info=FieldInfo(unique_items=True)
-            if default_factory == list
+            if default_factory == list  # noqa: E721
             else None,
         )
