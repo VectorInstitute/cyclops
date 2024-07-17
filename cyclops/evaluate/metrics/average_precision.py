@@ -131,9 +131,13 @@ class AveragePrecision(
                 pos_label=pos_label,
             )
         if task == "multiclass":
-            NotImplementedError("Multiclass average precision is not implemented.")
+            raise NotImplementedError(
+                "Multiclass average precision is not implemented."
+            )
         if task == "multilabel":
-            NotImplementedError("Multilabel average precision is not implemented.")
+            raise NotImplementedError(
+                "Multilabel average precision is not implemented."
+            )
 
         raise ValueError(
             "Expected argument `task` to be either 'binary', 'multiclass' or "

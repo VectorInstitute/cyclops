@@ -131,7 +131,7 @@ def normalize_events(
     data = data.infer_objects()
     data[event_name_col] = normalize_names(data[event_name_col])
 
-    if event_value_col and data[event_value_col].dtypes == object:
+    if event_value_col and data[event_value_col].dtypes == object:  # noqa: E721
         data[event_value_col] = normalize_values(data[event_value_col])
         log_df_counts(data, event_name_col, "Normalized values...", columns=True)
 
