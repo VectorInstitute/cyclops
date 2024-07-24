@@ -267,6 +267,7 @@ def model_card():
                     history=[0.8, 0.85, 0.9],
                     trend="positive",
                     plot=GraphicsCollection(collection=[Graphic(name="Accuracy")]),
+                    sample_sizes=[100, 200, 300],
                 ),
                 MetricCard(
                     name="Precision",
@@ -279,6 +280,7 @@ def model_card():
                     history=[0.7, 0.8, 0.9],
                     trend="positive",
                     plot=GraphicsCollection(collection=[Graphic(name="Precision")]),
+                    sample_sizes=[100, 200, 300],
                 ),
             ],
         ),
@@ -290,12 +292,14 @@ def model_card():
             value=0.85,
             slice="overall",
             tests=[Test()],
+            sample_size=100,
         ),
         PerformanceMetric(
             type="BinaryPrecision",
             value=0.8,
             slice="overall",
             tests=[Test()],
+            sample_size=100,
         ),
     ]
     return model_card
@@ -395,6 +399,7 @@ def test_create_metric_cards(model_card):
             description="Accuracy of binary classification",
             graphics=None,
             tests=None,
+            sample_size=100,
         ),
         PerformanceMetric(
             type="MulticlassPrecision",
@@ -403,6 +408,7 @@ def test_create_metric_cards(model_card):
             description="Precision of multiclass classification",
             graphics=None,
             tests=None,
+            sample_size=100,
         ),
     ]
     timestamp = "2022-01-01"
@@ -417,6 +423,7 @@ def test_create_metric_cards(model_card):
             passed=False,
             history=[0.75, 0.8, 0.85],
             timestamps=["2021-01-01", "2021-02-01", "2021-03-01"],
+            sample_sizes=[100, 200, 300],
         ),
         MetricCard(
             name="MulticlassPrecision",
@@ -428,6 +435,7 @@ def test_create_metric_cards(model_card):
             passed=True,
             history=[0.8, 0.85, 0.9],
             timestamps=["2021-01-01", "2021-02-01", "2021-03-01"],
+            sample_sizes=[100, 200, 300],
         ),
     ]
     metrics, tooltips, slices, values, metric_cards = create_metric_cards(

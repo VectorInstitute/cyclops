@@ -48,6 +48,7 @@ from cyclops.report.utils import (
     get_histories,
     get_names,
     get_passed,
+    get_sample_sizes,
     get_slices,
     get_thresholds,
     get_timestamps,
@@ -855,6 +856,7 @@ class ModelCardReport:
         pass_fail_threshold_fns: Optional[
             Union[Callable[[Any, float], bool], List[Callable[[Any, float], bool]]]
         ] = None,
+        sample_size: Optional[int] = None,
         **extra: Any,
     ) -> None:
         """Add a quantitative analysis to the report.
@@ -921,6 +923,7 @@ class ModelCardReport:
             "slice": metric_slice,
             "decision_threshold": decision_threshold,
             "description": description,
+            "sample_size": sample_size,
             **extra,
         }
 
@@ -958,42 +961,70 @@ class ModelCardReport:
             field_type=field_type,
         )
 
-    def log_performance_metrics(self, metrics: Dict[str, Any]) -> None:
-        """Add a performance metric to the `Quantitative Analysis` section.
+    def log_performance_metrics(
+        self,
+        results: Dict[str, Any],
+        metric_descriptions: Dict[str, str],
+        pass_fail_thresholds: Union[float, Dict[str, float]] = 0.7,
+        pass_fail_threshold_fn: Callable[[float, float], bool] = lambda x,
+        threshold: bool(x >= threshold),
+    ) -> None:
+        """
+        Log all performance metrics to the model card report.
 
         Parameters
         ----------
-        metrics : Dict[str, Any]
-            A dictionary of performance metrics. The keys should be the name of the
-            metric, and the values should be the value of the metric. If the metric
-            is a slice metric, the key should be the slice name followed by a slash
-            and then the metric name (e.g. "slice_name/metric_name"). If no slice
-            name is provided, the slice name will be "overall".
+        results : Dict[str, Any]
+            Dictionary containing the results,
+            with keys in the format "split/metric_name".
+        metric_descriptions : Dict[str, str]
+            Dictionary mapping metric names to their descriptions.
+        pass_fail_thresholds : Union[float, Dict[str, float]], optional
+            The threshold(s) for pass/fail tests.
+            Can be a single float applied to all metrics,
+            or a dictionary mapping "split/metric_name" to individual thresholds.
+            Default is 0.7.
+        pass_fail_threshold_fn : Callable[[float, float], bool], optional
+            Function to determine if a metric passes or fails.
+            Default is lambda x, threshold: bool(x >= threshold).
 
-        Raises
-        ------
-        TypeError
-            If the given metrics are not a dictionary with string keys.
-
+        Returns
+        -------
+        None
         """
-        _raise_if_not_dict_with_str_keys(metrics)
-        for metric_name, metric_value in metrics.items():
-            name_split = metric_name.split("/")
-            if len(name_split) == 1:
-                slice_name = "overall"
-                metric_name = name_split[0]  # noqa: PLW2901
-            else:  # everything before the last slash is the slice name
-                slice_name = "/".join(name_split[:-1])
-                metric_name = name_split[-1]  # noqa: PLW2901
+        # Extract sample sizes
+        sample_sizes = {
+            key.split("/")[0]: value
+            for key, value in results.items()
+            if "sample_size" in key.split("/")[1]
+        }
 
-            # TODO: create plot
+        # Log metrics
+        for name, metric in results.items():
+            split, metric_name = name.split("/")
+            if metric_name != "sample_size":
+                metric_value = metric.tolist() if hasattr(metric, "tolist") else metric
 
-            self._log_field(
-                data={"type": metric_name, "value": metric_value, "slice": slice_name},
-                section_name="quantitative_analysis",
-                field_name="performance_metrics",
-                field_type=PerformanceMetric,
-            )
+                # Determine the threshold for this specific metric
+                if isinstance(pass_fail_thresholds, dict):
+                    threshold = pass_fail_thresholds.get(
+                        name, 0.7
+                    )  # Default to 0.7 if not specified
+                else:
+                    threshold = pass_fail_thresholds
+
+                self.log_quantitative_analysis(
+                    "performance",
+                    name=metric_name,
+                    value=metric_value,
+                    description=metric_descriptions.get(
+                        metric_name, "No description provided."
+                    ),
+                    metric_slice=split,
+                    pass_fail_thresholds=threshold,
+                    pass_fail_threshold_fns=pass_fail_threshold_fn,
+                    sample_size=sample_sizes.get(split),
+                )
 
     # TODO: MERGE/COMPARE MODEL CARDS
 
@@ -1162,6 +1193,7 @@ class ModelCardReport:
             "get_names": get_names,
             "get_histories": get_histories,
             "get_timestamps": get_timestamps,
+            "get_sample_sizes": get_sample_sizes,
         }
         template.globals.update(func_dict)
 
