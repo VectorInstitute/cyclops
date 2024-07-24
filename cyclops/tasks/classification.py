@@ -413,7 +413,7 @@ class MultilabelImageClassificationTask(BaseTask):
     def _validate_models(self) -> None:
         """Validate the models for the task data type."""
         assert all(
-            _model_names_mapping.get(model.model.__name__) in _img_model_keys  # type: ignore
+            _model_names_mapping.get(model.model.__name__) in _img_model_keys
             for model in self.models.values()
         ), "All models must be image type model."
         for model in self.models.values():

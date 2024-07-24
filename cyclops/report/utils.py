@@ -585,6 +585,25 @@ def get_timestamps(model_card: ModelCard) -> str:
     return json.dumps(timestamps)
 
 
+def get_sample_sizes(model_card: ModelCard) -> str:
+    """Get all sample sizes from a model card."""
+    sample_sizes = {}
+    if (
+        (model_card.overview is None)
+        or (model_card.overview.metric_cards is None)
+        or (model_card.overview.metric_cards.collection is None)
+    ):
+        pass
+    else:
+        for itr, metric_card in enumerate(model_card.overview.metric_cards.collection):
+            sample_sizes[itr] = (
+                [str(sample_size) for sample_size in metric_card.sample_sizes]
+                if metric_card.sample_sizes is not None
+                else None
+            )
+    return json.dumps(sample_sizes)
+
+
 def _extract_slices_and_values(
     current_metrics: List[PerformanceMetric],
 ) -> Tuple[List[str], List[List[str]]]:
@@ -727,6 +746,7 @@ def _create_metric_card(
     name: str,
     history: List[float],
     timestamps: List[str],
+    sample_sizes: List[int],
     threshold: Union[float, None],
     passed: Union[bool, None],
 ) -> MetricCard:
@@ -744,6 +764,8 @@ def _create_metric_card(
         The timestamps for the metric card.
     threshold : Union[float, None]
         The threshold for the metric card.
+    sample_sizes : List[int]
+        The sample sizes for the metric card.
     passed : Union[bool, None]
         Whether or not the metric card passed.
 
@@ -772,6 +794,7 @@ def _create_metric_card(
         passed=passed,
         history=history,
         timestamps=timestamps,
+        sample_sizes=sample_sizes,
     )
 
 
@@ -811,7 +834,11 @@ def _get_metric_card(
         timestamps = metric["last_metric_card"].timestamps
         if timestamps is not None:
             timestamps.append(timestamp)
+        sample_sizes = metric["last_metric_card"].sample_sizes
+        if sample_sizes is not None:
+            sample_sizes.append(0)  # Append 0 for missing data
         metric["last_metric_card"].timestamps = timestamps
+        metric["last_metric_card"].sample_sizes = sample_sizes
         metric_card = metric["last_metric_card"]
     elif (
         metric["current_metric"] is not None
@@ -829,6 +856,9 @@ def _get_metric_card(
         timestamps = metric["last_metric_card"].timestamps
         if timestamps is not None:
             timestamps.append(timestamp)
+        sample_sizes = metric["last_metric_card"].sample_sizes
+        if sample_sizes is not None:
+            sample_sizes.append(metric["current_metric"].sample_size)
     else:
         history = [
             metric["current_metric"].value
@@ -840,12 +870,18 @@ def _get_metric_card(
             else 0,
         ]
         timestamps = [timestamp]
+        sample_sizes = (
+            [metric["current_metric"].sample_size]
+            if isinstance(metric["current_metric"], PerformanceMetric)
+            else [0]
+        )
     if metric_card is None:
         metric_card = _create_metric_card(
             metric,
             name,
             history,
             timestamps,
+            sample_sizes,
             _get_threshold(metric),
             _get_passed(metric),
         )

@@ -1,5 +1,6 @@
 // Javascript code for plots in the model card template
-
+const MAX_SIZE = 20;
+let maxSampleSize = 0;
 
 // Define a function to update the plot based on selected filters
 function updatePlot() {
@@ -140,6 +141,7 @@ function updatePlot() {
   var passed_all = JSON.parse({{ get_passed(model_card)|safe|tojson }});
   var names_all = JSON.parse({{ get_names(model_card)|safe|tojson }});
   var timestamps_all = JSON.parse({{ get_timestamps(model_card)|safe|tojson }});
+  var sample_sizes_all = JSON.parse({{ get_sample_sizes(model_card)|safe|tojson }});
 
   for (let i = 0; i < selection.length; i++) {
       // use selection to set label_slice_selection background color
@@ -223,6 +225,21 @@ function updatePlot() {
       }
   }
 
+  // Find the maximum sample size across all selections
+  for (let i = 0; i < selections.length; i++) {
+      if (selections[i] === null) {
+      continue;
+      }
+      selection = selections[i]
+      // get idx of slices where all elements match
+      var idx = Object.keys(slices_all).find(key => JSON.stringify(slices_all[key].sort()) === JSON.stringify(selection));
+      var sample_size_data = [];
+      for (let i = 0; i < sample_sizes_all[idx].length; i++) {
+      sample_size_data.push(sample_sizes_all[idx][i]);
+      }
+      maxSampleSize = Math.max(...sample_size_data);
+  }
+
   traces = [];
   for (let i = 0; i < selections.length; i++) {
       if (selections[i] === null) {
@@ -237,11 +254,17 @@ function updatePlot() {
       }
       var timestamp_data = [];
       for (let i = 0; i < timestamps_all[idx].length; i++) {
-      timestamp_data.push(timestamps_all[idx][i]);
+      // timestamp_data.push(timestamps_all[idx][i]);
+      timestamp_data.push(formatDate(timestamps_all[idx][i]));
+      }
+      var sample_size_data = [];
+      for (let i = 0; i < sample_sizes_all[idx].length; i++) {
+      sample_size_data.push(sample_sizes_all[idx][i]);
       }
       var last_n_evals = document.getElementById("n_evals_slider_pot").value;
       history_data = history_data.slice(-last_n_evals);
       timestamp_data = timestamp_data.slice(-last_n_evals);
+      sample_size_data = sample_size_data.slice(-last_n_evals);
       // get slope of line of best fit, if >0.01 then trending up, if <0.01 then trending down, else flat
       var slope = lineOfBestFit(history_data)[0];
       if (slope > 0.01) {
@@ -323,17 +346,41 @@ function updatePlot() {
         };
         traces.push(threshold_trace);
     }
-      var trace = {
-      // range of x is the length of the list of floats
-      x: timestamp_data,
-      y: history_data,
-      mode: 'lines+markers',
-      type: 'scatter',
-      marker: {color: plot_colors[i+1]},
-      line: {color: plot_colors[i+1]},
-      name: name,
-      legendgroup: name + i,
-      //name: selection.toString(),
+        // Add sample size circles
+        var sample_size_trace = {
+          x: timestamp_data,
+          y: history_data,
+          mode: 'markers',
+          marker: {
+              sizemode: 'area',
+              size: sample_size_data,
+              sizeref: maxSampleSize / MAX_SIZE ** 2,
+              color: `rgba(${plot_colors[i+1].slice(4, -1)}, 0.3)`,
+              line: {width: 0},
+          },
+          text: sample_size_data.map((s, index) =>
+              `Date: ${timestamp_data[index]}<br>Value: ${history_data[index].toFixed(2)}<br>Sample Size: ${s}`
+          ),
+          hoverinfo: 'text',
+          hovertemplate: '%{text}<extra></extra>',
+          name: name + ' (Sample Size)',
+          legendgroup: name + i,
+      };
+
+      // Add main data points and line
+      var main_trace = {
+          x: timestamp_data,
+          y: history_data,
+          mode: 'lines+markers',
+          type: 'scatter',
+          marker: {
+              color: plot_colors[i+1],
+              symbol: 'circle',
+          },
+          line: {color: plot_colors[i+1]},
+          name: name,
+          legendgroup: name + i,
+          hoverinfo: 'skip'
       };
 
       // check if length of history_data is >= mean_std_min_evals and if so get rolling mean and std if mean_plot_selection or std_plot_selection is checked
@@ -384,7 +431,8 @@ function updatePlot() {
             };
           traces.push(trace_mean);
       }
-      traces.push(trace);
+      traces.push(sample_size_trace);
+      traces.push(main_trace);
 
   }
 
@@ -744,6 +792,7 @@ function updatePlotSelection() {
   var passed_all = JSON.parse({{ get_passed(model_card)|safe|tojson }});
   var names_all = JSON.parse({{ get_names(model_card)|safe|tojson }});
   var timestamps_all = JSON.parse({{ get_timestamps(model_card)|safe|tojson }});
+  var sample_sizes_all = JSON.parse({{ get_sample_sizes(model_card)|safe|tojson }});
 
   var radioGroups = {};
   var labelGroups = {};
@@ -786,6 +835,21 @@ function updatePlotSelection() {
       }
   }
 
+  // Find the maximum sample size across all selections
+  for (let i = 0; i < selections.length; i++) {
+    if (selections[i] === null) {
+    continue;
+    }
+    selection = selections[i]
+    // get idx of slices where all elements match
+    var idx = Object.keys(slices_all).find(key => JSON.stringify(slices_all[key].sort()) === JSON.stringify(selection));
+    var sample_size_data = [];
+    for (let i = 0; i < sample_sizes_all[idx].length; i++) {
+    sample_size_data.push(sample_sizes_all[idx][i]);
+    }
+    maxSampleSize = Math.max(...sample_size_data);
+}
+
   traces = [];
   var plot_number = parseInt(plot_selected.value.split(" ")[1]-1);
   for (let i = 0; i < selections.length; i++) {
@@ -802,11 +866,17 @@ function updatePlotSelection() {
       }
       var timestamp_data = [];
       for (let i = 0; i < timestamps_all[idx].length; i++) {
-      timestamp_data.push(timestamps_all[idx][i]);
+      // timestamp_data.push(timestamps_all[idx][i]);
+      timestamp_data.push(formatDate(timestamps_all[idx][i]));
+      }
+      var sample_size_data = [];
+      for (let i = 0; i < sample_sizes_all[idx].length; i++) {
+      sample_size_data.push(sample_sizes_all[idx][i]);
       }
       var last_n_evals = document.getElementById("n_evals_slider_pot").value;
       history_data = history_data.slice(-last_n_evals);
       timestamp_data = timestamp_data.slice(-last_n_evals);
+      sample_size_data = sample_size_data.slice(-last_n_evals);
 
       // get slope of line of best fit, if >0.01 then trending up, if <0.01 then trending down, else flat
       var slope = lineOfBestFit(history_data)[0];
@@ -891,16 +961,41 @@ function updatePlotSelection() {
         traces.push(threshold_trace);
     }
 
-      var trace = {
-      // range of x is the length of the list of floats
-      x: timestamp_data,
-      y: history_data,
-      mode: 'lines+markers',
-      type: 'scatter',
-      marker: {color: plot_colors[i+1]},
-      line: {color: plot_colors[i+1]},
-      name: name,
-      legendgroup: name + i,
+        // Add sample size circles
+        var sample_size_trace = {
+          x: timestamp_data,
+          y: history_data,
+          mode: 'markers',
+          marker: {
+              sizemode: 'area',
+              size: sample_size_data,
+              sizeref: maxSampleSize / MAX_SIZE ** 2,
+              color: `rgba(${plot_colors[i+1].slice(4, -1)}, 0.3)`,
+              line: {width: 0},
+          },
+          text: sample_size_data.map((s, index) =>
+              `Date: ${timestamp_data[index]}<br>Value: ${history_data[index].toFixed(2)}<br>Sample Size: ${s}`
+          ),
+          hoverinfo: 'text',
+          hovertemplate: '%{text}<extra></extra>',
+          name: name + ' (Sample Size)',
+          legendgroup: name + i,
+      };
+
+      // Add main data points and line
+      var main_trace = {
+          x: timestamp_data,
+          y: history_data,
+          mode: 'lines+markers',
+          type: 'scatter',
+          marker: {
+              color: plot_colors[i+1],
+              symbol: 'circle',
+          },
+          line: {color: plot_colors[i+1]},
+          name: name,
+          legendgroup: name + i,
+          hoverinfo: 'skip'
       };
 
       // check if length of history_data is >= mean_std_min_evals and if so get rolling mean and std if mean_plot_selection or std_plot_selection is checked
@@ -914,7 +1009,6 @@ function updatePlotSelection() {
             var trace_std_upper = {
                 x: timestamp_data.slice(-history_std_data.length),
                 y: history_mean_data.map((x, i) => x + history_std_data[i]),
-                // fill: 'tonexty',
                 fillcolor: `rgba(${plot_colors[i+1].slice(4, -1)}, 0.3)`,
                 mode: 'lines',
                 line: {width: 0, color: `rgba(${plot_colors[i+1].slice(4, -1)}, 0.3)`},
@@ -951,7 +1045,8 @@ function updatePlotSelection() {
           traces.push(trace_mean);
       }
 
-    traces.push(trace);
+    traces.push(main_trace);
+    traces.push(sample_size_trace);
   }
 
 
@@ -1145,3 +1240,14 @@ function rollingStd(data, window) {
     }
     return std;
     }
+
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+  }
