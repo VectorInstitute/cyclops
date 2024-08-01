@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+
+
+{% macro render_if_exist_list(values) %}
+<div>
+  {% if values.__class__.__name__ == "User"%}
+  <li>
+    {% for name, value in values %}
+      {% if value %}
+          {{ value }}
+      {% endif %}
+    {% endfor %}
+  </li>
+  {% elif values.__class__.__name__ == "Citation"%}
+  <li>
+    {# {% for name, value in values %} #}
+      {# {% if value %} #}
+        {{ values.content | safe }}
+      {# {% endif %} #}
+    {# {% endfor %} #}
+  </li>
+  {% elif values.__class__.__name__ == "Graphic"%}
+    {{ render_graphic(values) }}
+  {% elif values.__class__.__name__ == "GraphicsCollection" %}
+    {{ render_graphics(values.collection) }}
+  {% else %}
+    {% if (values is string) or (values|int != 0) or (values|float != 0) %}
+    <li>
+      {{ values }}
+    </li>
+    {% else %}
+    <li>
+      {% for name, value in values %}
+        {% if value %}
+          {% if value.__class__.__name__ == "GraphicsCollection" %}
+            {{ render_graphics(value.collection) }}
+          {% elif (name == "description")%}
+            {{ value }}
+          {% elif (name == "link")%}
+            <a href="{{ value }}">{{ value }}</a>
+          {% else %}
+            {% if "str" in name%}
+              {{ value }}
+            {% else %}
+              <b>{{ name|regex_replace('_+', ' ')|title }}:</b> {{ value }}
+            {% endif %}
+          {% endif %}
+          <br>
+        {% endif %}
+      {% endfor %}
+    </li>
+    {% endif %}
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{% macro render_metric_table(comp) %}
+  <table class="styled-table">
+    <tr><th>Metric</th><th>Slice</th><th>Current Value</th><th>Threshold</th><th>Previous Value</th></tr>
+    {% for mp, mb in comp.new_metrics_failed_periodic|zip(comp.new_metrics_failed_baseline) %}
+    {% if mp.value != 0 %}
+      <tr>
+        <td style="padding: 5px; text-align: center;">{{ mp.type }}</td>
+        <td style="padding: 5px; text-align: center;">{{ mp.slice }}</td>
+          <td style="padding: 5px; text-align: center;" id="{{ mp.type }}/{{ mp.slice }}">{{ mp.value|round(2) }}</td>
+        {% if mp.tests|length != 0 %}
+          <td style="padding: 5px; text-align: center;">{{ mp.tests[0].threshold|round(2) }}</td>
+          <td style="padding: 5px; text-align: center;">{{mb.value|round(2)}}</td>
+        {% else %}
+          <td style="padding: 5px; text-align: center;">-</td>
+          <td style="padding: 5px; text-align: center;">-</td>
+        {% endif %}
+      </tr>
+    {% endif %}
+    {% endfor %}
+  </table>
+{% endmacro %}
+
+
+{% macro render_test_table(tests, passing, title) %}
+{% if passing %}
+  <table class="styled-table-pass" style="border: 3px solid green; ">
+    <tr><th style="background-color: green;">{{title}}</th></tr>
+    {% for test in tests %}
+      {% if test.passed %}
+        <tr>
+          <td style="padding: 5px; text-align: center;"><a href="#{{ test.name }}">{{ test.name }}</a></td>
+        </tr>
+      {% endif %}
+    {% endfor %}
+  </table>
+{% else %}
+<table class="styled-table-fail" style="border: 3px solid red;">
+  <tr><th style="background-color: red;">{{title}}</th></tr>
+  {% for test in tests %}
+    {% if not test.passed %}
+      <tr>
+        <td style="padding: 5px; text-align: center;"><a href="#{{ test.name }}">{{ test.name }}</a></td>
+      </tr>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+</table>
+{% endmacro %}
+
+
+{% macro render_graphic(graphic, class="img-item") %}
+<div class="{{ class }}">
+  {% if graphic.image.startswith('<div') %}
+    {{ graphic.image|safe }}
+  {% else %}
+    {% if 'data' in graphic.image %}
+      <img src='{{ graphic.image }}' alt='{{ graphic.name }}' />
+    {% else %}
+      <img src='data:image/png;base64,{{ graphic.image }}' alt='{{ graphic.name }}' />
+    {% endif %}
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{% macro render_graphics(graphics) %}
+<div>
+  {% if graphics.description %}<p>{{ graphics.description }}</p>{% endif %}
+  {% for graph in graphics %}
+    {{ render_graphic(graph) }}
+  {% endfor %}
+</div>
+{% endmacro %}
+
+
+{% macro render_metric_card(card, idx) %}
+<div class="metric-card-wrapper">
+  <div class="card h-100">
+    <div class="card-header p-3 pt-2">
+      <div class="icon icon-lg icon-shape bg-gradient-primary shadow-primary text-center border-radius-xl mt-n4 position-absolute">
+        {# <i class="material-icons opacity-10">analytics</i> #}
+      </div>
+      <div class="text-end pt-1">
+        <p class="text-sm mb-0 text-capitalize">{{ card.name }}</p>
+        <h4 class="mb-0 {% if card.passed %}text-success{% else %}text-danger{% endif %}">{{ "%.2f"|format(card.value) }}</h4>
+      </div>
+    </div>
+    <hr class="dark horizontal my-0">
+    <div class="card-footer p-3">
+      <p class="mb-0">
+        {% if card.passed %}
+          <span class="text-success text-sm font-weight-bolder">Above</span>
+        {% else %}
+          <span class="text-danger text-sm font-weight-bolder">Below</span>
+        {% endif %}
+        threshold ({{ "%.2f"|format(card.threshold) }})
+      </p>
+      <div id="model-card-plot-{{ idx }}" style="height: 150px;"></div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+
+{% macro render_perf(name, comp) %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4  bg-gray-200">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+            <h6 class="text-white text-capitalize ps-3">How is your model doing?</h6>
+          </div>
+        </div>
+        <div class="card-body px-0 pb-2">
+          <div class="row px-4 mb-4">
+            <div class="col-md-6">
+              <p class="mb-0">A quick glance of your most important metrics.</p>
+            </div>
+            <div class="col-md-6 text-end">
+              <label for="n_evals_slider_p" class="form-label">Last <span id="slider_p_num">{{ comp.last_n_evals }}</span> Evaluations</label>
+              <input type="range" class="form-range" min="1" max="{{ comp.last_n_evals }}" value="{{ comp.last_n_evals }}" id="n_evals_slider_p">
+            </div>
+          </div>
+          <div class="row px-4 g-4 mb-4">
+            {% for metric_card in comp.metric_cards.collection %}
+              {% if metric_card.slice == 'overall' %}
+                <div class="col-xl-3 col-sm-6">
+                  {{ render_metric_card(metric_card, loop.index0) }}
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro render_perf_over_time(name, comp) %}
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <div class="card my-4  bg-gray-200">
+        <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+          <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+            <h6 class="text-white text-capitalize ps-3">How is your model doing over time?</h6>
+          </div>
+        </div>
+        <div class="card-body px-0 pb-2">
+          <div class="row px-4">
+            <div class="col-md-6">
+              <p class="text-sm mb-0">See how your model is performing over several metrics and subgroups over time.</p>
+            </div>
+            <div class="col-md-6 text-end">
+              <label for="n_evals_slider_pot" class="form-label">Last <span id="slider_pot_num">{{ comp.last_n_evals }}</span> Evaluations</label>
+              <input type="range" class="form-range" min="1" max="{{ comp.last_n_evals }}" value="{{ comp.last_n_evals }}" id="n_evals_slider_pot">
+            </div>
+          </div>
+          <div class="row px-4 mt-3">
+            <div class="col-12">
+              <h6 class="mb-2">Multi-plot Selection:</h6>
+              <div class="btn-group" id="plot-selection" role="group" aria-label="Plot selection">
+                <input type="radio" class="btn-check" name="plot" id="Plot 1" value="Plot 1" checked>
+                <label class="btn btn-outline-primary" for="Plot 1">Plot 1</label>
+                <input type="radio" class="btn-check" name="plot" id="add_plot" value="+">
+                <label class="btn btn-outline-primary" for="add_plot">+</label>
+              </div>
+            </div>
+          </div>
+          <div class="row px-4 mt-3 mb-4">
+            <div class="col-md-3">
+              <div class="card">
+                <div class="card-body">
+                  <h6 class="mb-3">Metrics</h6>
+                  <div class="btn-group" id="mean-std-selection" role="group" aria-label="Mean and Std selection">
+                    <input type="checkbox" class="btn-check" id="mean" value="Mean" name="Mean">
+                    <label class="btn btn-outline-primary" for="mean" data-bs-toggle="tooltip" data-bs-placement="top" title="The moving average of all data points">
+                      Mean
+                    </label>
+                    <input type="checkbox" class="btn-check" id="std" value="Std" name="Std">
+                    <label class="btn btn-outline-primary" for="std" data-bs-toggle="tooltip" data-bs-placement="top" title="A measure of how dispersed the data points are in relation to the mean">
+                      Std
+                    </label>
+                  </div>
+                  <div class="btn-group-horizontal w-100 mt-3 d-flex flex-wrap" id="slice-selection" role="group" aria-label="Metric selection">
+                    {% for metric, tooltip in comp.metric_cards.metrics|zip(comp.metric_cards.tooltips) %}
+                      <input type="radio" class="btn-check" name="metric" id="{{ metric }}" value="{{ metric }}" {% if loop.first %}checked{% endif %}>
+                      <label class="btn btn-outline-primary m-1" for="{{ metric }}" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ tooltip }}">
+                        {{ metric|regex_replace('\((.*?)\)', '\1')|regex_replace('(?<!^)(?=[A-Z][a-z])', ' ') }}
+                      </label>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+              {% for slice, values in comp.metric_cards.slices|zip(comp.metric_cards.values) %}
+                <div class="card mt-3">
+                  <div class="card-body">
+                    <h6 class="mb-3">{{ slice|title }}</h6>
+                    <div class="btn-group-horizontal w-100 d-flex flex-wrap" id="slice-selection" role="group" aria-label="{{ slice }} selection">
+                      <input type="radio" class="btn-check" name="{{ slice }}" id="overall_{{ slice }}" value="overall_{{ slice }}" checked>
+                      <label class="btn btn-outline-primary m-1" for="overall_{{ slice }}">All</label>
+                      {% for value in values %}
+                        <input type="radio" class="btn-check" name="{{ slice }}" id="{{ value }}" value="{{ value }}">
+                        <label class="btn btn-outline-primary m-1" for="{{ value }}">
+                          {{ value|regex_replace('\((.*?)\)', '\1')|regex_replace('(?<!^)(?=[A-Z][a-z])', ' ') }}
+                        </label>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+            <div class="col-md-9">
+              <div class="card">
+                <div class="card-body">
+                  <div id="plot" style="height: 400px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro render_overview(name, comp) %}
+<div class="container-fluid py-4">
+  <div class="row">
+    {{ render_perf(name, comp) }}
+  </div>
+  <div class="row mt-4">
+    {{ render_perf_over_time(name, comp) }}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro render_objects(section) %}
+{% for name, object in section %}
+  {% if name == "performance_metrics" %} {# do nothing #}
+  {% elif object.__class__.__name__ == "GraphicsCollection" %}
+    <div class="card card-plain mx-4 mt-4 bg-gray-200">
+      <div class="card-header pb-0 p-3 bg-gray-200">
+        <h6 class="mb-0">{{ name|regex_replace('_+', ' ')|title }}</h6>
+      </div>
+      <div class="card-body p-3">
+        {{ render_graphics(object.collection) }}
+      </div>
+    </div>
+  {% else %}
+    {% if (object is list) and object|length != 0 %}
+      <div class="card card-plain mx-4 mt-4 bg-gray-200">
+        <div class="card-header pb-0 p-3 bg-gray-200">
+          <h6 class="mb-0">{{ name|regex_replace('_+', ' ')|title }}</h6>
+        </div>
+        <div class="card-body p-3">
+          {% for objects in object %}
+            <ul class="list-group list-group-flush">
+              {{ render_if_exist_list(objects) }}
+            </ul>
+          {% endfor %}
+        </div>
+      </div>
+    {% elif (object is string) or (object is number) or (object is boolean) %}
+      <div class="card card-plain mx-4 mt-4 bg-gray-200">
+        <div class="card-header pb-0 p-3 bg-gray-200">
+          <h6 class="mb-0">{{ name|title|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h6>
+        </div>
+        <div class="card-body p-3 bg-gray-200">
+          <p class="mb-0">{{ object }}</p>
+        </div>
+      </div>
+    {% elif (object is None) or (object is empty) %}
+      {# Do nothing for empty objects #}
+    {% else %}
+      <div class="card card-plain mx-4 mt-4 bg-gray-200">
+        <div class="card-header pb-0 p-3 bg-gray-200">
+          <h6 class="mb-0">{{ name|regex_replace('_+', ' ')|title }}</h6>
+        </div>
+        <div class="card-body p-3 bg-gray-200">
+          <ul class="list-group list-group-flush">
+            {{render_if_exist_list(object)}}
+          </ul>
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
+{% endfor %}
+{% endmacro %}
+
+
+{% macro render_section(model_card, name, section) %}
+{% if section is not empty %}
+  <div class="container-fluid py-4" id="{{ name }}">
+    <div class="row">
+      <div class="col-12">
+        <div class="card my-4 bg-gray-200">
+          <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+            <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+              <h6 class="text-white text-capitalize ps-3">{{ section.__class__.__name__|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</h6>
+            </div>
+          </div>
+          <div class="card-body px-0 pb-2">
+            {% if section.__class__.__name__ == "Datasets" %}
+              {% for dataset in section.data %}
+                {{ render_objects(dataset) }}
+              {% endfor %}
+              {# Display global plots from GraphicsCollection in Datasets, temporary fix #}
+              {% if section is hasattr "graphics" %}
+                <div class="card card-plain mx-4 mt-4">
+                  <h3>{{ "Graphics" }}</h3>
+                  {{ render_if_exist_list(section.graphics) }}
+                </div>
+              {% endif %}
+            {% elif section.__class__.__name__ == "QuantitativeAnalysis" %}
+              <div class="metric-cards-container mx-auto">
+                <div class="row g-4">
+                  {% for metric_card in model_card.overview.metric_cards.collection %}
+                    {% if metric_card.slice == 'overall' %}
+                      <div class="col-xl-3 col-md-6 col-sm-12">
+                        {{ render_metric_card(metric_card, loop.index-1) }}
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+            {% else %}
+              {{ render_objects(section) }}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+{% endmacro %}
+
+
+{% macro render_sidebar(model_card) %}
+<aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3   bg-gradient-dark" id="sidenav-main">
+  <div class="sidenav-header">
+    <i class="fas fa-times p-3 cursor-pointer text-white opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
+    <a class="navbar-brand m-0" href="#">
+      <span class="ms-1 font-weight-bold text-white">{{ model_card.model_details.name }}</span>
+    </a>
+  </div>
+  <hr class="horizontal light mt-0 mb-2">
+  <div class="collapse navbar-collapse  w-auto " id="sidenav-collapse-main">
+    <ul class="navbar-nav">
+      {% for name, section in model_card %}
+        {% if section is not empty %}
+          <li class="nav-item">
+            <a class="nav-link text-white" href="#{{ name }}">
+              <span class="nav-link-text ms-1">{{ section.__class__.__name__|regex_replace('(?<!^)(?=[A-Z])', ' ') }}</span>
+            </a>
+          </li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </div>
+</aside>
+{% endmacro %}

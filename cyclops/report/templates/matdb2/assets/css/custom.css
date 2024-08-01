@@ -1,0 +1,185 @@
+.btn-check:checked + .btn-outline-primary, 
+.btn-check:active + .btn-outline-primary, 
+.btn-check:hover + .btn-outline-primary {
+    color: #fff;
+    background-color: #e91e63;
+    border-color: #e91e63;
+}
+
+.btn-outline-primary {
+    color: #344767;
+    border-color: #d2d6da;
+}
+
+.btn-outline-primary:hover {
+    color: #fff;
+    background-color: #e91e63;
+    border-color: #e91e63;
+}
+
+.btn-group-horizontal .btn {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px; /* Adjust this value as needed */
+    text-align: center;
+    padding: 0.375rem 0.75rem;
+    line-height: 1.5;
+}
+  
+  /* For smaller screens, you might want to adjust the max-width */
+@media (max-width: 768px) {
+    .btn-group-horizontal .btn {
+      max-width: 120px;
+    }
+}
+  
+  /* If you want to show the full text on hover */
+.btn-group-horizontal .btn:hover {
+    overflow: visible;
+    white-space: normal;
+    z-index: 1;
+}
+  
+@media (min-width: 768px) {
+    .btn-group-horizontal .btn {
+      max-width: calc(33.333% - 0.5rem);  /* Adjust as needed for larger screens */
+    }
+}
+
+  /* Multi-plot selection */
+#plot-selection {
+    display: inline-flex;
+    width: auto;
+}
+  
+#plot-selection .btn {
+    flex: 0 0 auto;
+}
+
+  
+/* Metrics buttons */
+#slice-selection {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+}
+  
+#slice-selection .btn {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+  
+#slice-selection .btn-group {
+    flex: 0 0 auto;
+}
+
+/* General button styling */
+.btn-outline-primary {
+    color: #e91e63;
+    border-color: #e91e63;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-check:checked + .btn-outline-primary {
+    background-color: #e91e63;
+    border-color: #e91e63;
+    color: #fff;
+}
+
+#plot-selection {
+  display: inline-flex;
+  overflow: hidden;
+  border-radius: 0.25rem;
+}
+
+#plot-selection .btn {
+  border: 1px solid #ced4da;
+  background-color: #f8f9fa;
+  color: #495057;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  transition: all 0.15s ease-in-out;
+}
+
+#mean-std-selection .btn {
+    border: 1px solid #ced4da;
+    background-color: #f8f9fa;
+    color: #495057;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1.5;
+    transition: all 0.15s ease-in-out;
+}
+
+#plot-selection .btn .delete-btn {
+    position: relative;
+    padding-right: 30px !important; /* Increase right padding to make room for larger delete button */
+}
+  
+#plot-selection .btn.delete-btn {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    font-size: 20px; /* Increase font size */
+    line-height: 1;
+    padding: 5px; /* Add some padding to increase hitbox */
+    margin: 0;
+    cursor: pointer;
+    opacity: 0.7; /* Make it slightly transparent by default */
+    transition: opacity 0.2s;
+}
+  
+#plot-selection .btn .delete-btn:hover {
+    opacity: 1; /* Full opacity on hover */
+  }
+
+.metric-cards-container {
+    max-width: 1400px; /* Adjust this value as needed */
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 15px;
+  }
+
+  .metric-cards-container .row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .metric-cards-container .col-xl-3,
+  .metric-cards-container .col-md-6,
+  .metric-cards-container .col-sm-12 {
+    display: flex;
+    padding: 10px;
+  }
+
+  .metric-card-wrapper {
+    max-width: 400px; /* Adjust this value as needed */
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 1200px) {
+    .metric-card-wrapper {
+      max-width: 100%;
+    }
+  }
+
+  .metric-card-wrapper:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.14), 0 7px 10px -5px rgba(0, 0, 0, 0.4);
+  }
+
+  .metric-card-wrapper .card {
+    transition: all 0.3s ease;
+  }
+
+  .metric-card-wrapper:hover .card {
+    box-shadow: 0 14px 26px -12px rgba(156, 39, 176, 0.42), 0 4px 23px 0px rgba(0, 0, 0, 0.12), 0 8px 10px -5px rgba(156, 39, 176, 0.2);
+  }
