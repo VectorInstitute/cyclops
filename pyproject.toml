@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pycyclops"
-version = "0.2.9"
+version = "0.2.10"
 description = "Framework for healthcare ML implementation"
 authors = ["Vector AI Engineering <cyclops@vectorinstitute.ai>"]
 license = "Apache-2.0"
@@ -39,7 +39,7 @@ torchvision = { version = "^0.14.0", optional = true }
 torchxrayvision = { version = "^1.2.0", optional = true }
 xgboost = { version = "^1.5.2", optional = true }
 alibi = { version = "^0.9.4", optional = true, extras = ["shap"] }
-alibi-detect = { version = "^0.11.0", optional = true, extras = ["torch"] }
+alibi-detect = { version = "^0.12.0", optional = true, extras = ["torch"] }
 llvmlite = { version = "^0.40.0", optional = true }
 
 [tool.poetry.group.xgboost]
@@ -87,7 +87,7 @@ optional = true
 [tool.poetry.group.alibi-detect.dependencies]
 llvmlite = "^0.40.0"
 torch = "^1.11.0"
-alibi-detect = { version = "^0.11.0", extras = ["torch"] }
+alibi-detect = { version = "^0.12.0", extras = ["torch"] }
 
 [tool.poetry.group.test]
 optional = true
@@ -123,6 +123,7 @@ nbsphinx = "^0.9.3"
 ipython = "^8.8.0"
 ipykernel = "^6.23.0"
 kaggle = "^1.5.13"
+imbalanced-learn = "^0.12.0"
 furo = "^2024.01.29"
 
 [tool.poetry.group.dev]
@@ -141,16 +142,23 @@ mpi4py = {git = "https://github.com/mpi4py/mpi4py"}
 imbalanced-learn = "^0.12.0"
 pyperf = "^2.6.3"
 
-[tool.poetry.group.deploy]
+[tool.poetry.group.deploy_models]
 optional = true
 
-[tool.poetry.group.deploy.dependencies]
+[tool.poetry.group.deploy_models.dependencies]
 aiohttp = "^3.9.2"
 bentoml = { version = "1.2.5", extras = ["triton"] }
 torchxrayvision = "^1.2.1"
 kaggle = "^1.5.13"
 onnx = "^1.15.0"
 skl2onnx = "^1.16.0"
+
+[tool.poetry.group.deploy_report]
+optional = true
+
+[tool.poetry.group.deploy_report.dependencies]
+fastapi = "^0.111.0"
+uvicorn = "^0.30.1"
 
 [tool.poetry.extras]
 torch = ["torch"]
@@ -188,9 +196,6 @@ extra_checks = true
 [tool.ruff]
 include = ["*.py", "pyproject.toml", "*.ipynb"]
 line-length = 88
-exclude = [
-    "nbs",
-]
 
 [tool.ruff.format]
 quote-style = "double"

@@ -34,7 +34,7 @@ args = parser.parse_args()
 
 report = ModelCardReport()
 
-data_dir = "/mnt/data/clinical_datasets/NIHCXR"
+data_dir = "/mnt/data2/clinical_datasets/NIHCXR"
 nih_ds = load_nihcxr(data_dir)[args.split]
 
 # select a subset of the data
@@ -224,23 +224,33 @@ report.log_plotly_figure(
 results_flat = {}
 for slice_, metrics in nih_eval_results_age["model_for_predictions.densenet"].items():
     for name, metric in metrics.items():
-        results_flat[f"{slice_}/{name}"] = metric.mean()
-        for itr, m in enumerate(metric):
-            if slice_ == "overall":
-                results_flat[f"pathology:{pathologies[itr]}/{name}"] = m
-            else:
-                results_flat[f"{slice_}&pathology:{pathologies[itr]}/{name}"] = m
+        if "sample_size" in name:
+            results_flat[f"{slice_}/{name}"] = metric
+        else:
+            results_flat[f"{slice_}/{name}"] = metric.mean()
+            for itr, m in enumerate(metric):
+                if slice_ == "overall":
+                    results_flat[f"pathology:{pathologies[itr]}/{name}"] = m
+                else:
+                    results_flat[f"{slice_}&pathology:{pathologies[itr]}/{name}"] = m
 for slice_, metrics in nih_eval_results_gender[
     "model_for_predictions.densenet"
 ].items():
     for name, metric in metrics.items():
-        results_flat[f"{slice_}/{name}"] = metric.mean()
-        for itr, m in enumerate(metric):
-            if slice_ == "overall":
-                results_flat[f"pathology:{pathologies[itr]}/{name}"] = m
-            else:
-                results_flat[f"{slice_}&pathology:{pathologies[itr]}/{name}"] = m
-
+        if "sample_size" in name:
+            results_flat[f"{slice_}/{name}"] = metric
+        else:
+            results_flat[f"{slice_}/{name}"] = metric.mean()
+            for itr, m in enumerate(metric):
+                if slice_ == "overall":
+                    results_flat[f"pathology:{pathologies[itr]}/{name}"] = m
+                else:
+                    results_flat[f"{slice_}&pathology:{pathologies[itr]}/{name}"] = m
+sample_sizes = {
+    key.split("/")[0]: value
+    for key, value in results_flat.items()
+    if "sample_size" in key.split("/")[1]
+}
 for name, metric in results_flat.items():
     split, name = name.split("/")  # noqa: PLW2901
     descriptions = {
@@ -249,15 +259,26 @@ for name, metric in results_flat.items():
         "MultilabelSensitivity": "The proportion of actual positive instances that are correctly predicted. Also known as recall or true positive rate.",
         "MultilabelSpecificity": "The proportion of actual negative instances that are correctly predicted.",
     }
-    report.log_quantitative_analysis(
-        "performance",
-        name=name,
-        value=metric.tolist() if isinstance(metric, np.generic) else metric,
-        description=descriptions[name],
-        metric_slice=split,
-        pass_fail_thresholds=0.7,
-        pass_fail_threshold_fns=lambda x, threshold: bool(x >= threshold),
-    )
+    # remove the "&pathology" from the split name
+    # check if splits contains "pathology:{pathology}" and remove it
+    if "pathology" in split:
+        if len(split.split("&")) == 1:
+            sample_size_split = "overall"
+        else:
+            sample_size_split = "&".join(split.split("&")[:-1])
+    else:
+        sample_size_split = split
+    if name != "sample_size":
+        report.log_quantitative_analysis(
+            "performance",
+            name=name,
+            value=metric.tolist() if isinstance(metric, np.generic) else metric,
+            description=descriptions.get(name),
+            metric_slice=split,
+            pass_fail_thresholds=0.7,
+            pass_fail_threshold_fns=lambda x, threshold: bool(x >= threshold),
+            sample_size=sample_sizes[sample_size_split],
+        )
 
 
 # model details for NIH Chest X-Ray model
@@ -362,6 +383,6 @@ report.log_fairness_assessment(
 )
 
 report_path = report.export(
-    output_filename=f"nihcxr_report_periodic_{args.synthetic_timestamp}.html",
+    output_filename="nihcxr_report_periodic.html",
     synthetic_timestamp=args.synthetic_timestamp,
 )

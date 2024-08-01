@@ -1,62 +1,48 @@
-name: integration tests
+name: unit tests
 
 on:
   push:
     branches:
       - main
     paths:
-      - .pre-commit-config.yaml
       - .github/workflows/unit_tests.yml
       - .github/workflows/integration_tests.yml
       - '**.py'
-      - '**.ipynb'
       - '**.html'
       - '**.jinja'
       - '**.js'
       - poetry.lock
       - pyproject.toml
-      - '**.rst'
-      - '**.md'
-      - docs/cyclops-webpage
   pull_request:
     branches:
       - main
     paths:
-      - .pre-commit-config.yaml
       - .github/workflows/unit_tests.yml
       - .github/workflows/integration_tests.yml
       - '**.py'
-      - '**.ipynb'
       - '**.html'
       - '**.jinja'
       - '**.js'
       - poetry.lock
       - pyproject.toml
-      - '**.rst'
-      - '**.md'
-      - docs/cyclops-webpage
 
 jobs:
-  integration-tests:
-    runs-on: [self-hosted, gpu, db, cyclops]
+  build:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.7
-      - name: Install poetry
+      - name: Install dependencies, run unit tests and coverage report
         run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
       - uses: actions/setup-python@v5.1.1
         with:
           python-version: '3.10'
           cache: 'poetry'
-      - name: Install dependencies and check code
-        run: |
-          export PATH=/opt/openmpi-4.1.5/bin:$PATH
-          export LD_LIBRARY_PATH=/opt/openmpi-4.1.5/lib:$LD_LIBRARY_PATH
-          ompi_info
+      - run: |
+          python3 -m pip install --upgrade pip && python3 -m pip install poetry
           poetry env use '3.10'
           source $(poetry env info --path)/bin/activate
-          env MPICC=/opt/openmpi-4.1.5/bin/mpicc poetry install --with dev,test --all-extras
-          mpirun -n 2 python -m pytest --only-mpi
-          pytest -m integration_test --cov-report term --cov-report xml:./coverage.xml --cov=cyclops -n auto --dist loadscope
+          poetry install --with test --all-extras
+          pytest -m "not integration_test" --cov-report term --cov-report xml:./coverage.xml --cov=cyclops -n auto --dist loadscope
       - name: Upload coverage to Codecov
         uses: Wandalen/wretry.action@v3.5.0
         with:

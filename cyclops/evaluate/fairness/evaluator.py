@@ -260,7 +260,7 @@ def evaluate_fairness(  # noqa: PLR0912
             for prediction_column in fmt_prediction_columns:
                 results.setdefault(prediction_column, {})
                 results[prediction_column].setdefault(slice_name, {}).update(
-                    {"Group Size": len(sliced_dataset)},
+                    {"sample_size": len(sliced_dataset)},
                 )
 
                 pred_result = _get_metric_results_for_prediction_and_slice(
@@ -966,7 +966,7 @@ def _compute_parity_metrics(
         parity_results[key] = {}
         for slice_name, slice_result in prediction_result.items():
             for metric_name, metric_value in slice_result.items():
-                if metric_name == "Group Size":
+                if metric_name == "sample_size":
                     continue
 
                 # add 'Parity' to the metric name before @threshold, if specified

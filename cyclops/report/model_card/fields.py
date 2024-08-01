@@ -380,6 +380,11 @@ class PerformanceMetric(
         default_factory=list,
     )
 
+    sample_size: Optional[StrictInt] = Field(
+        None,
+        description="The sample size used to compute this metric.",
+    )
+
 
 class User(
     BaseModelCardField,
@@ -597,6 +602,11 @@ class MetricCard(
     timestamps: Optional[List[StrictStr]] = Field(
         None,
         description="Timestamps for each point in the history.",
+    )
+
+    sample_sizes: Optional[List[int]] = Field(
+        None,
+        description="Sample sizes for each point in the history.",
     )
 
 

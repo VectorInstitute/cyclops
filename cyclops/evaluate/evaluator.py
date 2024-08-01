@@ -311,6 +311,7 @@ def _compute_metrics(
                 model_name: str = "model_for_%s" % prediction_column
                 results.setdefault(model_name, {})
                 results[model_name][slice_name] = metric_output
+                results[model_name][slice_name]["sample_size"] = len(sliced_dataset)
 
         set_decode(dataset, True)  # restore decoding features
 

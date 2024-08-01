@@ -6,10 +6,9 @@
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pycyclops)
 [![code checks](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/code_checks.yml)
 [![integration tests](https://github.com/VectorInstitute/cyclops/actions/workflows/integration_tests.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/integration_tests.yml)
-[![docs](https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/docs_deploy.yml)
+[![docs](https://github.com/VectorInstitute/cyclops/actions/workflows/docs.yml/badge.svg)](https://github.com/VectorInstitute/cyclops/actions/workflows/docs.yml)
 [![codecov](https://codecov.io/gh/VectorInstitute/cyclops/branch/main/graph/badge.svg)](https://codecov.io/gh/VectorInstitute/cyclops)
 [![docker](https://github.com/VectorInstitute/cyclops/actions/workflows/docker.yml/badge.svg)](https://hub.docker.com/r/vectorinstitute/cyclops)
-[![license](https://img.shields.io/github/license/VectorInstitute/cyclops.svg)](https://github.com/VectorInstitute/cyclops/blob/main/LICENSE)
 
 ``cyclops`` is a toolkit for facilitating research and deployment of ML models for healthcare. It provides a few high-level APIs namely:
 

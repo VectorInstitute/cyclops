@@ -2,6 +2,8 @@
 
 from unittest import TestCase
 
+import numpy as np
+
 from cyclops.report import ModelCardReport
 from cyclops.report.model_card.sections import ModelDetails
 
@@ -349,6 +351,7 @@ class TestModelCardReport(TestCase):
             decision_threshold=0.7,
             pass_fail_thresholds=[0.6, 0.65, 0.7],
             pass_fail_threshold_fns=[lambda x, t: x >= t for _ in range(3)],
+            sample_size=100,
         )
         self.model_card_report.log_quantitative_analysis(
             analysis_type="performance",
@@ -359,8 +362,119 @@ class TestModelCardReport(TestCase):
             description="F1 score of the model on the test set",
             pass_fail_thresholds=[0.9, 0.85, 0.8],
             pass_fail_threshold_fns=[lambda x, t: x >= t for _ in range(3)],
+            sample_size=100,
         )
         self.model_card_report.log_owner(name="John Doe")
 
         report_path = self.model_card_report.export(interactive=False, save_json=False)
         assert isinstance(report_path, str)
+
+
+def test_log_performance_metrics():
+    """Test log_performance_metrics."""
+    report = ModelCardReport()
+
+    # Mock results
+    results = {
+        "overall/BinaryAccuracy": np.array(0.85),
+        "overall/BinaryPrecision": np.array(0.78),
+        "overall/BinaryRecall": np.array(0.92),
+        "overall/BinaryF1Score": np.array(0.84),
+        "overall/BinaryAUROC": np.array(0.91),
+        "overall/BinaryAveragePrecision": np.array(0.88),
+        "overall/sample_size": 1000,
+        "slice1/BinaryAccuracy": np.array(0.82),
+        "slice1/BinaryPrecision": np.array(0.75),
+        "slice1/BinaryRecall": np.array(0.89),
+        "slice1/BinaryF1Score": np.array(0.81),
+        "slice1/BinaryAUROC": np.array(0.88),
+        "slice1/BinaryAveragePrecision": np.array(0.85),
+        "slice1/sample_size": 500,
+    }
+
+    # Mock metric descriptions
+    metric_descriptions = {
+        "BinaryAccuracy": "The proportion of all instances that are correctly predicted.",
+        "BinaryPrecision": "The proportion of predicted positive instances that are correctly predicted.",
+        "BinaryRecall": "The proportion of actual positive instances that are correctly predicted.",
+        "BinaryF1Score": "The harmonic mean of precision and recall.",
+        "BinaryAUROC": "The area under the ROC curve.",
+        "BinaryAveragePrecision": "The area under the precision-recall curve.",
+    }
+
+    # Test with a single threshold
+    report.log_performance_metrics(
+        results, metric_descriptions, pass_fail_thresholds=0.8
+    )
+
+    # Check if metrics were logged correctly
+    assert report._model_card.quantitative_analysis is not None
+    assert (
+        len(report._model_card.quantitative_analysis.performance_metrics) == 12
+    )  # 6 metrics * 2 slices
+
+    # Check a few specific metrics
+    metrics = report._model_card.quantitative_analysis.performance_metrics
+
+    overall_accuracy = next(
+        m for m in metrics if m.type == "BinaryAccuracy" and m.slice == "overall"
+    )
+    assert overall_accuracy.value == 0.85
+    assert (
+        overall_accuracy.description
+        == "The proportion of all instances that are correctly predicted."
+    )
+    assert overall_accuracy.sample_size == 1000
+    assert overall_accuracy.tests[0].threshold == 0.8
+    assert overall_accuracy.tests[0].passed
+
+    slice1_precision = next(
+        m for m in metrics if m.type == "BinaryPrecision" and m.slice == "slice1"
+    )
+    assert slice1_precision.value == 0.75
+    assert (
+        slice1_precision.description
+        == "The proportion of predicted positive instances that are correctly predicted."
+    )
+    assert slice1_precision.sample_size == 500
+    assert slice1_precision.tests[0].threshold == 0.8
+    assert not slice1_precision.tests[0].passed
+
+    # Reset the report
+    report = ModelCardReport()
+
+    # Test with per-metric thresholds
+    pass_fail_thresholds = {
+        "overall/BinaryAccuracy": 0.9,
+        "overall/BinaryPrecision": 0.75,
+        "slice1/BinaryRecall": 0.85,
+    }
+    report.log_performance_metrics(
+        results, metric_descriptions, pass_fail_thresholds=pass_fail_thresholds
+    )
+
+    metrics = report._model_card.quantitative_analysis.performance_metrics
+
+    overall_accuracy = next(
+        m for m in metrics if m.type == "BinaryAccuracy" and m.slice == "overall"
+    )
+    assert overall_accuracy.tests[0].threshold == 0.9
+    assert not overall_accuracy.tests[0].passed
+
+    overall_precision = next(
+        m for m in metrics if m.type == "BinaryPrecision" and m.slice == "overall"
+    )
+    assert overall_precision.tests[0].threshold == 0.75
+    assert overall_precision.tests[0].passed
+
+    slice1_recall = next(
+        m for m in metrics if m.type == "BinaryRecall" and m.slice == "slice1"
+    )
+    assert slice1_recall.tests[0].threshold == 0.85
+    assert slice1_recall.tests[0].passed
+
+    slice1_f1 = next(
+        m for m in metrics if m.type == "BinaryF1Score" and m.slice == "slice1"
+    )
+    assert slice1_f1.tests[0].threshold == 0.7  # Default threshold
+    assert slice1_f1.tests[0].passed
