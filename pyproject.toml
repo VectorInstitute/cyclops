@@ -34,8 +34,8 @@ hydra-core = "^1.2.0"
 
 # Optional dependencies
 monai = { version = "^1.3.0", extras = ["itk"], optional = true }
-torch = { version = "^1.11.0", optional = true }
-torchvision = { version = "^0.14.0", optional = true }
+torch = { version = "^2.0.0", optional = true }
+torchvision = { version = "^0.15.0", optional = true }
 torchxrayvision = { version = "^1.2.0", optional = true }
 xgboost = { version = "^1.5.2", optional = true }
 alibi = { version = "^0.9.4", optional = true, extras = ["shap"] }
@@ -52,26 +52,26 @@ xgboost = "^1.5.2"
 optional = true
 
 [tool.poetry.group.torch.dependencies]
-torch = "^1.11.0"
+torch = "^2.0.0"
 
 [tool.poetry.group.torchvision]
 optional = true
 
 [tool.poetry.group.torchvision.dependencies]
-torchvision = "^0.14.0"
+torchvision = "^0.15.0"
 
 [tool.poetry.group.torchxrayvision]
 optional = true
 
 [tool.poetry.group.torchxrayvision.dependencies]
-torch = "^1.11.0"
+torch = "^2.0.0"
 torchxrayvision = "^1.2.0"
 
 [tool.poetry.group.monai]
 optional = true
 
 [tool.poetry.group.monai.dependencies]
-torch = "^1.11.0"
+torch = "^2.0.0"
 monai = "^1.1.0"
 
 [tool.poetry.group.alibi]
@@ -86,7 +86,7 @@ optional = true
 
 [tool.poetry.group.alibi-detect.dependencies]
 llvmlite = "^0.40.0"
-torch = "^1.11.0"
+torch = "^2.0.0"
 alibi-detect = { version = "^0.12.0", extras = ["torch"] }
 
 [tool.poetry.group.test]
