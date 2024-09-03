@@ -51,6 +51,6 @@ jobs:
             token: ${{ secrets.CODECOV_TOKEN }}
             file: ./coverage.xml
             name: codecov-umbrella
-            fail_ci_if_error: true
+            fail_ci_if_error: false
           attempt_limit: 5
           attempt_delay: 30000
