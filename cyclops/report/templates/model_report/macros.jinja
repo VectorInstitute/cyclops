@@ -28,7 +28,7 @@
     <li>
       {{ values }}
     </li>
-    {% else %}
+    {% elif values is not none %}
     <li>
       {% for name, value in values %}
         {% if value %}
