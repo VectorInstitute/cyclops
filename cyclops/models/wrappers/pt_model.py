@@ -1309,7 +1309,7 @@ class PTModel(ModelWrapper):
         if include_lr_scheduler:
             state_dict["lr_scheduler"] = self.lr_scheduler_.state_dict()  # type: ignore[attr-defined]
 
-        epoch = kwargs.get("epoch", None)
+        epoch = kwargs.get("epoch")
         if epoch is not None:
             filename, extension = os.path.basename(filepath).split(".")
             filepath = join(
