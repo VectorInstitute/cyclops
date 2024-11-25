@@ -27,7 +27,7 @@ jobs:
   run-code-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4.2.0
+      - uses: actions/checkout@v4.2.2
       - name: Install and configure Poetry
         uses: snok/install-poetry@v1
         with:
