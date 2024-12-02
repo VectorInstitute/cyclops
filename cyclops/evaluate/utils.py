@@ -159,9 +159,11 @@ def get_columns_as_array(
     if isinstance(columns, str):
         columns = [columns]
 
-    with dataset.formatted_as("arrow", columns=columns, output_all_columns=True) if (
-        isinstance(dataset, Dataset) and dataset.format != "arrow"
-    ) else nullcontext():
+    with (
+        dataset.formatted_as("arrow", columns=columns, output_all_columns=True)
+        if (isinstance(dataset, Dataset) and dataset.format != "arrow")
+        else nullcontext()
+    ):
         out_arr = squeeze_all(
             xp.stack(
                 [xp.asarray(dataset[col].to_pylist()) for col in columns], axis=-1
