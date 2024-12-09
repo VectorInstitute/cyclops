@@ -209,11 +209,14 @@ class MedicalImage(Image):  # type: ignore
                     use_auth_token = token_per_repo_id.get(repo_id)
                 except ValueError:
                     use_auth_token = None
-                with xopen(
-                    path,
-                    "rb",
-                    use_auth_token=use_auth_token,
-                ) as file_obj, BytesIO(file_obj.read()) as buffer:
+                with (
+                    xopen(
+                        path,
+                        "rb",
+                        use_auth_token=use_auth_token,
+                    ) as file_obj,
+                    BytesIO(file_obj.read()) as buffer,
+                ):
                     image, metadata = self._read_file_from_bytes(buffer)
                     metadata["filename_or_obj"] = path
 
