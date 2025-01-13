@@ -825,8 +825,7 @@ def filter_string_contains(
     example_values = pa.array(examples[column_name])
     if not pa.types.is_string(example_values.type):
         raise ValueError(
-            "Expected string feature, but got feature of type "
-            f"{example_values.type}.",
+            f"Expected string feature, but got feature of type {example_values.type}.",
         )
 
     # get all the values that contain the given substring

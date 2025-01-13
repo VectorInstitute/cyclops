@@ -39,13 +39,11 @@ else:
 LOGGER = logging.getLogger(__name__)
 setup_logging(print_level="WARN", logger=LOGGER)
 _xgboost_unavailable_message = (
-    "The XGBoost library is required to use the `XGBClassifier` model. "
-    "Please install it as an extra using `python3 -m pip install 'pycyclops[xgboost]'`\
+    "The XGBoost library is required to use the `XGBClassifier` model. Please install it as an extra using `python3 -m pip install 'pycyclops[xgboost]'`\
         or using `python3 -m pip install xgboost`."
 )
 _torchxrayvision_unavailable_message = (
-    "The torchxrayvision library is required to use the `densenet` or `resnet` model. "
-    "Please install it as an extra using `python3 -m pip install 'pycyclops[torchxrayvision]'`\
+    "The torchxrayvision library is required to use the `densenet` or `resnet` model. Please install it as an extra using `python3 -m pip install 'pycyclops[torchxrayvision]'`\
         or using `python3 -m pip install torchxrayvision`."
 )
 _torch_unavailable_message = (

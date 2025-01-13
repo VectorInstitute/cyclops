@@ -304,9 +304,9 @@ def get_metrics_trends(
         slice_names=slice_names,
         metric_names=metric_names,
     )
-    assert (
-        len(performance_history) > 0
-    ), "No performance history found. Check slice and metric names."
+    assert len(performance_history) > 0, (
+        "No performance history found. Check slice and metric names."
+    )
     performance_recent = []
     for metric_name, metric_value in flat_results.items():
         name_split = metric_name.split("/")
@@ -323,9 +323,9 @@ def get_metrics_trends(
         slice_names=slice_names,
         metric_names=metric_names,
     )
-    assert (
-        len(performance_recent) > 0
-    ), "No performance metrics found. Check slice and metric names."
+    assert len(performance_recent) > 0, (
+        "No performance metrics found. Check slice and metric names."
+    )
     today = dt_date.today().strftime("%Y-%m-%d")
     now = dt_datetime.now().strftime("%H-%M-%S")
     if keep_timestamps:

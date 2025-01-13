@@ -566,17 +566,17 @@ class PrecisionRecallCurve(
                 pos_label=pos_label,
             )
         if task == "multiclass":
-            assert (
-                isinstance(num_classes, int) and num_classes > 0
-            ), "Number of classes must be a positive integer."
+            assert isinstance(num_classes, int) and num_classes > 0, (
+                "Number of classes must be a positive integer."
+            )
             return MulticlassPrecisionRecallCurve(
                 num_classes=num_classes,
                 thresholds=thresholds,
             )
         if task == "multilabel":
-            assert (
-                isinstance(num_labels, int) and num_labels > 0
-            ), "Number of labels must be a positive integer."
+            assert isinstance(num_labels, int) and num_labels > 0, (
+                "Number of labels must be a positive integer."
+            )
             return MultilabelPrecisionRecallCurve(
                 num_labels=num_labels,
                 thresholds=thresholds,

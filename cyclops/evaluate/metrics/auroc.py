@@ -336,18 +336,18 @@ class AUROC(Metric, registry_key="auroc", force_register=True):
         if task == "binary":
             return BinaryAUROC(max_fpr=max_fpr, thresholds=thresholds)
         if task == "multiclass":
-            assert (
-                isinstance(num_classes, int) and num_classes > 0
-            ), "Number of classes must be a positive integer."
+            assert isinstance(num_classes, int) and num_classes > 0, (
+                "Number of classes must be a positive integer."
+            )
             return MulticlassAUROC(
                 num_classes=num_classes,
                 thresholds=thresholds,
                 average=average,  # type: ignore
             )
         if task == "multilabel":
-            assert (
-                isinstance(num_labels, int) and num_labels > 0
-            ), "Number of labels must be a positive integer."
+            assert isinstance(num_labels, int) and num_labels > 0, (
+                "Number of labels must be a positive integer."
+            )
             return MultilabelAUROC(
                 num_labels=num_labels,
                 thresholds=thresholds,

@@ -170,8 +170,7 @@ def _load_data(
         if split is None:
             split = choose_split(dataset, **load_dataset_kwargs)
             LOGGER.warning(
-                "Got `split=None` but `dataset` is a string. "
-                "Using `split=%s` instead.",
+                "Got `split=None` but `dataset` is a string. Using `split=%s` instead.",
                 split,
             )
 

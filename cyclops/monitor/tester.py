@@ -1057,9 +1057,9 @@ class Detectron:
 
     def counts(self, record_type, max_ensemble_size=None) -> np.ndarray:
         """Get counts."""
-        assert (
-            max_ensemble_size is None or max_ensemble_size > 0
-        ), "max_ensemble_size must be positive or None"
+        assert max_ensemble_size is None or max_ensemble_size > 0, (
+            "max_ensemble_size must be positive or None"
+        )
         rec = self.get_record(record_type)
         counts = []
         for i in rec.seed.unique():

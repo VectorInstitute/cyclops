@@ -427,9 +427,9 @@ def precision(
             zero_division=zero_division,
         )
     if task == "multiclass":
-        assert (
-            isinstance(num_classes, int) and num_classes > 0
-        ), "Number of classes must be specified for multiclass classification."
+        assert isinstance(num_classes, int) and num_classes > 0, (
+            "Number of classes must be specified for multiclass classification."
+        )
         return multiclass_precision(
             target,
             preds,
@@ -439,9 +439,9 @@ def precision(
             zero_division=zero_division,
         )
     if task == "multilabel":
-        assert (
-            isinstance(num_labels, int) and num_labels > 0
-        ), "Number of labels must be specified for multilabel classification."
+        assert isinstance(num_labels, int) and num_labels > 0, (
+            "Number of labels must be specified for multilabel classification."
+        )
         return multilabel_precision(
             target,
             preds,
@@ -786,9 +786,9 @@ def recall(
             zero_division=zero_division,
         )
     if task == "multiclass":
-        assert (
-            isinstance(num_classes, int) and num_classes > 0
-        ), "Number of classes must be specified for multiclass classification."
+        assert isinstance(num_classes, int) and num_classes > 0, (
+            "Number of classes must be specified for multiclass classification."
+        )
         return multiclass_recall(
             target,
             preds,
@@ -798,9 +798,9 @@ def recall(
             zero_division=zero_division,
         )
     if task == "multilabel":
-        assert (
-            isinstance(num_labels, int) and num_labels > 0
-        ), "Number of labels must be specified for multilabel classification."
+        assert isinstance(num_labels, int) and num_labels > 0, (
+            "Number of labels must be specified for multilabel classification."
+        )
         return multilabel_recall(
             target,
             preds,
