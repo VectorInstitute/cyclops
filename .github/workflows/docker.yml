@@ -32,12 +32,12 @@ jobs:
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@906ecf0fc0a80f9110f79d9e6c04b1080f4a2621
+        uses: docker/metadata-action@8e1d5461f02b7886d3c1a774bfbd873650445aa2
         with:
           images: vectorinstitute/cyclops
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@48aba3b46d1b1fec4febb7c5d0c644b249a11355
+        uses: docker/build-push-action@67a2d409c0a876cbe6b11854e3e25193efe4e62d
         with:
           context: .
           file: ./Dockerfile
