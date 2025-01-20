@@ -1056,9 +1056,9 @@ def precision_recall_curve(
             pos_label=pos_label,
         )
     if task == "multiclass":
-        assert (
-            isinstance(num_classes, int) and num_classes > 0
-        ), "Number of classes must be a positive integer."
+        assert isinstance(num_classes, int) and num_classes > 0, (
+            "Number of classes must be a positive integer."
+        )
 
         return multiclass_precision_recall_curve(
             target,
@@ -1067,9 +1067,9 @@ def precision_recall_curve(
             thresholds=thresholds,
         )
     if task == "multilabel":
-        assert (
-            isinstance(num_labels, int) and num_labels > 0
-        ), "Number of labels must be a positive integer."
+        assert isinstance(num_labels, int) and num_labels > 0, (
+            "Number of labels must be a positive integer."
+        )
 
         return multilabel_precision_recall_curve(
             target,

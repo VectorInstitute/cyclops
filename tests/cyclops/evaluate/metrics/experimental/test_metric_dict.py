@@ -94,16 +94,16 @@ def test_metric_dict_adfix(prefix, postfix):
     # test __call__
     output = metrics(anp.asarray(1, dtype=anp.float32))
     for name in names:
-        assert (
-            name in output
-        ), f"`MetricDict` output does not contain metric {name} when called."
+        assert name in output, (
+            f"`MetricDict` output does not contain metric {name} when called."
+        )
 
     # test `compute`
     output = metrics.compute()
     for name in names:
-        assert (
-            name in output
-        ), f"`MetricDict` output does not contain metric {name} using the `compute` method."
+        assert name in output, (
+            f"`MetricDict` output does not contain metric {name} using the `compute` method."
+        )
 
     # test `clone`
     new_metrics = metrics.clone(prefix="new_")
@@ -112,9 +112,9 @@ def test_metric_dict_adfix(prefix, postfix):
         n[len(prefix) :] if prefix is not None else n for n in names
     ]
     for name in names:
-        assert (
-            f"new_{name}" in output
-        ), f"`MetricDict` output does not contain metric new_{name} when cloned."
+        assert f"new_{name}" in output, (
+            f"`MetricDict` output does not contain metric new_{name} when cloned."
+        )
 
     for k in new_metrics:
         assert "new_" in k

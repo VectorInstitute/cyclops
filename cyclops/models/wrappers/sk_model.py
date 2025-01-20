@@ -400,7 +400,7 @@ class SKModel:
             splits_mapping = {"train": "train"}
         if not hasattr(self.model_, "partial_fit"):
             raise AttributeError(
-                f"Model {self.model_name}" "does not have a `partial_fit` method.",
+                f"Model {self.model_name}does not have a `partial_fit` method.",
             )
         # Train data is a Hugging Face Dataset Dictionary.
         if isinstance(X, DatasetDict):
@@ -687,7 +687,7 @@ class SKModel:
             splits_mapping = {"test": "test"}
         if not hasattr(self.model_, "predict_proba"):
             raise AttributeError(
-                f"Model {self.model_name}" "does not have a `predict_proba` method.",
+                f"Model {self.model_name}does not have a `predict_proba` method.",
             )
         # Data is a Hugging Face Dataset Dictionary.
         if isinstance(X, DatasetDict):

@@ -150,7 +150,7 @@ def evaluate_fairness(  # noqa: PLR0912
     # input validation and formatting
     if not isinstance(dataset, Dataset):
         raise TypeError(
-            "Expected `dataset` to be of type `Dataset`, but got " f"{type(dataset)}.",
+            f"Expected `dataset` to be of type `Dataset`, but got {type(dataset)}.",
         )
     if array_lib not in _SUPPORTED_ARRAY_LIBS:
         raise NotImplementedError(f"The array library `{array_lib}` is not supported.")
@@ -520,8 +520,7 @@ def _validate_group_bins(
     for group, bins in group_bins.items():
         if not isinstance(bins, (list, int)):
             raise TypeError(
-                f"The bins for {group} must be a list or an integer. "
-                f"Got {type(bins)}.",
+                f"The bins for {group} must be a list or an integer. Got {type(bins)}.",
             )
 
         if isinstance(bins, int) and not 2 <= bins < len(unique_values[group]):

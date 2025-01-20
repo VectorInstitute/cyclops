@@ -60,7 +60,7 @@ class FeatureMeta:
         if kwargs[FEATURE_TYPE_ATTR] not in FEATURE_TYPES:
             raise ValueError(
                 f"""Feature type '{kwargs[FEATURE_TYPE_ATTR]}'
-                not in {', '.join(FEATURE_TYPES)}.""",
+                not in {", ".join(FEATURE_TYPES)}.""",
             )
 
         # Set attributes

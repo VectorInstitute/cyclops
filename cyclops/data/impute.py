@@ -304,7 +304,7 @@ class SeriesImputer:
             if imputefunc not in IMPUTEFUNCS:
                 raise ValueError(
                     f"""Imputefunc string {imputefunc} not supported.
-                    Supporting: {','.join(IMPUTEFUNCS)}""",
+                    Supporting: {",".join(IMPUTEFUNCS)}""",
                 )
             func = IMPUTEFUNCS[imputefunc]
         elif callable(imputefunc):

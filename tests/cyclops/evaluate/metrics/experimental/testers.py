@@ -85,9 +85,9 @@ def _class_impl_test(  # noqa: PLR0912
 
     t_size = target.shape[0]
     p_size = preds.shape[0]
-    assert (
-        p_size == t_size
-    ), f"`preds` and `target` have different number of samples: {p_size} and {t_size}."
+    assert p_size == t_size, (
+        f"`preds` and `target` have different number of samples: {p_size} and {t_size}."
+    )
     num_batches = p_size
 
     # instantiate metric
@@ -176,9 +176,9 @@ def _function_impl_test(
 
     t_size = target.shape[0]
     p_size = preds.shape[0]
-    assert (
-        p_size == t_size
-    ), f"`preds` and `target` have different number of samples: {p_size} and {t_size}."
+    assert p_size == t_size, (
+        f"`preds` and `target` have different number of samples: {p_size} and {t_size}."
+    )
 
     metric_args = metric_args or {}
     metric = partial(metric_function, **metric_args)

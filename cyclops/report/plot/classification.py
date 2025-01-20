@@ -86,13 +86,13 @@ class ClassificationPlotter(Plotter):
 
         """
         if class_names is not None:
-            assert (
-                len(class_names) == self.class_num
-            ), "class_names must be equal to class_num"
+            assert len(class_names) == self.class_num, (
+                "class_names must be equal to class_num"
+            )
         elif self.task_type == "multilabel":
-            class_names = [f"Label_{i+1}" for i in range(self.class_num)]
+            class_names = [f"Label_{i + 1}" for i in range(self.class_num)]
         else:
-            class_names = [f"Class_{i+1}" for i in range(self.class_num)]
+            class_names = [f"Class_{i + 1}" for i in range(self.class_num)]
         self.class_names = class_names
 
     def calibration(
@@ -257,7 +257,9 @@ class ClassificationPlotter(Plotter):
             == len(roc_curve.thresholds)
             == len(ppv)
             == len(npv)
-        ), "Length mismatch between ROC curve, PPV, NPV. All curves need to be computed using the same thresholds"
+        ), (
+            "Length mismatch between ROC curve, PPV, NPV. All curves need to be computed using the same thresholds"
+        )
         # Define hover template to show three decimal places
         hover_template = "Threshold: %{x:.3f}<br>Metric Value: %{y:.3f}<extra></extra>"
         # Create a subplot for each metric
@@ -397,16 +399,18 @@ class ClassificationPlotter(Plotter):
                 ),
             )
         else:
-            assert (
-                len(fprs) == len(tprs) == self.class_num
-            ), "fprs and tprs must be of length class_num for \
+            assert len(fprs) == len(tprs) == self.class_num, (
+                "fprs and tprs must be of length class_num for \
                 multiclass/multilabel tasks"
+            )
             for i in range(self.class_num):
                 if auroc is not None:
                     assert (
                         len(auroc) == self.class_num  # type: ignore[arg-type]
-                    ), "AUROCs must be of length class_num for \
+                    ), (
+                        "AUROCs must be of length class_num for \
                         multiclass/multilabel tasks"
+                    )
                     name = f"{self.class_names[i]} (AUC = {auroc[i]:.2f})"  # type: ignore[index] # noqa: E501
                 else:
                     name = self.class_names[i]
@@ -496,16 +500,18 @@ class ClassificationPlotter(Plotter):
                 )
         else:
             for slice_name, slice_curve in roc_curves.items():
-                assert (
-                    len(slice_curve[0]) == len(slice_curve[1]) == self.class_num
-                ), f"FPRs and TPRs must be of length class_num for \
+                assert len(slice_curve[0]) == len(slice_curve[1]) == self.class_num, (
+                    f"FPRs and TPRs must be of length class_num for \
                     multiclass/multilabel tasks in slice {slice_name}"
+                )
                 for i in range(self.class_num):
                     if aurocs and slice_name in aurocs:
                         assert (
                             len(aurocs[slice_name]) == self.class_num  # type: ignore[arg-type] # noqa: E501
-                        ), "AUROCs must be of length class_num for \
+                        ), (
+                            "AUROCs must be of length class_num for \
                             multiclass/multilabel tasks"
+                        )
                         name = f"{slice_name}, {self.class_names[i]} \
                             (AUC = {aurocs[i]:.2f})"  # type: ignore[index]
                     else:
@@ -583,10 +589,10 @@ class ClassificationPlotter(Plotter):
             )
         else:
             trace = []
-            assert (
-                len(recalls) == len(precisions) == self.class_num
-            ), "Recalls and precisions must be of length class_num for \
+            assert len(recalls) == len(precisions) == self.class_num, (
+                "Recalls and precisions must be of length class_num for \
                 multiclass/multilabel tasks"
+            )
             for i in range(self.class_num):
                 trace.append(
                     line_plot(
@@ -668,14 +674,18 @@ class ClassificationPlotter(Plotter):
                     len(slice_curve.precision)
                     == len(slice_curve.recall)
                     == self.class_num
-                ), f"Recalls and precisions must be of length class_num for \
+                ), (
+                    f"Recalls and precisions must be of length class_num for \
                     multiclass/multilabel tasks in slice {slice_name}"
+                )
                 for i in range(self.class_num):
                     if auprcs and slice_name in auprcs:
                         assert (
                             len(auprcs[slice_name]) == self.class_num  # type: ignore[arg-type] # noqa: E501
-                        ), "AUPRCs must be of length class_num for \
+                        ), (
+                            "AUPRCs must be of length class_num for \
                             multiclass/multilabel tasks"
+                        )
                         name = f"{slice_name}, {self.class_names[i]} \
                             (AUC = {auprcs[i]:.2f})"
                     else:
@@ -747,8 +757,10 @@ class ClassificationPlotter(Plotter):
             assert all(
                 len(value) == self.class_num  # type: ignore[arg-type]
                 for value in metrics.values()
-            ), "Every metric must be of length class_num for \
+            ), (
+                "Every metric must be of length class_num for \
                 multiclass/multilabel tasks"
+            )
             for i in range(self.class_num):
                 trace.append(
                     bar_plot(
@@ -981,10 +993,10 @@ class ClassificationPlotter(Plotter):
                     if isinstance(metric_values, list) or (
                         isinstance(metric_values, np.ndarray) and metric_values.ndim > 0
                     ):
-                        assert (
-                            len(metric_values) == self.class_num
-                        ), "Metric values must be of length class_num for \
+                        assert len(metric_values) == self.class_num, (
+                            "Metric values must be of length class_num for \
                             multiclass/multilabel tasks"
+                        )
                         radial_data.extend(metric_values)
                         theta = [
                             f"{metric_name}: {self.class_names[i]}"

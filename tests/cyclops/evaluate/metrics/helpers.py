@@ -146,5 +146,5 @@ def _assert_allclose(data_a: Any, data_b: Any, atol: float = 1e-8):
             _assert_allclose(data_a[key], data_b[key], atol=atol)
     else:
         raise ValueError(
-            f"Unknown format for comparison: {type(data_a)} and" f" {type(data_b)}",
+            f"Unknown format for comparison: {type(data_a)} and {type(data_b)}",
         )
