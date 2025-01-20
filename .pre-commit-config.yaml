@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0  # Use the ref you want to point at
+    rev: v5.0.0  # Use the ref you want to point at
     hooks:
     - id: trailing-whitespace
     - id: check-ast
@@ -16,7 +16,7 @@ repos:
     - id: check-toml
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.6.5'
+    rev: 'v0.9.2'
     hooks:
     - id: ruff
       args: [--fix, --exit-non-zero-on-fix]
@@ -25,7 +25,7 @@ repos:
       types_or: [python, jupyter]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.11.2
+    rev: v1.14.1
     hooks:
     - id: mypy
       entry: python3 -m mypy --config-file pyproject.toml
@@ -41,7 +41,7 @@ repos:
       entry: python3 -m nbstripout
 
   - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.8.7
+    rev: 1.9.1
     hooks:
     - id: nbqa-black
     - id: nbqa-ruff
