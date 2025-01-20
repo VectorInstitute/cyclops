@@ -1509,22 +1509,22 @@ files = [
 
 [[package]]
 name = "cupy"
-version = "12.3.0"
+version = "13.3.0"
 description = "CuPy: NumPy & SciPy for GPU"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.9"
 files = [
-    {file = "cupy-12.3.0.tar.gz", hash = "sha256:47db32114e6fdd48d0510cbf0b08b0935522d7dfa3e39416b0c0da3914323524"},
+    {file = "cupy-13.3.0.tar.gz", hash = "sha256:9a2a17af2b99cce91dd1366939c3805e3f51f9de5046df64f29ccbad3bdf78ed"},
 ]
 
 [package.dependencies]
 fastrlock = ">=0.5"
-numpy = ">=1.20,<1.29"
+numpy = ">=1.22,<2.3"
 
 [package.extras]
-all = ["Cython (>=0.29.22,<3)", "optuna (>=2.0)", "scipy (>=1.6,<1.14)"]
+all = ["Cython (>=0.29.22,<3)", "optuna (>=2.0)", "scipy (>=1.7,<1.14)"]
 stylecheck = ["autopep8 (==1.5.5)", "flake8 (==3.8.4)", "mypy (==1.4.1)", "pbr (==5.5.1)", "pycodestyle (==2.6.0)", "types-setuptools (==57.4.14)"]
-test = ["hypothesis (>=6.37.2,<6.55.0)", "pytest (>=7.2)"]
+test = ["hypothesis (>=6.37.2,<6.55.0)", "mpmath", "packaging", "pytest (>=7.2)"]
 
 [[package]]
 name = "cycler"
@@ -10051,4 +10051,4 @@ xgboost = ["xgboost"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9, <3.12"
-content-hash = "2f4b3c920bf4e9eeaaf4db7b9b117a51c7ed7e3797d75a871c3f153714d1ee91"
+content-hash = "d4b52d05608fdba3850666509761b9b2ced92629bf81cebef09cd583675e08e0"

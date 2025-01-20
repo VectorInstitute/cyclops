@@ -137,7 +137,7 @@ jupyterlab = "^3.4.2"
 ipympl = "^0.9.3"
 ipywidgets = "^8.0.6"
 torchmetrics = {version = "^1.2.0", extras = ["classification", "regression"]}
-cupy = "^12.2.0"
+cupy = "^13.3.0"
 mpi4py = {git = "https://github.com/mpi4py/mpi4py"}
 imbalanced-learn = "^0.12.0"
 pyperf = "^2.6.3"
