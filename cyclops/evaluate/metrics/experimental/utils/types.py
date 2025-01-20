@@ -1,3 +1,5 @@
+# noqa: A005
+
 """Utilities for array-API compatibility."""
 
 import builtins

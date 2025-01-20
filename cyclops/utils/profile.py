@@ -1,3 +1,5 @@
+# noqa: A005
+
 """Useful functions for timing, profiling."""
 
 import logging

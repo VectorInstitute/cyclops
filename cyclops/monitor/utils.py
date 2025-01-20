@@ -258,12 +258,12 @@ def get_args(obj: Any, kwargs: Dict[str, Any]) -> Dict[str, Any]:
 
     """
     args = {}
-    for key in kwargs:
+    for key, value in kwargs.items():
         if (inspect.isclass(obj) and key in inspect.signature(obj).parameters) or (
             (inspect.ismethod(obj) or inspect.isfunction(obj))
             and key in inspect.getfullargspec(obj).args
         ):
-            args[key] = kwargs[key]
+            args[key] = value
     return args
 
 
