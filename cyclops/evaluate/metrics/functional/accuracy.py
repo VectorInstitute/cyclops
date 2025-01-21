@@ -446,9 +446,9 @@ def accuracy(
             zero_division=zero_division,
         )
     elif task == "multiclass":
-        assert (
-            isinstance(num_classes, int) and num_classes > 0
-        ), "Number of classes must be specified for multiclass classification."
+        assert isinstance(num_classes, int) and num_classes > 0, (
+            "Number of classes must be specified for multiclass classification."
+        )
         accuracy_score = multiclass_accuracy(
             target,
             preds,
@@ -458,9 +458,9 @@ def accuracy(
             zero_division=zero_division,
         )
     elif task == "multilabel":
-        assert (
-            isinstance(num_labels, int) and num_labels > 0
-        ), "Number of labels must be specified for multilabel classification."
+        assert isinstance(num_labels, int) and num_labels > 0, (
+            "Number of labels must be specified for multilabel classification."
+        )
         accuracy_score = multilabel_accuracy(
             target,
             preds,

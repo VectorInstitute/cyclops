@@ -215,7 +215,7 @@ def _binary_stat_scores_format(
     if check:
         raise ValueError(
             f"Detected the following values in `target`: {unique_values} but"
-            f" expected only the following values {[0,1]}.",
+            f" expected only the following values {[0, 1]}.",
         )
 
     # If preds is label array, also check that it only contains [0,1] values
@@ -823,9 +823,9 @@ def stat_scores(
             threshold=threshold,
         )
     elif task == "multiclass":
-        assert (
-            isinstance(num_classes, int) and num_classes > 0
-        ), "Number of classes must be a positive integer."
+        assert isinstance(num_classes, int) and num_classes > 0, (
+            "Number of classes must be a positive integer."
+        )
         scores = multiclass_stat_scores(
             target,
             preds,
@@ -834,9 +834,9 @@ def stat_scores(
             top_k=top_k,
         )
     elif task == "multilabel":
-        assert (
-            isinstance(num_labels, int) and num_labels > 0
-        ), "Number of labels must be a positive integer."
+        assert isinstance(num_labels, int) and num_labels > 0, (
+            "Number of labels must be a positive integer."
+        )
         scores = multilabel_stat_scores(
             target,
             preds,

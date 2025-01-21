@@ -64,8 +64,7 @@ def import_optional_module(
         return module
     except ModuleNotFoundError as exc:
         msg = (
-            f"Missing optional dependency '{name}'. "
-            f"Use pip or conda to install {name}."
+            f"Missing optional dependency '{name}'. Use pip or conda to install {name}."
         )
         if error == "raise":
             raise type(exc)(msg) from None

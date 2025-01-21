@@ -574,9 +574,9 @@ def auroc(
     if task == "binary":
         return binary_auroc(target, preds, max_fpr=max_fpr, thresholds=thresholds)
     if task == "multiclass":
-        assert (
-            isinstance(num_classes, int) and num_classes > 0
-        ), "Number of classes must be a positive integer."
+        assert isinstance(num_classes, int) and num_classes > 0, (
+            "Number of classes must be a positive integer."
+        )
         return multiclass_auroc(
             target,
             preds,
@@ -585,9 +585,9 @@ def auroc(
             average=average,  # type: ignore[arg-type]
         )
     if task == "multilabel":
-        assert (
-            isinstance(num_labels, int) and num_labels > 0
-        ), "Number of labels must be a positive integer."
+        assert isinstance(num_labels, int) and num_labels > 0, (
+            "Number of labels must be a positive integer."
+        )
         return multilabel_auroc(
             target,
             preds,

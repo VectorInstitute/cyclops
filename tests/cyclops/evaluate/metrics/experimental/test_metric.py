@@ -46,9 +46,9 @@ def test_add_state_factory():
     metric.add_state_default_factory("a", lambda xp: xp.asarray(0), None)  # type: ignore
     reduce_fn = metric._reductions["a"]
     assert reduce_fn is None, "Saved reduction function is not None."
-    assert (
-        metric._default_factories.get("a") is not None
-    ), "Default factory was not correctly created."
+    assert metric._default_factories.get("a") is not None, (
+        "Default factory was not correctly created."
+    )
 
     # default_factory is 'list'
     metric.add_state_default_factory("b", list)  # type: ignore
@@ -61,8 +61,7 @@ def test_add_state_factory():
     reduce_fn = metric._reductions["c"]
     assert callable(reduce_fn), "Saved reduction function is not callable."
     assert reduce_fn is dim_zero_sum, (
-        "Saved reduction function is not the same as the one used to "
-        "create the state."
+        "Saved reduction function is not the same as the one used to create the state."
     )
     assert reduce_fn(anp.asarray([1, 1])) == anp.asarray(
         2,
@@ -73,8 +72,7 @@ def test_add_state_factory():
     reduce_fn = metric._reductions["d"]
     assert callable(reduce_fn), "Saved reduction function is not callable."
     assert reduce_fn is dim_zero_mean, (
-        "Saved reduction function is not the same as the one used to "
-        "create the state."
+        "Saved reduction function is not the same as the one used to create the state."
     )
     assert np.allclose(
         reduce_fn(anp.asarray([1.0, 2.0])),
@@ -86,8 +84,7 @@ def test_add_state_factory():
     reduce_fn = metric._reductions["e"]
     assert callable(reduce_fn), "Saved reduction function is not callable."
     assert reduce_fn is dim_zero_cat, (
-        "Saved reduction function is not the same as the one used to "
-        "create the state."
+        "Saved reduction function is not the same as the one used to create the state."
     )
     np.testing.assert_array_equal(
         reduce_fn([anp.asarray([1]), anp.asarray([1])]),
@@ -100,8 +97,7 @@ def test_add_state_factory():
     reduce_fn = metric._reductions["f"]
     assert callable(reduce_fn), "Saved reduction function is not callable."
     assert reduce_fn is dim_zero_max, (
-        "Saved reduction function is not the same as the one used to "
-        "create the state."
+        "Saved reduction function is not the same as the one used to create the state."
     )
     np.testing.assert_array_equal(
         reduce_fn(anp.asarray([1, 2])),
@@ -115,8 +111,7 @@ def test_add_state_factory():
     reduce_fn = metric._reductions["g"]
     assert callable(reduce_fn), "Saved reduction function is not callable."
     assert reduce_fn is dim_zero_min, (
-        "Saved reduction function is not the same as the one used to "
-        "create the state."
+        "Saved reduction function is not the same as the one used to create the state."
     )
     np.testing.assert_array_equal(
         reduce_fn(anp.asarray([1, 2])),

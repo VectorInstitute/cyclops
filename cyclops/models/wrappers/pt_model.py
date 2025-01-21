@@ -968,14 +968,17 @@ class PTModel(ModelWrapper):
                 splits_mapping["validation"] = val_split
 
                 format_kwargs = {} if transforms is None else {"transform": transforms}
-                with X[train_split].formatted_as(
-                    "custom" if transforms is not None else "torch",
-                    columns=feature_columns + target_columns,
-                    **format_kwargs,
-                ), X[val_split].formatted_as(
-                    "custom" if transforms is not None else "torch",
-                    columns=feature_columns + target_columns,
-                    **format_kwargs,
+                with (
+                    X[train_split].formatted_as(
+                        "custom" if transforms is not None else "torch",
+                        columns=feature_columns + target_columns,
+                        **format_kwargs,
+                    ),
+                    X[val_split].formatted_as(
+                        "custom" if transforms is not None else "torch",
+                        columns=feature_columns + target_columns,
+                        **format_kwargs,
+                    ),
                 ):
                     self.partial_fit(
                         X,
@@ -1309,7 +1312,7 @@ class PTModel(ModelWrapper):
         if include_lr_scheduler:
             state_dict["lr_scheduler"] = self.lr_scheduler_.state_dict()  # type: ignore[attr-defined]
 
-        epoch = kwargs.get("epoch", None)
+        epoch = kwargs.get("epoch")
         if epoch is not None:
             filename, extension = os.path.basename(filepath).split(".")
             filepath = join(

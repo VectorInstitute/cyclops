@@ -363,9 +363,9 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
                 zero_division=zero_division,
             )
         if task == "multiclass":
-            assert (
-                isinstance(num_classes, int) and num_classes > 0
-            ), "Number of classes must be specified for multiclass classification."
+            assert isinstance(num_classes, int) and num_classes > 0, (
+                "Number of classes must be specified for multiclass classification."
+            )
             return MulticlassFbetaScore(
                 beta=beta,
                 num_classes=num_classes,
@@ -374,9 +374,9 @@ class FbetaScore(Metric, registry_key="fbeta_score", force_register=True):
                 zero_division=zero_division,
             )
         if task == "multilabel":
-            assert (
-                isinstance(num_labels, int) and num_labels > 0
-            ), "Number of labels must be specified for multilabel classification."
+            assert isinstance(num_labels, int) and num_labels > 0, (
+                "Number of labels must be specified for multilabel classification."
+            )
             return MultilabelFbetaScore(
                 beta=beta,
                 num_labels=num_labels,
@@ -682,9 +682,9 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
                 zero_division=zero_division,
             )
         if task == "multiclass":
-            assert (
-                isinstance(num_classes, int) and num_classes > 0
-            ), "Number of classes must be specified for multiclass classification."
+            assert isinstance(num_classes, int) and num_classes > 0, (
+                "Number of classes must be specified for multiclass classification."
+            )
             return MulticlassF1Score(
                 num_classes=num_classes,
                 top_k=top_k,
@@ -692,9 +692,9 @@ class F1Score(FbetaScore, registry_key="f1_score", force_register=True):
                 zero_division=zero_division,
             )
         if task == "multilabel":
-            assert (
-                isinstance(num_labels, int) and num_labels > 0
-            ), "Number of labels must be specified for multilabel classification."
+            assert isinstance(num_labels, int) and num_labels > 0, (
+                "Number of labels must be specified for multilabel classification."
+            )
             return MultilabelF1Score(
                 num_labels=num_labels,
                 threshold=threshold,

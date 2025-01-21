@@ -434,9 +434,9 @@ def specificity(
             zero_division=zero_division,
         )
     if task == "multiclass":
-        assert (
-            isinstance(num_classes, int) and num_classes > 0
-        ), "Number of classes must be specified for multiclass classification."
+        assert isinstance(num_classes, int) and num_classes > 0, (
+            "Number of classes must be specified for multiclass classification."
+        )
         return multiclass_specificity(
             target,
             preds,
@@ -446,9 +446,9 @@ def specificity(
             zero_division=zero_division,
         )
     if task == "multilabel":
-        assert (
-            isinstance(num_labels, int) and num_labels > 0
-        ), "Number of labels must be specified for multilabel classification."
+        assert isinstance(num_labels, int) and num_labels > 0, (
+            "Number of labels must be specified for multilabel classification."
+        )
         return multilabel_specificity(
             target,
             preds,

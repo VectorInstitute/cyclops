@@ -487,18 +487,18 @@ class StatScores(Metric, registry_key="stat_scores", force_register=True):
         if task == "binary":
             return BinaryStatScores(threshold=threshold, pos_label=pos_label)
         if task == "multiclass":
-            assert (
-                isinstance(num_classes, int) and num_classes > 0
-            ), "Number of classes must be a positive integer."
+            assert isinstance(num_classes, int) and num_classes > 0, (
+                "Number of classes must be a positive integer."
+            )
             return MulticlassStatScores(
                 num_classes=num_classes,
                 top_k=top_k,
                 classwise=classwise,
             )
         if task == "multilabel":
-            assert (
-                isinstance(num_labels, int) and num_labels > 0
-            ), "Number of labels must be a positive integer."
+            assert isinstance(num_labels, int) and num_labels > 0, (
+                "Number of labels must be a positive integer."
+            )
             return MultilabelStatScores(
                 num_labels=num_labels,
                 threshold=threshold,

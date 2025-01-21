@@ -189,19 +189,17 @@ class TestApplyToArrayCollection:
             },
         }
 
-        for k in expected_result:
+        for k, v in expected_result.items():
             assert k in result
 
-            if isinstance(expected_result[k], dict):
-                for kk in expected_result[k]:
+            if isinstance(v, dict):
+                for kk in v:
                     assert kk in result[k]
-                    assert anp.all(expected_result[k][kk] == result[k][kk])
-            elif isinstance(expected_result[k], (tuple, list)):
-                assert all(
-                    anp.all(a == b) for a, b in zip(result[k], expected_result[k])
-                )
+                    assert anp.all(v[kk] == result[k][kk])
+            elif isinstance(v, (tuple, list)):
+                assert all(anp.all(a == b) for a, b in zip(result[k], v))
             else:
-                assert anp.all(expected_result[k] == result[k])
+                assert anp.all(v == result[k])
 
 
 class TestBincount:

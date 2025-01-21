@@ -108,8 +108,10 @@ def prepare_models(
         models_dict = {model_name: models}
     # models contains one model name
     elif isinstance(models, str):
-        assert models in list_models(), f"Model name is not registered! \
+        assert models in list_models(), (
+            f"Model name is not registered! \
                     Available models are: {list_models()}"
+        )
         models_dict = {models: create_model(models)}
     # models contains a list or tuple of model names or wrapped models
     elif isinstance(models, (list, tuple)):
@@ -118,8 +120,10 @@ def prepare_models(
                 model_name = _model_names_mapping.get(model.model.__name__)
                 models_dict[model_name] = model
             elif isinstance(model, str):
-                assert model in list_models(), f"Model name is not registered! \
+                assert model in list_models(), (
+                    f"Model name is not registered! \
                     Available models are: {list_models()}"
+                )
                 models_dict[model] = create_model(model)
             else:
                 raise TypeError(
