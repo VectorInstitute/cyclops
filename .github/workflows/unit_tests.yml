@@ -11,7 +11,7 @@ on:
       - '**.html'
       - '**.jinja'
       - '**.js'
-      - poetry.lock
+      - uv.lock
       - pyproject.toml
   pull_request:
     branches:
@@ -23,7 +23,7 @@ on:
       - '**.html'
       - '**.jinja'
       - '**.js'
-      - poetry.lock
+      - uv.lock
       - pyproject.toml
 
 jobs:
@@ -31,17 +31,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.2.2
-      - name: Install dependencies, run unit tests and coverage report
-        run: python3 -m pip install --upgrade pip && python3 -m pip install poetry
-      - uses: actions/setup-python@v5.4.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@4db96194c378173c656ce18a155ffc14a9fc4355
         with:
-          python-version: '3.10'
-          cache: 'poetry'
+          # Install a specific version of uv.
+          version: "0.5.21"
+          enable-cache: true
+      - name: "Set up Python"
+        uses: actions/setup-python@42375524e23c412d93fb67b49958b491fce71c38
+        with:
+          python-version-file: ".python-version"
+      - name: Install the project
+        run: uv sync --group test
       - run: |
-          python3 -m pip install --upgrade pip && python3 -m pip install poetry
-          poetry env use '3.10'
-          source $(poetry env info --path)/bin/activate
-          poetry install --with test --all-extras
+          source .venv/bin/activate
           pytest -m "not integration_test" --cov-report term --cov-report xml:./coverage.xml --cov=cyclops -n auto --dist loadscope
       - name: Upload coverage to Codecov
         uses: Wandalen/wretry.action@v3.8.0
