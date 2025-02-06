@@ -53,29 +53,29 @@ below.
 
 ## 🧑🏿‍💻 Developing
 
-### Using poetry
+### Using uv
 
 The development environment can be set up using
-[poetry](https://python-poetry.org/docs/#installation). Hence, make sure it is
+[uv](https://github.com/astral-sh/uv?tab=readme-ov-file#installation). Hence, make sure it is
 installed and then run:
 
 ```bash
-python3 -m poetry install
-source $(poetry env info --path)/bin/activate
+uv sync
+source .venv/bin/activate
 ```
 
 In order to install dependencies for testing (codestyle, unit tests, integration tests),
 run:
 
 ```bash
-python3 -m poetry install --with test
+uv sync --group test
 ```
 
 API documentation is built using [Sphinx](https://www.sphinx-doc.org/en/master/) and
 can be locally built by:
 
 ```bash
-python3 -m poetry install --with docs
+uv sync --group docs
 cd docs
 make html SPHINXOPTS="-D nbsphinx_allow_errors=True"
 ```
@@ -89,7 +89,7 @@ guidelines.
 
 ## 📚 [Documentation](https://vectorinstitute.github.io/cyclops/)
 
-If you need to build the documentations locally, make sure to install ``Pandoc`` in addition to ``docs`` poetry group.
+If you need to build the documentations locally, make sure to install ``Pandoc`` in addition to ``docs`` dependency group.
 
 
 ## 📓 Notebooks
