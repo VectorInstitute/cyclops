@@ -42,7 +42,7 @@ jobs:
         with:
           python-version-file: ".python-version"
       - name: Install the project
-        run: uv sync --group test
+        run: uv sync --dev
       - run: |
           source .venv/bin/activate
           pytest -m "not integration_test" --cov-report term --cov-report xml:./coverage.xml --cov=cyclops -n auto --dist loadscope
