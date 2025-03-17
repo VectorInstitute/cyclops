@@ -676,7 +676,7 @@ class Features:
         # Convert to binary categorical indicators
         return self._to_feature_types(
             data,
-            {feat: CATEGORICAL_INDICATOR for feat in features},
+            dict.fromkeys(features, CATEGORICAL_INDICATOR),
             inplace=False,
         )
 

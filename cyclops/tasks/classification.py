@@ -531,7 +531,7 @@ class MultilabelImageClassificationTask(BaseTask):
         missing_labels = [
             label for label in self.task_target if label not in dataset.column_names
         ]
-        if len(missing_labels):
+        if missing_labels:
 
             def add_missing_labels(examples: Dict[str, Any]) -> Dict[str, Any]:
                 for label in missing_labels:
