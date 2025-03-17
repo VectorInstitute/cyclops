@@ -284,7 +284,7 @@ class Vectorized:
         index_map = self.index_maps[axis_index]
         if normalizer_map is None:
             # Use the same normalization method for all features
-            normalizer_map = {feat: normalization_method for feat in index_map}  # type: ignore
+            normalizer_map = dict.fromkeys(index_map, normalization_method)  # type: ignore
         else:
             missing = set(normalizer_map.keys()) - set(index_map.keys())
             if len(missing) != 0:
