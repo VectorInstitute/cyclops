@@ -248,7 +248,7 @@ class Vectorized:
         self,
         axis: Union[str, int],
         normalization_method: Optional[str] = None,
-        normalizer_map: Optional[Dict[str, str]] = None,
+        normalizer_map: Optional[Dict[Any, str]] = None,
     ) -> None:
         """Add a normalizer.
 
@@ -284,12 +284,12 @@ class Vectorized:
         index_map = self.index_maps[axis_index]
         if normalizer_map is None:
             # Use the same normalization method for all features
-            normalizer_map = {feat: normalization_method for feat in index_map}  # type: ignore
+            normalizer_map = dict.fromkeys(index_map, normalization_method)  # type: ignore
         else:
             missing = set(normalizer_map.keys()) - set(index_map.keys())
             if len(missing) != 0:
                 raise ValueError(f"Invalid index values {', '.join(missing)}.")
-        normalizer = VectorizedNormalizer(axis_index, normalizer_map)
+        normalizer = VectorizedNormalizer(axis_index, normalizer_map)  # type: ignore
         self.normalizer = normalizer
 
     def add_normalizer_direct(self, normalizer: VectorizedNormalizer) -> None:
