@@ -8,7 +8,6 @@ license = "Apache-2.0"
 repository = "https://github.com/VectorInstitute/cyclops"
 requires-python = ">=3.9,<3.12"
 dependencies = [
-    "pandas>=2.1,<3.0; extra == 'performance'",
     "numpy>=1.24.0,<2.0.0",
     "scikit-learn>=1.3.0,<2.0.0",
     "scipy>=1.11.0,<2.0.0",
@@ -24,27 +23,30 @@ dependencies = [
     "scour>=0.38.2,<0.39.0",
     "plotly>=5.7.0,<6.0.0",
     "pillow>=10.0.0,<11.0.0",
-    "array-api-compat==1.6",
+    "array-api-compat>=1.11.2",
     "hydra-core>=1.2.0,<2.0.0"
 ]
 
 [project.optional-dependencies]
-monai = ["torch>=1.11.0,<2.0.0", "monai>=1.3.0,<2.0.0; extra == 'itk'"]
-torch = ["torch>=1.11.0,<2.0.0"]
-torchvision = ["torchvision>=0.14.0,<0.15.0"]
-torchxrayvision = ["torch>=1.11.0,<2.0.0", "torchxrayvision>=1.2.0,<2.0.0"]
+performance = ["pandas>=2.1,<3.0"]
+monai = ["torch>=2.0.0,<3.0.0", "monai>=1.3.0,<2.0.0"]
+torch = ["torch>=2.0.0,<3.0.0"]
+torchvision = ["torchvision>=0.15.0,<2.0.0"]
+torchxrayvision = ["torch>=2.0.0,<3.0.0", "torchxrayvision>=1.2.0,<2.0.0"]
 xgboost = ["xgboost>=1.5.2,<2.0.0"]
-alibi = ["llvmlite>=0.40.0,<0.41.0", "alibi>=0.9.4,<0.10.0; extra == 'shap'"]
-alibi-detect = ["torch>=1.11.0,<2.0.0", "llvmlite>=0.40.0,<0.41.0", "alibi-detect>=0.12.0,<0.13.0; extra == 'torch'"]
+alibi = ["llvmlite>=0.40.0,<0.41.0", "alibi>=0.9.4,<0.10.0"]
+alibi-detect = ["torch>=2.0.0,<3.0.0", "llvmlite>=0.40.0,<0.41.0", "alibi-detect>=0.12.0,<0.13.0"]
+itk = ["monai>=1.3.0,<2.0.0"]
+shap = ["alibi>=0.9.4,<0.10.0"]
 all = [
-    "torch>=1.11.0,<2.0.0",
-    "torchvision>=0.14.0,<0.15.0",
+    "torch>=2.0.0,<3.0.0",
+    "torchvision>=0.15.0,<2.0.0",
     "torchxrayvision>=1.2.0,<2.0.0",
     "llvmlite>=0.40.0,<0.41.0",
-    "monai>=1.3.0,<2.0.0; extra == 'itk'",
+    "monai>=1.3.0,<2.0.0",
     "xgboost>=1.5.2,<2.0.0",
-    "alibi>=0.9.4,<0.10.0; extra == 'shap'",
-    "alibi-detect>=0.12.0,<0.13.0; extra == 'torch'"
+    "alibi>=0.9.4,<0.10.0",
+    "alibi-detect>=0.12.0,<0.13.0"
 ]
 
 [dependency-groups]
@@ -52,17 +54,26 @@ dev = [
     "pytest>=7.1.1,<8.0.0",
     "pre-commit>=4.0.0,<5.0.0",
     "pytest-cov>=3.0.0,<4.0.0",
+    "pytest-xdist>=3.5.0,<4.0.0",
     "codecov>=2.1.13,<3.0.0",
     "nbstripout>=0.6.1,<0.7.0",
     "mypy>=1.7.0,<2.0.0",
     "ruff>=0.4.0,<0.5.0",
-    "nbqa>=1.7.0,<2.0.0; extra == 'toolchain'",
     "pip-audit>=2.7.1,<3.0.0",
     "cycquery>=0.1.2,<0.2.0",
-    "torchmetrics>=1.2.0,<2.0.0; extra == 'classification'",
     "pytest-mpi>=0.6,<0.7",
-    "pytest-xdist>=3.5.0,<4.0.0; extra == 'psutil'"
+    "torchmetrics>=1.2.0,<2.0.0"
 ]
+
+toolchain = [
+    "nbqa>=1.7.0,<2.0.0"
+]
+
+classification = [
+    "torchmetrics>=1.2.0,<2.0.0"
+]
+
+psutil = []
 
 docs = [
     "numpydoc>=1.2,<2.0",
@@ -88,7 +99,6 @@ test = [
     "jupyterlab>=3.4.2,<4.0.0",
     "ipympl>=0.9.3,<0.10.0",
     "ipywidgets>=8.0.6,<9.0.0",
-    "torchmetrics>=1.2.0,<2.0.0; extra == 'classification'",
     "cupy>=13.3.0,<14.0.0",
     "mpi4py @ git+https://github.com/mpi4py/mpi4py",
     "imbalanced-learn>=0.12.0,<0.13.0",
@@ -97,11 +107,14 @@ test = [
 
 deploy_models = [
     "aiohttp>=3.9.2,<4.0.0",
-    "bentoml>=1.2.5,<2.0.0; extra == 'triton'",
     "torchxrayvision>=1.2.1,<2.0.0",
     "kaggle>=1.5.13,<2.0.0",
     "onnx>=1.15.0,<2.0.0",
     "skl2onnx>=1.16.0,<2.0.0"
+]
+
+triton = [
+    "bentoml>=1.2.5,<2.0.0"
 ]
 
 deploy_report = [
@@ -199,6 +212,7 @@ max-doc-length = 88
 markers = [
     "integration_test: marks tests as integration tests",
 ]
+addopts = "-xvs"
 
 [tool.coverage]
     [tool.coverage.run]
