@@ -1,174 +1,133 @@
-[tool.poetry]
+[project]
 name = "pycyclops"
 version = "0.2.12"
 description = "Framework for healthcare ML implementation"
-authors = ["Vector AI Engineering <cyclops@vectorinstitute.ai>"]
+readme = "README.md"
+authors = [{name = "Vector AI Engineering", email = "cyclops@vectorinstitute.ai"}]
 license = "Apache-2.0"
 repository = "https://github.com/VectorInstitute/cyclops"
-documentation = "https://vectorinstitute.github.io/cyclops/"
-packages = [
-    { include = "cyclops" },
+requires-python = ">=3.9,<3.12"
+dependencies = [
+    "numpy>=1.24.0,<2.0.0",
+    "scikit-learn>=1.3.0,<2.0.0",
+    "scipy>=1.11.0,<2.0.0",
+    "matplotlib>=3.8.3,<4.0.0",
+    "datasets>=2.15.0,<3.0.0",
+    "psutil>=5.9.4,<6.0.0",
+    "pyarrow>=17.0.0,<18.0.0",
+    "pydantic>=1.10.11,<2.0.0",
+    "Jinja2>=3.1.3,<4.0.0",
+    "spdx-tools>=0.8.1,<0.9.0",
+    "pybtex>=0.24.0,<0.25.0",
+    "kaleido==0.2.1",
+    "scour>=0.38.2,<0.39.0",
+    "plotly>=5.7.0,<6.0.0",
+    "pillow>=10.0.0,<11.0.0",
+    "array-api-compat>=1.11.2",
+    "hydra-core>=1.2.0,<2.0.0"
 ]
-readme = "README.md"
 
-[tool.poetry.dependencies]
-python = ">=3.9, <3.12"
-pandas = {version = "^2.1", extras = ["performance"]}
-numpy = "^1.24.0"
-scikit-learn = "^1.3.0"
-scipy = "^1.11.0"
-matplotlib = "^3.8.3"
-datasets = "^2.15.0"
-psutil = "^5.9.4"
-pyarrow = "^17.0.0"
-pydantic = "^1.10.11"
-Jinja2 = "^3.1.3"
-spdx-tools = "^0.8.1"
-pybtex = "^0.24.0"
-kaleido = "0.2.1"
-scour = "^0.38.2"
-plotly = "^5.7.0"
-pillow = "^10.0.0"
-array-api-compat = "1.6"
-hydra-core = "^1.2.0"
+[project.optional-dependencies]
+performance = ["pandas>=2.1,<3.0"]
+monai = ["torch>=2.0.0,<3.0.0", "monai>=1.3.0,<2.0.0"]
+torch = ["torch>=2.0.0,<3.0.0"]
+torchvision = ["torchvision>=0.15.0,<2.0.0"]
+torchxrayvision = ["torch>=2.0.0,<3.0.0", "torchxrayvision>=1.2.0,<2.0.0"]
+xgboost = ["xgboost>=1.5.2,<2.0.0"]
+alibi = ["llvmlite>=0.40.0,<0.41.0", "alibi>=0.9.4,<0.10.0"]
+alibi-detect = ["torch>=2.0.0,<3.0.0", "llvmlite>=0.40.0,<0.41.0", "alibi-detect>=0.12.0,<0.13.0"]
+itk = ["monai>=1.3.0,<2.0.0"]
+shap = ["alibi>=0.9.4,<0.10.0"]
+all = [
+    "torch>=2.0.0,<3.0.0",
+    "torchvision>=0.15.0,<2.0.0",
+    "torchxrayvision>=1.2.0,<2.0.0",
+    "llvmlite>=0.40.0,<0.41.0",
+    "monai>=1.3.0,<2.0.0",
+    "xgboost>=1.5.2,<2.0.0",
+    "alibi>=0.9.4,<0.10.0",
+    "alibi-detect>=0.12.0,<0.13.0"
+]
 
-# Optional dependencies
-monai = { version = "^1.3.0", extras = ["itk"], optional = true }
-torch = { version = "^1.11.0", optional = true }
-torchvision = { version = "^0.14.0", optional = true }
-torchxrayvision = { version = "^1.2.0", optional = true }
-xgboost = { version = "^1.5.2", optional = true }
-alibi = { version = "^0.9.4", optional = true, extras = ["shap"] }
-alibi-detect = { version = "^0.12.0", optional = true, extras = ["torch"] }
-llvmlite = { version = "^0.40.0", optional = true }
+[dependency-groups]
+dev = [
+    "pytest>=7.1.1,<8.0.0",
+    "pre-commit>=4.0.0,<5.0.0",
+    "pytest-cov>=3.0.0,<4.0.0",
+    "pytest-xdist>=3.5.0,<4.0.0",
+    "codecov>=2.1.13,<3.0.0",
+    "nbstripout>=0.6.1,<0.7.0",
+    "mypy>=1.7.0,<2.0.0",
+    "ruff>=0.4.0,<0.5.0",
+    "pip-audit>=2.7.1,<3.0.0",
+    "cycquery>=0.1.2,<0.2.0",
+    "pytest-mpi>=0.6,<0.7",
+    "torchmetrics>=1.2.0,<2.0.0"
+]
 
-[tool.poetry.group.xgboost]
-optional = true
+toolchain = [
+    "nbqa>=1.7.0,<2.0.0"
+]
 
-[tool.poetry.group.xgboost.dependencies]
-xgboost = "^1.5.2"
+classification = [
+    "torchmetrics>=1.2.0,<2.0.0"
+]
 
-[tool.poetry.group.torch]
-optional = true
+psutil = []
 
-[tool.poetry.group.torch.dependencies]
-torch = "^1.11.0"
+docs = [
+    "numpydoc>=1.2,<2.0",
+    "sphinx>=7.2.5,<8.0.0",
+    "sphinxcontrib-apidoc>=0.4.0,<0.5.0",
+    "sphinx-autodoc-typehints>=1.24.0,<2.0.0",
+    "myst-parser>=2.0.0,<3.0.0",
+    "sphinx-design>=0.5.0,<0.6.0",
+    "sphinx-copybutton>=0.5.0,<0.6.0",
+    "sphinx-autoapi>=2.0.0,<3.0.0",
+    "nbsphinx>=0.9.3,<0.10.0",
+    "ipython>=8.8.0,<9.0.0",
+    "ipykernel>=6.23.0,<7.0.0",
+    "kaggle>=1.5.13,<2.0.0",
+    "imbalanced-learn>=0.12.0,<0.13.0",
+    "furo>=2024.01.29"
+]
 
-[tool.poetry.group.torchvision]
-optional = true
+test = [
+    "cycquery>=0.1.0,<0.2.0",
+    "seaborn>=0.11.2,<0.12.0",
+    "jupyter>=1.0.0,<2.0.0",
+    "jupyterlab>=3.4.2,<4.0.0",
+    "ipympl>=0.9.3,<0.10.0",
+    "ipywidgets>=8.0.6,<9.0.0",
+    "cupy>=13.3.0,<14.0.0",
+    "mpi4py @ git+https://github.com/mpi4py/mpi4py",
+    "imbalanced-learn>=0.12.0,<0.13.0",
+    "pyperf>=2.6.3,<3.0.0"
+]
 
-[tool.poetry.group.torchvision.dependencies]
-torchvision = "^0.14.0"
+deploy_models = [
+    "aiohttp>=3.9.2,<4.0.0",
+    "torchxrayvision>=1.2.1,<2.0.0",
+    "kaggle>=1.5.13,<2.0.0",
+    "onnx>=1.15.0,<2.0.0",
+    "skl2onnx>=1.16.0,<2.0.0"
+]
 
-[tool.poetry.group.torchxrayvision]
-optional = true
+triton = [
+    "bentoml>=1.2.5,<2.0.0"
+]
 
-[tool.poetry.group.torchxrayvision.dependencies]
-torch = "^1.11.0"
-torchxrayvision = "^1.2.0"
+deploy_report = [
+    "fastapi>=0.111.0,<0.112.0",
+    "uvicorn>=0.30.1,<0.31.0"
+]
 
-[tool.poetry.group.monai]
-optional = true
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry.group.monai.dependencies]
-torch = "^1.11.0"
-monai = "^1.1.0"
-
-[tool.poetry.group.alibi]
-optional = true
-
-[tool.poetry.group.alibi.dependencies]
-llvmlite = "^0.40.0"
-alibi = "^0.9.4"
-
-[tool.poetry.group.alibi-detect]
-optional = true
-
-[tool.poetry.group.alibi-detect.dependencies]
-llvmlite = "^0.40.0"
-torch = "^1.11.0"
-alibi-detect = { version = "^0.12.0", extras = ["torch"] }
-
-[tool.poetry.group.test]
-optional = true
-
-[tool.poetry.group.test.dependencies]
-pytest = "^7.1.1"
-pre-commit = "^4.0.0"
-pytest-cov = "^3.0.0"
-codecov = "^2.1.13"
-nbstripout = "^0.6.1"
-mypy = "^1.7.0"
-ruff = "^0.4.0"
-nbqa = { version = "^1.7.0", extras = ["toolchain"] }
-pip-audit = "^2.7.1"
-cycquery = "^0.1.2" # used for integration test
-torchmetrics = {version = "^1.2.0", extras = ["classification", "regression"]}
-pytest-mpi = "^0.6"
-pytest-xdist = {extras = ["psutil"], version = "^3.5.0"}
-
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-numpydoc = "^1.2"
-sphinx = "^7.2.5"
-sphinxcontrib-apidoc = "^0.4.0"
-sphinx-autodoc-typehints = "^1.24.0"
-myst-parser = "^2.0.0"
-sphinx-design = "^0.5.0"
-sphinx-copybutton = "^0.5.0"
-sphinx-autoapi = "^2.0.0"
-nbsphinx = "^0.9.3"
-ipython = "^8.8.0"
-ipykernel = "^6.23.0"
-kaggle = "^1.5.13"
-imbalanced-learn = "^0.12.0"
-furo = "^2024.01.29"
-
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-cycquery = "^0.1.0"
-seaborn = "^0.11.2"
-jupyter = "^1.0.0"
-jupyterlab = "^3.4.2"
-ipympl = "^0.9.3"
-ipywidgets = "^8.0.6"
-torchmetrics = {version = "^1.2.0", extras = ["classification", "regression"]}
-cupy = "^13.3.0"
-mpi4py = {git = "https://github.com/mpi4py/mpi4py"}
-imbalanced-learn = "^0.12.0"
-pyperf = "^2.6.3"
-
-[tool.poetry.group.deploy_models]
-optional = true
-
-[tool.poetry.group.deploy_models.dependencies]
-aiohttp = "^3.9.2"
-bentoml = { version = "1.4.8", extras = ["triton"] }
-torchxrayvision = "^1.2.1"
-kaggle = "^1.5.13"
-onnx = "^1.15.0"
-skl2onnx = "^1.16.0"
-
-[tool.poetry.group.deploy_report]
-optional = true
-
-[tool.poetry.group.deploy_report.dependencies]
-fastapi = "^0.111.0"
-uvicorn = "^0.30.1"
-
-[tool.poetry.extras]
-torch = ["torch"]
-torchvision = ["torchvision"]
-torchxrayvision = ["torch", "torchxrayvision"]
-monai = ["torch", "monai"]
-xgboost = ["xgboost"]
-alibi = ["llvmlite", "alibi"]
-alibi-detect = ["torch", "llvmlite", "alibi-detect"]
-all = ["torch", "torchvision", "torchxrayvision", "llvmlite", "monai", "xgboost", "alibi", "alibi-detect"]
+[tool.hatch.build.targets.wheel]
+packages = ["cyclops"]
 
 [tool.mypy]
 plugins = ["numpy.typing.mypy_plugin"]
@@ -253,12 +212,9 @@ max-doc-length = 88
 markers = [
     "integration_test: marks tests as integration tests",
 ]
+addopts = "-xvs"
 
 [tool.coverage]
     [tool.coverage.run]
     source=["cyclops"]
     omit=["tests/*", "*__init__.py"]
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
