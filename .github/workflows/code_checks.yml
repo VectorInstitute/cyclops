@@ -33,7 +33,7 @@ jobs:
         with:
           virtualenvs-create: true
           virtualenvs-in-project: true
-      - uses: actions/setup-python@v5.5.0
+      - uses: actions/setup-python@v5.6.0
         with:
           python-version: '3.10'
           cache: 'poetry'
