@@ -966,8 +966,9 @@ class ModelCardReport:
         results: Dict[str, Any],
         metric_descriptions: Dict[str, str],
         pass_fail_thresholds: Union[float, Dict[str, float]] = 0.7,
-        pass_fail_threshold_fn: Callable[[float, float], bool] = lambda x,
-        threshold: bool(x >= threshold),
+        pass_fail_threshold_fn: Callable[[float, float], bool] = lambda x, threshold: (
+            bool(x >= threshold)
+        ),
     ) -> None:
         """
         Log all performance metrics to the model card report.

@@ -289,7 +289,7 @@ def load_model(model_path: str) -> Any:
         loaded pre-trained model
 
     """
-    file_type = model_path.split(".")[-1]
+    file_type = model_path.rsplit(".", maxsplit=1)[-1]
     if file_type in ("pkl", "pickle"):
         with open(model_path, "rb") as file:
             model = pickle.load(file)
@@ -310,7 +310,7 @@ def save_model(model: Any, output_path: str) -> None:
         path to save the model to
 
     """
-    file_type = output_path.split(".")[-1]
+    file_type = output_path.rsplit(".", maxsplit=1)[-1]
     if file_type in ("pkl", "pickle"):
         with open(output_path, "wb") as file:
             pickle.dump(model, file)
