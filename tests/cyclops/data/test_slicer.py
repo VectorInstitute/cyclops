@@ -25,29 +25,36 @@ from cyclops.data.slicer import (
 )
 
 
-SYNTHEA = OMOPQuerier(
-    database="synthea_integration_test",
-    user="postgres",
-    password="pwd",
-    schema_name="cdm_synthea10",
-)
+def get_synthea_querier() -> OMOPQuerier:
+    """Create a querier for the Synthea OMOP database.
+
+    Connecting lazily keeps module import from requiring a database, so
+    non-integration tests in this module can run without one.
+    """
+    return OMOPQuerier(
+        database="synthea_integration_test",
+        user="postgres",
+        password="pwd",
+        schema_name="cdm_synthea10",
+    )
 
 
 def visits_table() -> pd.DataFrame:
     """Get the visits table."""
+    synthea = get_synthea_querier()
     ops = qo.Sequential(
         qo.ConditionEquals("gender_source_value", "M"),  # type: ignore
         qo.Rename({"race_source_value": "race"}),  # type: ignore
     )
-    persons = SYNTHEA.person()
+    persons = synthea.person()
     persons = persons.ops(ops)
-    visits = SYNTHEA.visit_occurrence()
+    visits = synthea.visit_occurrence()
     return visits.join(persons, on="person_id").run()
 
 
 def measurement_table() -> pd.DataFrame:
     """Get the measurements table."""
-    return SYNTHEA.measurement().run()
+    return get_synthea_querier().measurement().run()
 
 
 def get_filtered_dataset(table: pd.DataFrame, filter_func: Callable) -> Dataset:

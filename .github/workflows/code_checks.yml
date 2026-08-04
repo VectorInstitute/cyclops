@@ -7,9 +7,8 @@ on:
     paths:
       - .pre-commit-config.yaml
       - .github/workflows/code_checks.yml
-      - .github/workflows/integration_tests.yml
       - '**.py'
-      - poetry.lock
+      - uv.lock
       - pyproject.toml
       - '**.ipynb'
   pull_request:
@@ -19,7 +18,7 @@ on:
       - .pre-commit-config.yaml
       - .github/workflows/code_checks.yml
       - '**.py'
-      - poetry.lock
+      - uv.lock
       - pyproject.toml
       - '**.ipynb'
 
@@ -28,24 +27,47 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.2.2
-      - name: Install and configure Poetry
-        uses: snok/install-poetry@v1
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.3.2
         with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-      - uses: actions/setup-python@v5.5.0
-        with:
-          python-version: '3.10'
-          cache: 'poetry'
+          enable-cache: true
+          python-version: '3.11'
       - name: Install dependencies and check code
         run: |
-          poetry env use '3.10'
+          uv sync --no-default-groups --group test --all-extras
           source .venv/bin/activate
-          poetry install --with test --all-extras
           pre-commit run --all-files
       - name: pip-audit (gh-action-pip-audit)
         uses: pypa/gh-action-pip-audit@v1.1.0
         with:
           virtual-environment: .venv/
+          # The ignored vulnerabilities below cannot be fixed while alibi and
+          # alibi-detect cap pillow (<11) and transformers (<5), cycquery
+          # caps pyarrow (<18), and pybtex needs pkg_resources (removed in
+          # setuptools 81+). Revisit when those libraries relax their
+          # constraints.
           ignore-vulns: |
             GHSA-pg7h-5qx3-wjr3
+            PYSEC-2026-3447
+            PYSEC-2026-165
+            PYSEC-2026-2249
+            PYSEC-2026-2250
+            PYSEC-2026-2252
+            PYSEC-2026-2253
+            PYSEC-2026-2254
+            PYSEC-2026-2255
+            PYSEC-2026-2256
+            PYSEC-2026-2257
+            PYSEC-2026-2874
+            PYSEC-2026-3451
+            PYSEC-2026-3453
+            PYSEC-2026-3454
+            PYSEC-2026-3493
+            PYSEC-2026-3494
+            PYSEC-2026-3495
+            PYSEC-2026-3496
+            PYSEC-2026-113
+            PYSEC-2025-217
+            PYSEC-2026-2288
+            PYSEC-2026-2289
+            PYSEC-2026-2290

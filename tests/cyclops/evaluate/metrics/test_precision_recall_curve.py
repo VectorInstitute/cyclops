@@ -29,7 +29,7 @@ def _sk_binary_precision_recall_curve(
 
     return sk_precision_recall_curve(
         y_true=target,
-        probas_pred=preds,
+        y_score=preds,
         pos_label=pos_label,
     )
 

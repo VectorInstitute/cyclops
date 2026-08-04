@@ -38,7 +38,9 @@ def _test_torch_distributed_class(rank: int, worldsize: int = NUM_PROCESSES):
     backend = TorchDistributed()
 
     assert backend.is_initialized == torch_dist.is_initialized()
-    assert backend.rank == rank
+    # pool.map does not guarantee that task `rank` runs on the worker whose
+    # distributed rank is `rank`, so only check that the rank is valid
+    assert backend.rank in range(worldsize)
     assert backend.world_size == worldsize
 
     # test all simple all gather (tensors of the same size)
