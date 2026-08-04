@@ -21,6 +21,7 @@ from cyclops.report.model_card.sections import (
     QuantitativeAnalysis,
 )
 from cyclops.report.utils import (
+    _process_metric_name,
     create_metric_card_plot,
     create_metric_cards,
     extract_performance_metrics,
@@ -303,6 +304,22 @@ def model_card():
         ),
     ]
     return model_card
+
+
+def test_process_metric_name_with_recognized_prefix():
+    """Test _process_metric_name strips known Binary/Multiclass/Multilabel prefixes."""
+    assert _process_metric_name({"type": "BinaryAccuracy"}) == "Accuracy"
+    assert _process_metric_name({"type": "MulticlassPrecision"}) == "Precision"
+    assert _process_metric_name({"type": "MultilabelRecall"}) == "Recall"
+
+
+def test_process_metric_name_with_unrecognized_prefix():
+    """A metric type without a Binary/Multiclass/Multilabel prefix must not crash.
+
+    Regression test: previously raised UnboundLocalError because `name` was
+    only assigned inside the prefix-matching branches.
+    """
+    assert _process_metric_name({"type": "CustomMetric"}) == "CustomMetric"
 
 
 def test_sweep_tests(model_card):

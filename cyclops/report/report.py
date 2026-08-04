@@ -970,8 +970,9 @@ class ModelCardReport:
         results: Dict[str, Any],
         metric_descriptions: Dict[str, str],
         pass_fail_thresholds: Union[float, Dict[str, float]] = 0.7,
-        pass_fail_threshold_fn: Callable[[float, float], bool] = lambda x,
-        threshold: bool(x >= threshold),
+        pass_fail_threshold_fn: Callable[[float, float], bool] = lambda x, threshold: (
+            bool(x >= threshold)
+        ),
     ) -> None:
         """
         Log all performance metrics to the model card report.
@@ -1140,11 +1141,14 @@ class ModelCardReport:
             List[List[PerformanceMetric]], List[PerformanceMetric]
         ] = []
         sweep_metrics(self._model_card, current_report_metrics)
-        current_report_metrics_set = (
-            current_report_metrics[0]
-            if isinstance(current_report_metrics[0], list)
-            else [current_report_metrics[0]]
-        )
+        if len(current_report_metrics) == 0:
+            current_report_metrics_set: List[PerformanceMetric] = []
+        else:
+            current_report_metrics_set = (
+                current_report_metrics[0]
+                if isinstance(current_report_metrics[0], list)
+                else [current_report_metrics[0]]
+            )
 
         report_paths = glob.glob(
             os.path.join(
@@ -1160,7 +1164,11 @@ class ModelCardReport:
                 latest_report = ModelCard.model_validate_json(f_handle.read())
             latest_report_metric_cards: List[List[MetricCard]] = []
             sweep_metric_cards(latest_report, latest_report_metric_cards)
-            latest_report_metric_cards_set = latest_report_metric_cards[0]
+            latest_report_metric_cards_set = (
+                latest_report_metric_cards[0]
+                if len(latest_report_metric_cards) != 0
+                else None
+            )
         else:
             latest_report_metric_cards_set = None
         # check if overview section exists

@@ -371,6 +371,20 @@ class TestModelCardReport(TestCase):
         assert isinstance(report_path, str)
 
 
+def test_export_with_no_performance_metrics(tmp_path):
+    """Test that export() does not crash when no PerformanceMetric was logged.
+
+    Regression test: previously raised IndexError because
+    `current_report_metrics[0]` was indexed unconditionally on a
+    possibly-empty list.
+    """
+    report = ModelCardReport(str(tmp_path))
+    report.log_owner(name="John Doe")
+
+    report_path = report.export(interactive=False, save_json=False)
+    assert isinstance(report_path, str)
+
+
 def test_log_performance_metrics():
     """Test log_performance_metrics."""
     report = ModelCardReport()
