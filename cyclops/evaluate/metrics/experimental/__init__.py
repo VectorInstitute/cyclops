@@ -15,6 +15,13 @@ from cyclops.evaluate.metrics.experimental.average_precision import (
     MulticlassAveragePrecision,
     MultilabelAveragePrecision,
 )
+from cyclops.evaluate.metrics.experimental.brier_score import (
+    BinaryBrierScore,
+    MulticlassBrierScore,
+)
+from cyclops.evaluate.metrics.experimental.calibration_error import (
+    BinaryCalibrationError,
+)
 from cyclops.evaluate.metrics.experimental.confusion_matrix import (
     BinaryConfusionMatrix,
     MulticlassConfusionMatrix,
@@ -95,6 +102,9 @@ __all__ = [
     "BinaryAveragePrecision",
     "MulticlassAveragePrecision",
     "MultilabelAveragePrecision",
+    "BinaryBrierScore",
+    "MulticlassBrierScore",
+    "BinaryCalibrationError",
     "BinaryConfusionMatrix",
     "MulticlassConfusionMatrix",
     "MultilabelConfusionMatrix",

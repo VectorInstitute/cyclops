@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   using SHAP on the domain classifier trained by `tester_method="classifier"`,
   returning features ranked by how strongly they indicate a sample belongs
   to the shifted distribution.
+- `cyclops.evaluate.metrics.experimental`: added calibration metrics -
+  `BinaryBrierScore`/`MulticlassBrierScore` and `BinaryCalibrationError`
+  (Expected Calibration Error / Maximum Calibration Error), plus their
+  functional counterparts. Discrimination metrics like AUROC don't tell
+  you whether a predicted probability can be trusted at face value, which
+  matters for clinical risk scores that are often acted on directly.
 
 ### Fixed
 
