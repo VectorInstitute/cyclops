@@ -102,7 +102,7 @@ class EvaluationInput(BaseModel):
 
 
 # This endpoint serves the UI
-@app.get("/", response_class=HTMLResponse)  # type: ignore[misc]
+@app.get("/", response_class=HTMLResponse)  # type: ignore[untyped-decorator]
 async def get_home(request: Request) -> HTMLResponse:
     """Return home page for cyclops model report app.
 
@@ -120,7 +120,7 @@ async def get_home(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("test_report.html", {"request": request})
 
 
-@app.post("/evaluate")  # type: ignore[misc]
+@app.post("/evaluate")  # type: ignore[untyped-decorator]
 async def evaluate_result(data: EvaluationInput) -> None:
     """Calculate metric and return result from request body.
 
@@ -151,7 +151,7 @@ async def evaluate_result(data: EvaluationInput) -> None:
         raise HTTPException(status_code=500, detail="Internal server error") from e
 
 
-@app.get("/evaluate", response_class=HTMLResponse)  # type: ignore[misc]
+@app.get("/evaluate", response_class=HTMLResponse)  # type: ignore[untyped-decorator]
 async def get_report(request: Request) -> HTMLResponse:
     """Return latest updated model report.
 

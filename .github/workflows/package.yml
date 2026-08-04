@@ -8,7 +8,7 @@ on:
       - .pre-commit-config.yaml
       - .github/workflows/package.yml
       - '**.py'
-      - poetry.lock
+      - uv.lock
       - pyproject.toml
       - '**.ipynb'
   pull_request:
@@ -18,7 +18,7 @@ on:
       - .pre-commit-config.yaml
       - .github/workflows/package.yml
       - '**.py'
-      - poetry.lock
+      - uv.lock
       - pyproject.toml
       - '**.ipynb'
 
@@ -31,7 +31,7 @@ jobs:
         run: python3 -m pip install --upgrade pip
       - uses: actions/setup-python@v5.5.0
         with:
-          python-version: '3.10'
+          python-version: '3.11'
       - name: Install package and test import
         run: |
           pip install -e .

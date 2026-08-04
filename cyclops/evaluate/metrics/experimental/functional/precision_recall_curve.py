@@ -322,8 +322,8 @@ def _binary_precision_recall_curve_compute(
     )
     thresholds = xp.flip(thresholds, axis=0)
     if hasattr(thresholds, "detach"):
-        thresholds = clone(thresholds.detach())  # type: ignore
-    return precision, recall, thresholds  # type: ignore[return-value]
+        thresholds = clone(thresholds.detach())
+    return precision, recall, thresholds
 
 
 def binary_precision_recall_curve(

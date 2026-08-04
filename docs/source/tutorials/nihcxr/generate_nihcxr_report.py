@@ -71,7 +71,7 @@ nih_ds = model.predict(
 )
 
 # remove any rows with No Finding == 1
-nih_ds = nih_ds.filter(
+nih_ds = nih_ds.filter(  # type: ignore[union-attr]
     partial(filter_value, column_name="No Finding", value=1, negate=True),
     batched=True,
 )
