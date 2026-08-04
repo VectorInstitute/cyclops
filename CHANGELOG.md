@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `cyclops.monitor`: `Detector.detect_shift_by_subgroup()` runs the fitted
+  drift tester independently on each subgroup of a target dataset (e.g.
+  age band, sex, hospital site, defined via the existing `SliceSpec`),
+  instead of only testing the aggregate population - a model can look
+  stable overall while drifting badly for a specific subgroup, which
+  matters for health-equity-aware monitoring. Includes Bonferroni
+  correction across subgroups and a minimum-sample-size guard.
+- `cyclops.monitor`: `DCTester.explain_shift()` explains a detected shift
+  using SHAP on the domain classifier trained by `tester_method="classifier"`,
+  returning features ranked by how strongly they indicate a sample belongs
+  to the shifted distribution.
+
 ### Fixed
 
 - `cyclops.monitor`: `errorfill()` crashed on the default `color=None` because
