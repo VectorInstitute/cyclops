@@ -15,7 +15,7 @@ def test_index_axis():
 
     indices = index_axis(4, 2, (10, 20, 30))
     assert indices[0] == slice(None, None, None)
-    assert indices[0] == slice(None, None, None)
+    assert indices[1] == slice(None, None, None)
     assert indices[2] == 4
 
 
