@@ -61,6 +61,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `cyclops.utils`: `exchange_extension()` dropped the filename entirely
   for paths with no existing extension (e.g. `"myfile"` -> `".csv"`
   instead of `"myfile.csv"`).
+- `cyclops.models`: `MLPModel` (the packaged `"mlp_pt"` model) could not
+  be constructed at all - an activation class was inserted into
+  `nn.Sequential` instead of an instance, the first hidden layer was
+  double-wrapped in a list, and the loop connecting hidden layers used
+  the wrong input dimension. The packaged `mlp_pt.yaml` config also
+  passed a nonexistent `layer_dim` argument left over from the RNN/GRU/
+  LSTM configs.
 
 ### Changed
 
