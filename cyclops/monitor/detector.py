@@ -7,6 +7,7 @@ import pandas as pd
 from datasets import concatenate_datasets
 from datasets.arrow_dataset import Dataset
 
+from cyclops.data.slicer import SliceSpec
 from cyclops.monitor.reductor import Reductor
 from cyclops.monitor.tester import DCTester, TSTester
 from cyclops.monitor.utils import get_args
@@ -191,6 +192,111 @@ class Detector:
             "distance": results["distance"],
             "shift_detected": shift_detected,
         }
+
+    def detect_shift_by_subgroup(
+        self,
+        ds_target: Dataset,
+        slice_spec: SliceSpec,
+        correction: str = "bonferroni",
+        min_sample_size: int = 30,
+        batched: bool = True,
+        batch_size: int = 1000,
+        num_proc: int = 1,
+    ) -> Dict[str, Dict[str, Any]]:
+        """Detect distribution shift independently within each subgroup.
+
+        A model can look stable when tested against the whole target
+        population while drifting badly for a specific clinically or
+        socially relevant subgroup (e.g. an age band, sex, or hospital
+        site) - an aggregate test can mask this. This method runs the
+        already-fit tester separately on each subgroup of `ds_target`
+        defined by `slice_spec`, so that subgroup-level shift can be
+        detected and reported on its own, which is useful for
+        health-equity-aware monitoring of deployed models.
+
+        Parameters
+        ----------
+        ds_target : Dataset
+            Target dataset to test for shift, split into subgroups.
+        slice_spec : SliceSpec
+            Specification of the subgroups (slices) of `ds_target` to test
+            independently. See :class:`cyclops.data.slicer.SliceSpec`.
+        correction : str, optional
+            Multiple-testing correction applied to the p-value threshold
+            across all subgroups tested, to control the false-positive
+            rate that testing many subgroups simultaneously would
+            otherwise inflate. One of "bonferroni" or "none". Default is
+            "bonferroni".
+        min_sample_size : int, optional
+            Minimum number of samples required in a subgroup for the
+            shift test to be run. Subgroups with fewer samples than this
+            are still returned (with their sample size), but with
+            `p_val`/`distance`/`shift_detected` set to None, since a
+            statistical test on too few samples is unreliable. Default
+            is 30.
+        batched : bool, optional
+            Whether to filter the dataset in batches. Default is True.
+        batch_size : int, optional
+            Batch size to use when filtering. Default is 1000.
+        num_proc : int, optional
+            Number of processes to use when filtering. Default is 1.
+
+        Returns
+        -------
+        dict
+            Dictionary mapping each subgroup's slice name to a dictionary
+            with keys `p_val`, `distance`, `shift_detected`, and
+            `sample_size`.
+
+        Examples
+        --------
+        >>> from cyclops.data.slicer import SliceSpec
+        >>> slice_spec = SliceSpec(
+        ...     spec_list=[{"sex": {"value": "M"}}, {"sex": {"value": "F"}}],
+        ... )
+        >>> results = detector.detect_shift_by_subgroup(ds_target, slice_spec)
+
+        """
+        if correction not in ("bonferroni", "none"):
+            raise ValueError(
+                f"Unknown correction method: {correction}. "
+                "Must be one of 'bonferroni', 'none'.",
+            )
+
+        slices = slice_spec.get_slices()
+        base_threshold = self.tester.p_val_threshold
+        threshold = (
+            base_threshold / len(slices)
+            if correction == "bonferroni"
+            else base_threshold
+        )
+
+        results: Dict[str, Dict[str, Any]] = {}
+        for slice_name, slice_fn in slices.items():
+            ds_subgroup = ds_target.filter(
+                slice_fn,
+                batched=batched,
+                batch_size=batch_size,
+                num_proc=num_proc,
+            )
+            sample_size = ds_subgroup.shape[0]
+            if sample_size < min_sample_size:
+                results[slice_name] = {
+                    "p_val": None,
+                    "distance": None,
+                    "shift_detected": None,
+                    "sample_size": sample_size,
+                }
+                continue
+
+            drift_result = self._detect_shift_sample(ds_subgroup)
+            results[slice_name] = {
+                "p_val": drift_result["p_val"],
+                "distance": drift_result["distance"],
+                "shift_detected": 1 if drift_result["p_val"] < threshold else 0,
+                "sample_size": sample_size,
+            }
+        return results
 
     def sensitivity_test(
         self,
