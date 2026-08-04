@@ -60,22 +60,18 @@ class ModelDetails(BaseModelCardSection):
     owners: Optional[List[Owner]] = Field(
         description="The individuals or teams who own the model.",
         default_factory=list,
-        unique_items=True,
     )
     licenses: Optional[List[License]] = Field(
         description="The license information for the model.",
         default_factory=list,
-        unique_items=True,
     )
     citations: Optional[List[Citation]] = Field(
         description="How should the model be cited?",
         default_factory=list,
-        unique_items=True,
     )
     references: Optional[List[Reference]] = Field(
         description="Provide any additional references the reader may need.",
         default_factory=list,
-        unique_items=True,
     )
     path: Optional[StrictStr] = Field(None, description="Where is this model stored?")
     regulatory_requirements: Optional[List[RegulatoryRequirement]] = Field(
@@ -83,7 +79,6 @@ class ModelDetails(BaseModelCardSection):
             "Provide any regulatory requirements that the model should comply to."
         ),
         default_factory=list,
-        unique_items=True,
     )
 
 
@@ -140,12 +135,10 @@ class Considerations(BaseModelCardSection):
     users: Optional[List[User]] = Field(
         description="Who are the primary intended users of the model?",
         default_factory=list,
-        unique_items=True,
     )
     use_cases: Optional[List[UseCase]] = Field(
         description="What are the intended use cases of the model?",
         default_factory=list,
-        unique_items=True,
     )
     fairness_assessment: Optional[List[FairnessAssessment]] = Field(
         description="""
@@ -157,7 +150,6 @@ class Considerations(BaseModelCardSection):
     ethical_considerations: Optional[List[Risk]] = Field(
         description="What are the ethical risks involved in application of this model?",
         default_factory=list,
-        unique_items=True,
     )
 
 

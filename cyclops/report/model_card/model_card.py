@@ -3,9 +3,10 @@
 import inspect
 from typing import Optional
 
-from pydantic import BaseModel, Extra, Field
+import numpy as np
+from pydantic import BaseModel, ConfigDict, Field
 
-from cyclops.report.model_card.base import BaseModelCardConfig, BaseModelCardSection
+from cyclops.report.model_card.base import BaseModelCardSection, unwrap_optional_type
 from cyclops.report.model_card.sections import (
     Considerations,
     Datasets,
@@ -26,10 +27,15 @@ class ModelCard(BaseModel):
 
     """
 
-    class Config(BaseModelCardConfig):
-        """Model Card configuration."""
-
-        extra: Extra = Extra.forbid
+    model_config = ConfigDict(
+        extra="forbid",
+        validate_default=True,
+        validate_assignment=True,
+        # `json_encoders` must be set on the outermost model for pydantic to
+        # apply it while serializing nested fields (e.g. PerformanceMetric.value
+        # holding a numpy array) via `.model_dump_json()`.
+        json_encoders={np.ndarray: lambda v: v.tolist()},
+    )
 
     overview: Optional[Overview] = Field(
         None,
@@ -80,7 +86,7 @@ class ModelCard(BaseModel):
             If the given `section_name` is not a subclass of `BaseModel`.
 
         """
-        sections = self.__fields__
+        sections = type(self).model_fields
         if section_name not in sections:
             raise ValueError(
                 f"Section `{section_name}` not found in model card. "
@@ -89,7 +95,7 @@ class ModelCard(BaseModel):
 
         section: Optional[BaseModelCardSection] = getattr(self, section_name)
         if section is None:
-            section = sections[section_name].type_()
+            section = unwrap_optional_type(sections[section_name])()
             setattr(self, section_name, section)
 
         if not issubclass(section.__class__, BaseModel):

@@ -11,7 +11,7 @@ from datasets.arrow_dataset import Dataset
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from cyclops.data.slicer import SliceSpec
 from cyclops.evaluate import evaluator
@@ -34,23 +34,21 @@ templates = Jinja2Templates(directory=TEMPLATES_PATH)
 class EvaluationInput(BaseModel):
     """Input data for evaluation."""
 
-    preds_prob: List[float] = Field(..., min_items=1)
-    target: List[float] = Field(..., min_items=1)
+    preds_prob: List[float] = Field(..., min_length=1)
+    target: List[float] = Field(..., min_length=1)
     metadata: Dict[str, List[Any]] = Field(default_factory=dict)
 
+    @field_validator("preds_prob", "target")
     @classmethod
-    @validator("preds_prob", "target")
-    def check_list_length(
-        cls, v: List[float], values: Dict[str, List[Any]], **kwargs: Any
-    ) -> List[float]:
+    def check_list_length(cls, v: List[float], info: ValidationInfo) -> List[float]:
         """Check if preds_prob and target have the same length.
 
         Parameters
         ----------
         v : List[float]
             List of values.
-        values : Dict[str, List[Any]]
-            Dictionary of values.
+        info : ValidationInfo
+            Validation info, including previously-validated field values.
 
         Returns
         -------
@@ -63,14 +61,15 @@ class EvaluationInput(BaseModel):
             If preds_prob and target have different lengths.
 
         """
-        if "preds_prob" in values and len(v) != len(values["preds_prob"]):
+        preds_prob = info.data.get("preds_prob")
+        if preds_prob is not None and len(v) != len(preds_prob):
             raise ValueError("preds_prob and target must have the same length")
         return v
 
+    @field_validator("metadata")
     @classmethod
-    @validator("metadata")
     def check_metadata_length(
-        cls, v: Dict[str, List[Any]], values: Dict[str, List[Any]], **kwargs: Any
+        cls, v: Dict[str, List[Any]], info: ValidationInfo
     ) -> Dict[str, List[Any]]:
         """Check if metadata columns have the same length as preds_prob and target.
 
@@ -78,8 +77,8 @@ class EvaluationInput(BaseModel):
         ----------
         v : Dict[str, List[Any]]
             Dictionary of values.
-        values : Dict[str, List[Any]]
-            Dictionary of values.
+        info : ValidationInfo
+            Validation info, including previously-validated field values.
 
         Returns
         -------
@@ -92,9 +91,10 @@ class EvaluationInput(BaseModel):
             If metadata columns have different lengths than preds_prob and target.
 
         """
-        if "preds_prob" in values:
+        preds_prob = info.data.get("preds_prob")
+        if preds_prob is not None:
             for column in v.values():
-                if len(column) != len(values["preds_prob"]):
+                if len(column) != len(preds_prob):
                     raise ValueError(
                         "All metadata columns must have the same length as preds_prob and target"
                     )

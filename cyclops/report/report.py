@@ -17,7 +17,7 @@ from pydantic import BaseModel, StrictStr, create_model
 from scour import scour
 
 from cyclops.report.model_card import ModelCard  # type: ignore[attr-defined]
-from cyclops.report.model_card.base import BaseModelCardField
+from cyclops.report.model_card.base import BaseModelCardField, unwrap_optional_type
 from cyclops.report.model_card.fields import (
     Citation,
     Dataset,
@@ -107,7 +107,8 @@ class ModelCardReport:
             The model card report.
 
         """
-        model_card = ModelCard.parse_file(path)
+        with open(path, encoding="utf-8") as f_handle:
+            model_card = ModelCard.model_validate_json(f_handle.read())
         report = ModelCardReport(output_dir=output_dir)
         report._model_card = model_card
         return report
@@ -136,9 +137,9 @@ class ModelCardReport:
         """
         section_name = str_to_snake_case(section_name)
         section = self._model_card.get_section(section_name)
-        field_value = field_type.parse_obj(data)
+        field_value = field_type.model_validate(data)
 
-        if field_name in section.__fields__:
+        if field_name in type(section).model_fields:
             section.update_field(field_name, field_value)
         else:
             field_name = str_to_snake_case(field_name)
@@ -162,10 +163,10 @@ class ModelCardReport:
         section = self._model_card.get_section(section_name)
 
         # get data already in section and update with new data
-        section_data = section.dict()
+        section_data = section.model_dump()
         section_data.update(data)
 
-        populated_section = section.__class__.parse_obj(section_data)
+        populated_section = section.__class__.model_validate(section_data)
         setattr(self._model_card, section_name, populated_section)
 
     def log_descriptor(
@@ -247,9 +248,10 @@ class ModelCardReport:
         section = self._model_card.get_section(section_name)
 
         # append graphic to existing GraphicsCollection or create new one
+        section_fields = type(section).model_fields
         if (
-            "graphics" in section.__fields__
-            and section.__fields__["graphics"].type_ is GraphicsCollection
+            "graphics" in section_fields
+            and unwrap_optional_type(section_fields["graphics"]) is GraphicsCollection
             and section.graphics is not None  # type: ignore
         ):
             section.graphics.collection.append(graphic)  # type: ignore
@@ -275,9 +277,11 @@ class ModelCardReport:
         section = self._model_card.get_section(section_name)
 
         # append graphic to existing GraphicsCollection or create new one
+        section_fields = type(section).model_fields
         if (
-            "metric_cards" in section.__fields__
-            and section.__fields__["metric_cards"].type_ is MetricCardCollection
+            "metric_cards" in section_fields
+            and unwrap_optional_type(section_fields["metric_cards"])
+            is MetricCardCollection
             and section.metric_cards is not None  # type: ignore
         ):
             section.metric_cards.collection.append(metric_cards)  # type: ignore
@@ -323,7 +327,7 @@ class ModelCardReport:
             img.save(buffered, format=img.format)
             img_base64 = base64.b64encode(buffered.getvalue()).decode()
 
-        graphic = Graphic.parse_obj(
+        graphic = Graphic.model_validate(
             {"name": caption, "image": f"data:image/{img.format};base64,{img_base64}"},
         )
 
@@ -373,7 +377,7 @@ class ModelCardReport:
 
             data = {"name": caption, "image": f"data:image/svg+xml;base64,{svg}"}
 
-        graphic = Graphic.parse_obj(data)  # create Graphic object from data
+        graphic = Graphic.model_validate(data)  # create Graphic object from data
 
         self._log_graphic_collection(graphic, "Plots", section_name)
 
@@ -1030,7 +1034,7 @@ class ModelCardReport:
 
     def _validate(self) -> None:
         """Validate the model card."""
-        ModelCard.validate(self._model_card.dict())
+        ModelCard.model_validate(self._model_card.model_dump())
 
     def _write_file(self, path: str, content: str) -> None:
         """Write a file to the given path.
@@ -1152,9 +1156,8 @@ class ModelCardReport:
 
         if len(report_paths) != 0:
             latest_report_path = sorted(report_paths)[-1]
-            latest_report = ModelCard.parse_file(
-                latest_report_path,
-            )
+            with open(latest_report_path, encoding="utf-8") as f_handle:
+                latest_report = ModelCard.model_validate_json(f_handle.read())
             latest_report_metric_cards: List[List[MetricCard]] = []
             sweep_metric_cards(latest_report, latest_report_metric_cards)
             latest_report_metric_cards_set = latest_report_metric_cards[0]
@@ -1210,7 +1213,7 @@ class ModelCardReport:
             json_path = report_path.replace(".html", ".json")
             self._write_file(
                 json_path,
-                self._model_card.json(indent=2, exclude_unset=True),
+                self._model_card.model_dump_json(indent=2, exclude_unset=True),
             )
 
         return report_path
