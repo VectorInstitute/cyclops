@@ -1,6 +1,5 @@
 model__input_dim: null
 model__hidden_dims: [256, 256, 256, 256]
-model__layer_dim: 2
 model__output_dim: 1
 model__activation: 'ReLU'
 criterion: 'BCEWithLogitsLoss'
