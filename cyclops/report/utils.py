@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 
 import numpy as np
 import plotly.graph_objects as go
+from pydantic import BaseModel
 
 from cyclops.report.model_card import ModelCard  # type: ignore[attr-defined]
 from cyclops.report.model_card.fields import (
@@ -350,7 +351,7 @@ def sweep_tests(model_card: Any, tests: List[Any]) -> None:
             field = field[1]  # noqa: PLW2901
         if isinstance(field, Test):
             tests.append(field)
-        if hasattr(field, "__fields__"):
+        if isinstance(field, BaseModel):
             sweep_tests(field, tests)
         if (
             isinstance(field, list)
@@ -384,7 +385,7 @@ def sweep_metrics(model_card: Any, metrics: List[Any]) -> None:
             field = field[1]  # noqa: PLW2901
         if isinstance(field, PerformanceMetric):
             metrics.append(field)
-        if hasattr(field, "__fields__"):
+        if isinstance(field, BaseModel):
             sweep_metrics(field, metrics)
         if (
             isinstance(field, list)
@@ -418,7 +419,7 @@ def sweep_metric_cards(model_card: Any, metric_cards: List[Any]) -> None:
             field = field[1]  # noqa: PLW2901
         if isinstance(field, MetricCard):
             metric_cards.append(field)
-        if hasattr(field, "__fields__"):
+        if isinstance(field, BaseModel):
             sweep_metric_cards(field, metric_cards)
         if (
             isinstance(field, list)
@@ -454,7 +455,7 @@ def sweep_graphics(model_card: Any, graphics: list[Any], caption: str) -> None:
             field = field[1]  # noqa: PLW2901
         if isinstance(field, Graphic) and field.name == caption:
             graphics.append(field)
-        if hasattr(field, "__fields__"):
+        if isinstance(field, BaseModel):
             sweep_graphics(field, graphics, caption)
         if (
             isinstance(field, list)
@@ -1044,7 +1045,7 @@ def create_metric_card_plot(
             config={"displayModeBar": False},
         ),
     }
-    graphic = Graphic.parse_obj(data)
+    graphic = Graphic.model_validate(data)
     return GraphicsCollection(description="plot", collection=[graphic])
 
 

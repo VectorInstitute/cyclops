@@ -3,7 +3,7 @@
 import inspect
 from datetime import date as dt_date
 from datetime import datetime as dt_datetime
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, List, Literal, Optional, Tuple, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -17,8 +17,8 @@ from pydantic import (
     StrictFloat,
     StrictInt,
     StrictStr,
-    root_validator,
-    validator,
+    field_validator,
+    model_validator,
 )
 
 from cyclops.report.model_card.base import BaseModelCardField
@@ -90,24 +90,33 @@ class License(
     )
     text_url: Optional[AnyUrl] = Field(None, description="A URL to the license text.")
 
-    @root_validator(skip_on_failure=True)
-    def validate_spdx_identifier(
-        cls: "License",  # noqa: N805
-        values: Dict[str, StrictStr],
-    ) -> Dict[str, Union[StrictStr, AnyUrl]]:
+    @model_validator(mode="after")
+    def validate_spdx_identifier(self) -> "License":
         """Validate the SPDX license identifier."""
-        spdx_id = values["identifier"]
+        spdx_id = self.identifier
         try:
             get_spdx_licensing().parse(spdx_id, validate=True)
-            if spdx_id not in [None, ""] and values.get("text_url") is None:
-                values["text_url"] = cls._get_license_text_url(spdx_id)  # type: ignore
+            if spdx_id not in [None, ""] and self.text_url is None:
+                text_url = self._get_license_text_url(spdx_id)
+                # bypass the validated `__setattr__` (which would re-run this
+                # "after" validator and recurse indefinitely); coerce to
+                # `AnyUrl` ourselves since validation is being skipped
+                object.__setattr__(
+                    self,
+                    "text_url",
+                    AnyUrl(text_url) if text_url is not None else None,
+                )
         except ExpressionError as exc:
-            if spdx_id.lower() not in ["proprietary", "unlicensed", "unknown"]:
+            if spdx_id is None or spdx_id.lower() not in [
+                "proprietary",
+                "unlicensed",
+                "unknown",
+            ]:
                 raise ValueError(
                     "Expected a valid SPDX license identifier "
                     f"(https://spdx.org/licenses/). Got {spdx_id} instead.",
                 ) from exc
-        return values
+        return self
 
     @staticmethod
     def _get_license_text_url(identifier: Optional[str]) -> Optional[str]:
@@ -154,9 +163,10 @@ class Citation(
         description="The citation content in BibTeX format.",
     )
 
-    @validator("content")
+    @field_validator("content")
+    @classmethod
     def parse_content(
-        cls: "Citation",  # noqa: N805
+        cls: "type[Citation]",  # noqa: N805
         value: StrictStr,
     ) -> StrictStr:
         """Parse the citation content."""
@@ -226,12 +236,10 @@ class SensitiveData(BaseModelCardField, composable_with=["Dataset"], list_factor
             "aggregated. Please describe any such fields here."
         ),
         default_factory=list,
-        unique_items=True,
     )
     sensitive_data_used: Optional[List[StrictStr]] = Field(
         description="A list of sensitive data used in the deployed model.",
         default_factory=list,
-        unique_items=True,
     )
     justification: Optional[StrictStr] = Field(
         None,
@@ -253,23 +261,19 @@ class Dataset(BaseModelCardField, composable_with=["Datasets"], list_factory=Tru
     citations: Optional[List[Citation]] = Field(
         description="How should the dataset be cited?",
         default_factory=list,
-        unique_items=True,
     )
     references: Optional[List[Reference]] = Field(
         description="Provide any additional links to resources the reader may need.",
         default_factory=list,
-        unique_items=True,
     )
     licenses: Optional[List[License]] = Field(
         description="The license information for the dataset.",
         default_factory=list,
-        unique_items=True,
     )
     version: Optional[Version] = Field(None, description="The version of the dataset.")
     features: Optional[List[StrictStr]] = Field(
         description="A list of features in the dataset.",
         default_factory=list,
-        unique_items=True,
     )
     graphics: Optional[GraphicsCollection] = Field(
         None,
@@ -419,9 +423,10 @@ class UseCase(
         ),
     )
 
-    @validator("kind")
+    @field_validator("kind")
+    @classmethod
     def kind_must_be_valid(
-        cls: "UseCase",  # noqa: N805
+        cls: "type[UseCase]",  # noqa: N805
         value: str,
     ) -> str:
         """Validate the use case kind."""
@@ -595,7 +600,7 @@ class MetricCard(
     )
 
     history: List[StrictFloat] = Field(
-        None,
+        default_factory=list,
         description="History of the metric over time.",
     )
 

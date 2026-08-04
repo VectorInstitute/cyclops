@@ -227,7 +227,8 @@ class TestModelCardReport(TestCase):
         )
         self.model_card_report.log_reference(ref)
         assert (
-            self.model_card_report._model_card.model_details.references[0].link == ref
+            str(self.model_card_report._model_card.model_details.references[0].link)
+            == ref
         )
 
     def test_log_regulation(self):
