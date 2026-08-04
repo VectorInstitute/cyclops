@@ -250,7 +250,29 @@ class Detector:
 
         Examples
         --------
+        >>> import numpy as np
+        >>> from datasets import Dataset
         >>> from cyclops.data.slicer import SliceSpec
+        >>> from cyclops.monitor.detector import Detector
+        >>> from cyclops.monitor.reductor import Reductor
+        >>> from cyclops.monitor.tester import TSTester
+        >>> np.random.seed(0)
+        >>> ds_source = Dataset.from_dict(
+        ...     {
+        ...         "feature_0": np.random.rand(100),
+        ...         "sex": ["M", "F"] * 50,
+        ...     },
+        ... )
+        >>> ds_target = Dataset.from_dict(
+        ...     {
+        ...         "feature_0": np.random.rand(100),
+        ...         "sex": ["M", "F"] * 50,
+        ...     },
+        ... )
+        >>> reductor = Reductor("nored", feature_columns=["feature_0"])
+        >>> tester = TSTester("mmd")
+        >>> detector = Detector("sensitivity_test", reductor, tester)
+        >>> detector.fit(ds_source)
         >>> slice_spec = SliceSpec(
         ...     spec_list=[{"sex": {"value": "M"}}, {"sex": {"value": "F"}}],
         ... )

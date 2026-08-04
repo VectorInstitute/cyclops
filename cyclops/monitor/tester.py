@@ -18,7 +18,6 @@ from cyclops.data.utils import apply_transforms
 from cyclops.models.catalog import wrap_model
 from cyclops.models.utils import is_pytorch_model, is_sklearn_model
 from cyclops.models.wrappers import PTModel, SKModel
-from cyclops.monitor.explainer import Explainer
 from cyclops.monitor.utils import DetectronModule, DummyCriterion, get_args
 from cyclops.utils.optional import import_optional_module
 
@@ -528,9 +527,18 @@ class DCTester:
         >>> tester = DCTester("classifier", model=model)
         >>> tester.fit(X_s)
         >>> p_val, dist = tester.test_shift(X_t)
-        >>> importances = tester.explain_shift(X_t)
+        >>> importances = tester.explain_shift(X_t)  # doctest: +SKIP
 
         """
+        # imported lazily: cyclops.monitor.explainer eagerly imports shap, and
+        # importing shap at module load time (i.e. every time cyclops.monitor
+        # is imported) is both unnecessary for users who never call
+        # explain_shift() and can collide with this repo's own
+        # cyclops/data/slicer.py under some import mechanisms (e.g. doctest's
+        # per-file `sys.path` handling), since shap depends on a third-party
+        # package also named `slicer`.
+        from cyclops.monitor.explainer import Explainer  # noqa: PLC0415
+
         if self.tester_method != "classifier":
             raise ValueError(
                 'explain_shift() is only supported for tester_method="classifier" '
