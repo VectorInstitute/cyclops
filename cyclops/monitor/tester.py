@@ -165,6 +165,7 @@ class TSTester:
         self.tester_method = tester_method
         self.method: Any = None
         self.p_val_threshold = p_val_threshold
+        self._base_p_val_threshold = p_val_threshold
 
         # dict where the key is the string of each test_method
         # and the value is the class of the test_method
@@ -256,6 +257,7 @@ class TSTester:
         Tuple[float, float]
             p-value and distance between reference and target datasets
         """
+        num_features = None
         if isinstance(X_t, np.ndarray):
             X_t = X_t.astype("float32")
             num_features = X_t.shape[1]
@@ -287,8 +289,10 @@ class TSTester:
             p_val = p_val[idx]
             dist = dist[idx]
 
-        if self.tester_method in ["ks", "chi2", "fet", "tabular"]:
-            self.p_val_threshold = self.p_val_threshold / num_features
+        if self.tester_method in ["ks", "chi2", "fet", "tabular"] and num_features:
+            # Bonferroni-correct relative to the original threshold each call,
+            # so repeated calls (e.g. in Detector's loops) don't compound.
+            self.p_val_threshold = self._base_p_val_threshold / num_features
 
         return p_val, dist
 
@@ -488,6 +492,7 @@ class ContextMMDWrapper:
         backend: str = "tensorflow",
         p_val: float = 0.05,
         preprocess_x_ref: bool = False,
+        preprocess_at_init: bool = True,
         update_ref: Optional[Dict[str, int]] = None,
         preprocess_fn: Optional[Callable[..., Any]] = None,
         x_kernel: Optional[Callable[..., Any]] = None,
@@ -505,25 +510,26 @@ class ContextMMDWrapper:
 
         c_source = context_generator.transform(ds_source)
 
-        args = [
-            backend,
-            p_val,
-            preprocess_x_ref,
-            update_ref,
-            preprocess_fn,
-            x_kernel,
-            c_kernel,
-            n_permutations,
-            prop_c_held,
-            n_folds,
-            batch_size,
-            device,
-            input_shape,
-            data_type,
-            verbose,
-        ]
-
-        self.tester = ContextMMDDrift(X_s, c_source, *args)
+        self.tester = ContextMMDDrift(
+            X_s,
+            c_source,
+            backend=backend,
+            p_val=p_val,
+            x_ref_preprocessed=preprocess_x_ref,
+            preprocess_at_init=preprocess_at_init,
+            update_ref=update_ref,
+            preprocess_fn=preprocess_fn,
+            x_kernel=x_kernel,
+            c_kernel=c_kernel,
+            n_permutations=n_permutations,
+            prop_c_held=prop_c_held,
+            n_folds=n_folds,
+            batch_size=batch_size,
+            device=device,
+            input_shape=input_shape,
+            data_type=data_type,
+            verbose=verbose,
+        )
 
     def predict(
         self,
@@ -584,35 +590,36 @@ class LKWrapper:
         kernel_b = GaussianRBF(trainable=True) if kernel_b is None else kernel_b
         kernel = DeepKernel(self.proj, kernel_a, kernel_b, eps)
 
-        args = [
-            backend,
-            p_val,
-            x_ref_preprocessed,
-            preprocess_at_init,
-            update_x_ref,
-            preprocess_fn,
-            n_permutations,
-            batch_size_permutations,
-            var_reg,
-            reg_loss_fn,
-            train_size,
-            retrain_from_scratch,
-            optimizer,
-            learning_rate,
-            batch_size,
-            batch_size_predict,
-            preprocess_batch_fn,
-            epochs,
-            num_workers,
-            verbose,
-            train_kwargs,
-            device,
-            dataset,
-            dataloader,
-            input_shape,
-            data_type,
-        ]
-        self.tester = LearnedKernelDrift(X_s, kernel, *args)
+        self.tester = LearnedKernelDrift(
+            X_s,
+            kernel,
+            backend=backend,
+            p_val=p_val,
+            x_ref_preprocessed=x_ref_preprocessed,
+            preprocess_at_init=preprocess_at_init,
+            update_x_ref=update_x_ref,
+            preprocess_fn=preprocess_fn,
+            n_permutations=n_permutations,
+            batch_size_permutations=batch_size_permutations,
+            var_reg=var_reg,
+            reg_loss_fn=reg_loss_fn,
+            train_size=train_size,
+            retrain_from_scratch=retrain_from_scratch,
+            optimizer=optimizer,
+            learning_rate=learning_rate,
+            batch_size=batch_size,
+            batch_size_predict=batch_size_predict,
+            preprocess_batch_fn=preprocess_batch_fn,
+            epochs=epochs,
+            num_workers=num_workers,
+            verbose=verbose,
+            train_kwargs=train_kwargs,
+            device=device,
+            dataset=dataset,
+            dataloader=dataloader,
+            input_shape=input_shape,
+            data_type=data_type,
+        )
 
     def predict(
         self,
