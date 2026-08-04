@@ -84,7 +84,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### CI / infra
 
-- Added a CodeQL workflow for Python static security scanning.
 - Added a `uv` ecosystem entry to Dependabot so `pyproject.toml`/
   `uv.lock` dependencies get automated update PRs.
 - Fixed the README's "integration tests" badge, which linked to a
