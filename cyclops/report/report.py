@@ -1136,6 +1136,10 @@ class ModelCardReport:
             today_now = synthetic_timestamp
         else:
             today_now = dt_datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # filesystem-safe timestamp for the default output filename, so that
+        # repeated export() calls into the same output_dir don't silently
+        # overwrite one another and lose trend/history data.
+        filename_timestamp = today_now.replace(" ", "_").replace(":", "-")
 
         current_report_metrics: Union[
             List[List[PerformanceMetric]], List[PerformanceMetric]
@@ -1214,7 +1218,7 @@ class ModelCardReport:
         report_path = os.path.join(
             self.output_dir,
             "cyclops_report",
-            output_filename or "model_card.html",
+            output_filename or f"model_card_{filename_timestamp}.html",
         )
         self._write_file(report_path, content)
         if save_json:

@@ -1,5 +1,6 @@
 """Test cyclops report module model report."""
 
+import os
 from unittest import TestCase
 
 import numpy as np
@@ -369,6 +370,33 @@ class TestModelCardReport(TestCase):
 
         report_path = self.model_card_report.export(interactive=False, save_json=False)
         assert isinstance(report_path, str)
+
+
+def test_export_default_filename_is_timestamped_per_call(tmp_path):
+    """Repeated export() calls without output_filename must not overwrite each other.
+
+    Regression test: the default output filename used to be the static
+    "model_card.html"/"model_card.json", so every export() call into the
+    same output_dir silently overwrote the previous report, defeating the
+    trend/history comparison the export() docstring promises.
+    """
+    report = ModelCardReport(str(tmp_path))
+    report.log_owner(name="John Doe")
+
+    path_1 = report.export(
+        interactive=False,
+        save_json=True,
+        synthetic_timestamp="2024-01-01 00:00:00",
+    )
+    path_2 = report.export(
+        interactive=False,
+        save_json=True,
+        synthetic_timestamp="2024-01-02 00:00:00",
+    )
+
+    assert path_1 != path_2
+    assert os.path.exists(path_1)
+    assert os.path.exists(path_2)
 
 
 def test_export_with_no_performance_metrics(tmp_path):
