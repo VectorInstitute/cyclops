@@ -9,3 +9,7 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+  - package-ecosystem: "uv"
+    directory: "/" # Location of pyproject.toml / uv.lock
+    schedule:
+      interval: "weekly"
