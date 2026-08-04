@@ -88,3 +88,40 @@ def test_dctester(source_target, generic_source_target, method):
     tester.fit(X_source)
     p_val = tester.test_shift(X_target)[0]
     assert 0 <= p_val <= 1
+
+
+def test_dctester_explain_shift(source_target):
+    """Test DCTester.explain_shift for the classifier tester method."""
+    X_source, X_target = source_target
+    model = RandomForestClassifier()
+    tester = DCTester("classifier", model=model)
+    tester.fit(X_source)
+    tester.test_shift(X_target)
+
+    feature_names = [f"feature_{i}" for i in range(X_source.shape[1])]
+    importances = tester.explain_shift(X_target, feature_names=feature_names)
+
+    assert set(importances.keys()) == set(feature_names)
+    assert all(value >= 0 for value in importances.values())
+    # sorted by descending importance
+    values = list(importances.values())
+    assert values == sorted(values, reverse=True)
+
+
+def test_dctester_explain_shift_unsupported_method(source_target):
+    """explain_shift must raise a clear error for non-classifier methods."""
+    X_source, X_target = source_target
+    tester = DCTester("spot_the_diff")
+    tester.fit(X_source)
+    tester.test_shift(X_target)
+
+    with pytest.raises(ValueError, match="classifier"):
+        tester.explain_shift(X_target)
+
+
+def test_dctester_explain_shift_before_fit():
+    """explain_shift must raise a clear error if called before fit/test_shift."""
+    model = RandomForestClassifier()
+    tester = DCTester("classifier", model=model)
+    with pytest.raises(ValueError, match="fit"):
+        tester.explain_shift(np.random.rand(10, 10))

@@ -18,6 +18,7 @@ from cyclops.data.utils import apply_transforms
 from cyclops.models.catalog import wrap_model
 from cyclops.models.utils import is_pytorch_model, is_sklearn_model
 from cyclops.models.wrappers import PTModel, SKModel
+from cyclops.monitor.explainer import Explainer
 from cyclops.monitor.utils import DetectronModule, DummyCriterion, get_args
 from cyclops.utils.optional import import_optional_module
 
@@ -412,6 +413,7 @@ class DCTester:
         self.p_val_threshold = p_val_threshold
         self.method_args = kwargs
         self.tester: Any = None
+        self.X_s: Any = None
 
         self.tester_methods = {
             "spot_the_diff": SpotTheDiffDrift,
@@ -435,6 +437,7 @@ class DCTester:
         """Initialize test method to source data."""
         if isinstance(X_s, np.ndarray):
             X_s = X_s.astype("float32")
+        self.X_s = X_s
 
         if self.tester_method == "spot_the_diff":
             if not isinstance(X_s, np.ndarray):
@@ -478,6 +481,100 @@ class DCTester:
         p_val = preds["data"]["p_val"]
         dist = preds["data"]["distance"]
         return p_val, dist
+
+    def explain_shift(
+        self,
+        X_t: np.ndarray[float, np.dtype[np.float64]],
+        feature_names: Optional[List[str]] = None,
+        **explainer_kwargs: Any,
+    ) -> Dict[str, float]:
+        """Explain which features are driving a detected shift.
+
+        Only supported for ``tester_method="classifier"``: that test trains
+        a classifier to discriminate reference (source) from test (target)
+        samples, which SHAP can then explain directly - the features that
+        most strongly indicate a sample belongs to the target distribution
+        are the ones most responsible for the detected drift. Must be
+        called after :meth:`fit` and :meth:`test_shift`.
+
+        Parameters
+        ----------
+        X_t : np.ndarray
+            Target data to compute SHAP values for (the same data, or data
+            from the same distribution, passed to :meth:`test_shift`).
+        feature_names : list of str, optional
+            Names for each feature/column of `X_t`, used as keys in the
+            returned dictionary. Defaults to stringified column indices.
+        **explainer_kwargs : Any
+            Additional keyword arguments passed to
+            :class:`cyclops.monitor.explainer.Explainer`.
+
+        Returns
+        -------
+        dict
+            Dictionary mapping each feature name to its mean absolute SHAP
+            value, sorted by descending importance (most drift-responsible
+            feature first).
+
+        Examples
+        --------
+        >>> from cyclops.monitor.tester import DCTester
+        >>> import numpy as np
+        >>> np.random.seed(0)
+        >>> X_s = np.random.normal(0, 1, (100, 10))
+        >>> X_t = np.random.normal(1, 1, (100, 10))
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> model = LogisticRegression()
+        >>> tester = DCTester("classifier", model=model)
+        >>> tester.fit(X_s)
+        >>> p_val, dist = tester.test_shift(X_t)
+        >>> importances = tester.explain_shift(X_t)
+
+        """
+        if self.tester_method != "classifier":
+            raise ValueError(
+                'explain_shift() is only supported for tester_method="classifier" '
+                f"(got {self.tester_method!r}); the other domain-classifier "
+                "methods don't expose a single trained model to explain.",
+            )
+        if self.tester is None:
+            raise ValueError("Must call fit() and test_shift() before explain_shift().")
+
+        try:
+            trained_model = self.tester._detector.model  # noqa: SLF001
+        except AttributeError as exc:
+            raise RuntimeError(
+                "Could not access the trained classifier from the underlying "
+                "alibi-detect ClassifierDrift detector; explain_shift() may be "
+                "incompatible with the installed alibi-detect version.",
+            ) from exc
+        predict_fn = getattr(
+            trained_model,
+            "predict_proba",
+            getattr(trained_model, "predict", trained_model),
+        )
+        # cap background data size, since SHAP's model-agnostic explainers scale
+        # poorly with the number of background samples
+        background = self.X_s[:100] if self.X_s is not None else None
+
+        if isinstance(X_t, np.ndarray):
+            X_t = X_t.astype("float32")
+        explainer = Explainer(predict_fn, data=background, **explainer_kwargs)
+        shap_values = np.asarray(explainer.get_shap_values(X_t).values)
+        if shap_values.ndim == 3:  # (samples, features, classes/outputs)
+            shap_values = shap_values.mean(axis=-1)
+        importances = np.abs(shap_values).mean(axis=0)
+
+        if feature_names is None:
+            feature_names = [str(i) for i in range(len(importances))]
+
+        return dict(
+            sorted(
+                zip(feature_names, importances.tolist()),
+                key=lambda item: item[1],
+                reverse=True,
+            ),
+        )
 
 
 class ContextMMDWrapper:

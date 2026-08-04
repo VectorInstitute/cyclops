@@ -51,6 +51,8 @@ class Explainer:
             explainer = shap.DeepExplainer(self.model, self.data)
         elif self.explainer_type == "gradient":
             explainer = shap.GradientExplainer(self.model, self.data)
+        elif self.data is not None:
+            explainer = shap.Explainer(self.model, self.data)
         else:
             explainer = shap.Explainer(self.model)
         return explainer
