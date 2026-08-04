@@ -1,6 +1,17 @@
 Monitoring
 ==========
 
+.. note::
+
+    This page covers tracking a model's *logged performance metrics* over time
+    through repeated report card evaluations. To proactively test whether the
+    data a deployed model is seeing has statistically drifted from its
+    training/reference distribution - before a performance drop is even
+    observed - see the :doc:`drift detection API <tutorials_monitor>`
+    (:mod:`cyclops.monitor`), which implements two-sample statistical tests,
+    the Detectron harmful-covariate-shift test, and clinically meaningful
+    shift simulators (e.g. by age, sex, hospital type, or time).
+
 After initial evaluation and model report generation, how can we monitor model
 performance over time?
 
