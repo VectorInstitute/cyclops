@@ -277,7 +277,7 @@ def _binary_precision_recall_curve_compute(
 
         precision = np.hstack((precision[sliced], 1))
         recall = np.hstack((recall[sliced], 0))
-        thresholds = thresholds[sliced]  # type: ignore[index]
+        thresholds = thresholds[sliced]
 
     return precision, recall, thresholds
 

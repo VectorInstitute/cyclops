@@ -13,7 +13,7 @@ from typing import (
 )
 
 import pandas as pd
-import PIL
+import PIL.Image
 import psutil
 from datasets import Dataset, DatasetDict
 from datasets.features import (

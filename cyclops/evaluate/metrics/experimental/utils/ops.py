@@ -681,7 +681,7 @@ def _adjust_weight_apply_average(
             weights[tp + fp + fn == 0] = 0.0
 
     weights = xp.astype(weights, xp.float32, copy=False)
-    return xp.sum(  # type: ignore[no-any-return]
+    return xp.sum(
         safe_divide(
             weights * score,
             xp.sum(weights, axis=-1, dtype=score.dtype, keepdims=True),

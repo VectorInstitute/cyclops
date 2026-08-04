@@ -343,8 +343,10 @@ def _inject_ignore_index(array, ignore_index):
     xp = apc.array_namespace(array)
     classes = xp.unique_values(array)
 
-    # select random indices (same size as ignore_index) and set them to ignore_index
-    indices = np.random.randint(0, apc.size(array), size=len(ignore_index))  # type: ignore
+    # select random indices (same size as ignore_index) and set them to ignore_index;
+    # use a local RNG so results do not depend on test execution order
+    rng = np.random.default_rng(42)
+    indices = rng.integers(0, apc.size(array), size=len(ignore_index))  # type: ignore
     array = clone(array)
 
     # use loop + basic indexing to set ignore_index

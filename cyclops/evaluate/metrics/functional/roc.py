@@ -125,7 +125,7 @@ def _binary_roc_compute(
         # start the curve at (0, 0)
         fps = np.hstack((0, fps))
         tps = np.hstack((0, tps))
-        thresholds = np.hstack((1, thresholds))  # type: ignore[arg-type]
+        thresholds = np.hstack((1, thresholds))
 
         if fps[-1] <= 0:
             LOGGER.warning(

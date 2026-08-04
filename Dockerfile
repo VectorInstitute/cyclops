@@ -1,20 +1,16 @@
-FROM python:3.9.7
-
+FROM python:3.11
 
 WORKDIR /app/cyclops
 ARG DEBIAN_FRONTEND=noninteractive
-ENV LANG C.UTF-8
-
+ENV LANG=C.UTF-8
 
 RUN apt-get update \
     && apt-get install -y git software-properties-common \
     && rm -rf /var/lib/apt/lists/*
 
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-RUN python3 -m pip install --upgrade pip
-RUN pip install poetry
+COPY . /app/cyclops/
+RUN uv sync --frozen --no-default-groups --group test --group docs
 
-
-COPY * /app/cyclops/
-RUN poetry config virtualenvs.create false \
-   && poetry install --no-interaction --no-ansi --with test,docs
+ENV PATH="/app/cyclops/.venv/bin:$PATH"

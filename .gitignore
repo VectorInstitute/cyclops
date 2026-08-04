@@ -31,3 +31,4 @@ _autosummary
 *dummy_reports*
 .mypy_cache
 *code-workspace*
+.venv/

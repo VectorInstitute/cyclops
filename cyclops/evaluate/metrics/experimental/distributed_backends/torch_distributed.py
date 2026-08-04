@@ -53,7 +53,7 @@ class TorchDistributed(DistributedBackend, registry_key="torch_distributed"):
     def _simple_all_gather(self, data: Tensor) -> List[Tensor]:
         """Gather tensors of the same shape from all processes."""
         gathered_data = [torch.zeros_like(data) for _ in range(self.world_size)]
-        torch_dist.all_gather(gathered_data, data)  # type: ignore[no-untyped-call]
+        torch_dist.all_gather(gathered_data, data)
         return gathered_data
 
     def all_gather(self, data: Tensor) -> List[Tensor]:  # type: ignore[override]
@@ -77,7 +77,7 @@ class TorchDistributed(DistributedBackend, registry_key="torch_distributed"):
         # gather sizes of all tensors
         local_size = torch.tensor(data.shape, device=data.device)
         local_sizes = [torch.zeros_like(local_size) for _ in range(self.world_size)]
-        torch_dist.all_gather(local_sizes, local_size)  # type: ignore[no-untyped-call]
+        torch_dist.all_gather(local_sizes, local_size)
         max_size = torch.stack(local_sizes).max(dim=0).values
         all_sizes_equal = all(all(ls == max_size) for ls in local_sizes)
 
@@ -93,9 +93,9 @@ class TorchDistributed(DistributedBackend, registry_key="torch_distributed"):
             pad_dims.append(val.item())
         data_padded = torch.nn.functional.pad(data, pad_dims)
         gathered_data = [torch.zeros_like(data_padded) for _ in range(self.world_size)]
-        torch_dist.all_gather(gathered_data, data_padded)  # type: ignore[no-untyped-call]
+        torch_dist.all_gather(gathered_data, data_padded)
         for idx, item_size in enumerate(local_sizes):
-            slice_param = [slice(dim_size) for dim_size in item_size]
+            slice_param = tuple(slice(dim_size) for dim_size in item_size)
             gathered_data[idx] = gathered_data[idx][slice_param]
         return gathered_data
 

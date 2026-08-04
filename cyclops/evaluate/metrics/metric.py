@@ -682,7 +682,10 @@ class MetricCollection(UserDict[str, Union[Metric, "MetricCollection"]]):
             metrics = list(metrics)
             extras: List[Any] = []
             for metric in other_metrics:
-                (metrics if isinstance(metric, Metric) else extras).append(metric)
+                if isinstance(metric, Metric):
+                    metrics.append(metric)
+                else:
+                    extras.append(metric)
 
             if extras:
                 LOGGER.warning(
