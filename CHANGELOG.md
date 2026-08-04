@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-04
+
 ### Added
 
 - `cyclops.monitor`: `Detector.detect_shift_by_subgroup()` runs the fitted
@@ -68,6 +70,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the wrong input dimension. The packaged `mlp_pt.yaml` config also
   passed a nonexistent `layer_dim` argument left over from the RNN/GRU/
   LSTM configs.
+- `cyclops.data`: `SliceSpec`'s datetime `day` component filter
+  (`filter_datetime`) silently matched on year instead of day of month.
 
 ### Changed
 
@@ -89,4 +93,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expanded `CONTRIBUTING.md` with environment setup, test-running, and
   repository layout sections.
 
-[Unreleased]: https://github.com/VectorInstitute/cyclops/compare/v0.2.12...HEAD
+[Unreleased]: https://github.com/VectorInstitute/cyclops/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/VectorInstitute/cyclops/compare/v0.2.12...v0.3.0
