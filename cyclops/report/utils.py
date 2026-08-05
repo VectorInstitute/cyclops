@@ -734,6 +734,8 @@ def _process_metric_name(
             "Multilabel",
         ):
             name = metric["type"][10:]
+        else:
+            name = metric["type"]
         for key, value in _METRIC_NAMES_DISPLAY_MAP.items():
             name = name.replace(key, value)
     else:
@@ -1049,13 +1051,18 @@ def create_metric_card_plot(
     return GraphicsCollection(description="plot", collection=[graphic])
 
 
-def regex_replace(string: str, find: str, replace: str) -> str:
+def regex_replace(string: Any, find: str, replace: str) -> Any:
     """Replace a regex pattern with a string."""
+    if not isinstance(string, str):
+        # e.g. Jinja's Undefined when a template indexes into an empty list
+        return string
     return sub(find, replace, string)
 
 
-def regex_search(string: str, find: str) -> List[Any]:
+def regex_search(string: Any, find: str) -> List[Any]:
     """Search a regex pattern in a string and return the match."""
+    if not isinstance(string, str):
+        return []
     return findall(r"\((.*?)\)", string)
 
 

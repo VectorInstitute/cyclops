@@ -156,6 +156,17 @@ def test_exchange_extension():
     assert exchange_extension("/tmp/file.txt", "csv") == "/tmp/file.csv"
 
 
+def test_exchange_extension_no_existing_extension():
+    """Test exchange_extension fn on a path with no existing extension.
+
+    Regression test: os.path.splitext returns "" for old_ext on an
+    extensionless path, and `file_path[:-len(old_ext)]` evaluated to
+    `file_path[:-0]` == `file_path[:0]` == "", silently dropping the
+    filename instead of appending the new extension.
+    """
+    assert exchange_extension("/tmp/myfile", "csv") == "/tmp/myfile.csv"
+
+
 def test_process_file_save_path():
     """Test process_file_save_path fn."""
     with pytest.raises(ValueError):

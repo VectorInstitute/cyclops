@@ -6,6 +6,7 @@ from typing import Any, Callable, List, Union
 import cycquery.ops as qo
 import numpy as np
 import pandas as pd
+import pyarrow as pa
 import pytest
 from cycquery import OMOPQuerier
 from datasets import Dataset
@@ -295,6 +296,27 @@ def test_filter_datetime(
     if keep_nulls:
         result = np.bitwise_or(result, pd.isnull(examples))
     assert result.all()
+
+
+def test_filter_datetime_day():
+    """Test that filter_datetime's `day` argument filters on day, not year.
+
+    Regression test: `day` filtering used `pc.year(...)` instead of
+    `pc.day(...)`, so it silently matched on year instead of day of
+    month. Self-contained (no database), unlike the other filter_datetime
+    tests in this file, which all require a live Synthea database and
+    are therefore excluded from CI.
+    """
+    dates = pd.to_datetime(
+        ["2020-01-05", "2020-02-14", "2020-03-14", "2020-04-21"],
+    )
+    table = pa.table({"visit_date": dates})
+
+    result = filter_datetime(table, column_name="visit_date", day=14)
+    assert result == [False, True, True, False]
+
+    result = filter_datetime(table, column_name="visit_date", day=[5, 21])
+    assert result == [True, False, False, True]
 
 
 @pytest.mark.integration_test()

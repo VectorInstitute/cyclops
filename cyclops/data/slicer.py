@@ -768,7 +768,7 @@ def filter_datetime(
         months = pc.month(example_values)
         mask = _apply_mask(months, month, mask)
     if day is not None:
-        days = pc.year(example_values)
+        days = pc.day(example_values)
         mask = _apply_mask(days, day, mask)
     if hour is not None:
         hours = pc.hour(example_values)

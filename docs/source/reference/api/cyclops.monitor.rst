@@ -14,3 +14,7 @@ cyclops.monitor
 
     clinical_applicator
     synthetic_applicator
+    detector
+    reductor
+    tester
+    explainer

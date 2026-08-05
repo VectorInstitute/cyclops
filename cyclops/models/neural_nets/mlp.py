@@ -50,13 +50,17 @@ class MLPModel(nn.Module):
         self.input_dim = input_dim
         self.hidden_dims = hidden_dims
         self.output_dim = output_dim
-        self.activation = get_module("activation", activation)
+        self.activation = (
+            get_module("activation", activation)()
+            if isinstance(activation, str)
+            else activation
+        )
 
-        layers = [self._layer(input_dim, hidden_dims[0], self.activation)]
+        layers = self._layer(input_dim, hidden_dims[0], self.activation)
         for i in range(len(hidden_dims) - 1):
             layers.extend(
                 self._layer(
-                    self.hidden_dims[i] if i > 0 else input_dim,
+                    self.hidden_dims[i],
                     self.hidden_dims[i + 1],
                     activation,
                 ),

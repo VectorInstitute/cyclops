@@ -71,7 +71,7 @@ class Reductor:
         dr_method: str,
         batch_size: int = 32,
         num_workers: int = 0,
-        device: str = None,
+        device: Optional[str] = None,
         transforms: Optional[Union[Callable, Compose]] = None,
         feature_columns: Optional[Union[str, List[str]]] = None,
         **kwargs: Any,
@@ -80,7 +80,7 @@ class Reductor:
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.device = device
-        if isinstance(transforms, Compose):
+        if Compose is not None and isinstance(transforms, Compose):
             self.transforms = partial(apply_transforms, transforms=transforms)
         else:
             self.transforms = transforms
@@ -120,7 +120,7 @@ class Reductor:
         else:
             self.model = wrap_model(self.model)
 
-    def load_model(self, output_path: str = None) -> None:
+    def load_model(self, output_path: Optional[str] = None) -> None:
         """Load pre-trained model from path.
 
         For scikit-learn models, a pickle is loaded from disk. For the torch models, the

@@ -1,6 +1,6 @@
 [project]
 name = "pycyclops"
-version = "0.2.12"
+version = "0.3.0"
 description = "Framework for healthcare ML implementation"
 authors = [{ name = "Vector AI Engineering", email = "cyclops@vectorinstitute.ai" }]
 license = { text = "Apache-2.0" }

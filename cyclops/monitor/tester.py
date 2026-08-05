@@ -165,6 +165,7 @@ class TSTester:
         self.tester_method = tester_method
         self.method: Any = None
         self.p_val_threshold = p_val_threshold
+        self._base_p_val_threshold = p_val_threshold
 
         # dict where the key is the string of each test_method
         # and the value is the class of the test_method
@@ -256,6 +257,7 @@ class TSTester:
         Tuple[float, float]
             p-value and distance between reference and target datasets
         """
+        num_features = None
         if isinstance(X_t, np.ndarray):
             X_t = X_t.astype("float32")
             num_features = X_t.shape[1]
@@ -287,8 +289,10 @@ class TSTester:
             p_val = p_val[idx]
             dist = dist[idx]
 
-        if self.tester_method in ["ks", "chi2", "fet", "tabular"]:
-            self.p_val_threshold = self.p_val_threshold / num_features
+        if self.tester_method in ["ks", "chi2", "fet", "tabular"] and num_features:
+            # Bonferroni-correct relative to the original threshold each call,
+            # so repeated calls (e.g. in Detector's loops) don't compound.
+            self.p_val_threshold = self._base_p_val_threshold / num_features
 
         return p_val, dist
 
@@ -408,6 +412,7 @@ class DCTester:
         self.p_val_threshold = p_val_threshold
         self.method_args = kwargs
         self.tester: Any = None
+        self.X_s: Any = None
 
         self.tester_methods = {
             "spot_the_diff": SpotTheDiffDrift,
@@ -431,6 +436,7 @@ class DCTester:
         """Initialize test method to source data."""
         if isinstance(X_s, np.ndarray):
             X_s = X_s.astype("float32")
+        self.X_s = X_s
 
         if self.tester_method == "spot_the_diff":
             if not isinstance(X_s, np.ndarray):
@@ -475,6 +481,109 @@ class DCTester:
         dist = preds["data"]["distance"]
         return p_val, dist
 
+    def explain_shift(
+        self,
+        X_t: np.ndarray[float, np.dtype[np.float64]],
+        feature_names: Optional[List[str]] = None,
+        **explainer_kwargs: Any,
+    ) -> Dict[str, float]:
+        """Explain which features are driving a detected shift.
+
+        Only supported for ``tester_method="classifier"``: that test trains
+        a classifier to discriminate reference (source) from test (target)
+        samples, which SHAP can then explain directly - the features that
+        most strongly indicate a sample belongs to the target distribution
+        are the ones most responsible for the detected drift. Must be
+        called after :meth:`fit` and :meth:`test_shift`.
+
+        Parameters
+        ----------
+        X_t : np.ndarray
+            Target data to compute SHAP values for (the same data, or data
+            from the same distribution, passed to :meth:`test_shift`).
+        feature_names : list of str, optional
+            Names for each feature/column of `X_t`, used as keys in the
+            returned dictionary. Defaults to stringified column indices.
+        **explainer_kwargs : Any
+            Additional keyword arguments passed to
+            :class:`cyclops.monitor.explainer.Explainer`.
+
+        Returns
+        -------
+        dict
+            Dictionary mapping each feature name to its mean absolute SHAP
+            value, sorted by descending importance (most drift-responsible
+            feature first).
+
+        Examples
+        --------
+        >>> from cyclops.monitor.tester import DCTester
+        >>> import numpy as np
+        >>> np.random.seed(0)
+        >>> X_s = np.random.normal(0, 1, (100, 10))
+        >>> X_t = np.random.normal(1, 1, (100, 10))
+        >>> from sklearn.linear_model import LogisticRegression
+        >>> model = LogisticRegression()
+        >>> tester = DCTester("classifier", model=model)
+        >>> tester.fit(X_s)
+        >>> p_val, dist = tester.test_shift(X_t)
+        >>> importances = tester.explain_shift(X_t)  # doctest: +SKIP
+
+        """
+        # imported lazily: cyclops.monitor.explainer eagerly imports shap, and
+        # importing shap at module load time (i.e. every time cyclops.monitor
+        # is imported) is both unnecessary for users who never call
+        # explain_shift() and can collide with this repo's own
+        # cyclops/data/slicer.py under some import mechanisms (e.g. doctest's
+        # per-file `sys.path` handling), since shap depends on a third-party
+        # package also named `slicer`.
+        from cyclops.monitor.explainer import Explainer  # noqa: PLC0415
+
+        if self.tester_method != "classifier":
+            raise ValueError(
+                'explain_shift() is only supported for tester_method="classifier" '
+                f"(got {self.tester_method!r}); the other domain-classifier "
+                "methods don't expose a single trained model to explain.",
+            )
+        if self.tester is None:
+            raise ValueError("Must call fit() and test_shift() before explain_shift().")
+
+        try:
+            trained_model = self.tester._detector.model  # noqa: SLF001
+        except AttributeError as exc:
+            raise RuntimeError(
+                "Could not access the trained classifier from the underlying "
+                "alibi-detect ClassifierDrift detector; explain_shift() may be "
+                "incompatible with the installed alibi-detect version.",
+            ) from exc
+        predict_fn = getattr(
+            trained_model,
+            "predict_proba",
+            getattr(trained_model, "predict", trained_model),
+        )
+        # cap background data size, since SHAP's model-agnostic explainers scale
+        # poorly with the number of background samples
+        background = self.X_s[:100] if self.X_s is not None else None
+
+        if isinstance(X_t, np.ndarray):
+            X_t = X_t.astype("float32")
+        explainer = Explainer(predict_fn, data=background, **explainer_kwargs)
+        shap_values = np.asarray(explainer.get_shap_values(X_t).values)
+        if shap_values.ndim == 3:  # (samples, features, classes/outputs)
+            shap_values = shap_values.mean(axis=-1)
+        importances = np.abs(shap_values).mean(axis=0)
+
+        if feature_names is None:
+            feature_names = [str(i) for i in range(len(importances))]
+
+        return dict(
+            sorted(
+                zip(feature_names, importances.tolist()),
+                key=lambda item: item[1],
+                reverse=True,
+            ),
+        )
+
 
 class ContextMMDWrapper:
     """Wrapper for ContextMMDDrift."""
@@ -488,6 +597,7 @@ class ContextMMDWrapper:
         backend: str = "tensorflow",
         p_val: float = 0.05,
         preprocess_x_ref: bool = False,
+        preprocess_at_init: bool = True,
         update_ref: Optional[Dict[str, int]] = None,
         preprocess_fn: Optional[Callable[..., Any]] = None,
         x_kernel: Optional[Callable[..., Any]] = None,
@@ -505,25 +615,26 @@ class ContextMMDWrapper:
 
         c_source = context_generator.transform(ds_source)
 
-        args = [
-            backend,
-            p_val,
-            preprocess_x_ref,
-            update_ref,
-            preprocess_fn,
-            x_kernel,
-            c_kernel,
-            n_permutations,
-            prop_c_held,
-            n_folds,
-            batch_size,
-            device,
-            input_shape,
-            data_type,
-            verbose,
-        ]
-
-        self.tester = ContextMMDDrift(X_s, c_source, *args)
+        self.tester = ContextMMDDrift(
+            X_s,
+            c_source,
+            backend=backend,
+            p_val=p_val,
+            x_ref_preprocessed=preprocess_x_ref,
+            preprocess_at_init=preprocess_at_init,
+            update_ref=update_ref,
+            preprocess_fn=preprocess_fn,
+            x_kernel=x_kernel,
+            c_kernel=c_kernel,
+            n_permutations=n_permutations,
+            prop_c_held=prop_c_held,
+            n_folds=n_folds,
+            batch_size=batch_size,
+            device=device,
+            input_shape=input_shape,
+            data_type=data_type,
+            verbose=verbose,
+        )
 
     def predict(
         self,
@@ -584,35 +695,36 @@ class LKWrapper:
         kernel_b = GaussianRBF(trainable=True) if kernel_b is None else kernel_b
         kernel = DeepKernel(self.proj, kernel_a, kernel_b, eps)
 
-        args = [
-            backend,
-            p_val,
-            x_ref_preprocessed,
-            preprocess_at_init,
-            update_x_ref,
-            preprocess_fn,
-            n_permutations,
-            batch_size_permutations,
-            var_reg,
-            reg_loss_fn,
-            train_size,
-            retrain_from_scratch,
-            optimizer,
-            learning_rate,
-            batch_size,
-            batch_size_predict,
-            preprocess_batch_fn,
-            epochs,
-            num_workers,
-            verbose,
-            train_kwargs,
-            device,
-            dataset,
-            dataloader,
-            input_shape,
-            data_type,
-        ]
-        self.tester = LearnedKernelDrift(X_s, kernel, *args)
+        self.tester = LearnedKernelDrift(
+            X_s,
+            kernel,
+            backend=backend,
+            p_val=p_val,
+            x_ref_preprocessed=x_ref_preprocessed,
+            preprocess_at_init=preprocess_at_init,
+            update_x_ref=update_x_ref,
+            preprocess_fn=preprocess_fn,
+            n_permutations=n_permutations,
+            batch_size_permutations=batch_size_permutations,
+            var_reg=var_reg,
+            reg_loss_fn=reg_loss_fn,
+            train_size=train_size,
+            retrain_from_scratch=retrain_from_scratch,
+            optimizer=optimizer,
+            learning_rate=learning_rate,
+            batch_size=batch_size,
+            batch_size_predict=batch_size_predict,
+            preprocess_batch_fn=preprocess_batch_fn,
+            epochs=epochs,
+            num_workers=num_workers,
+            verbose=verbose,
+            train_kwargs=train_kwargs,
+            device=device,
+            dataset=dataset,
+            dataloader=dataloader,
+            input_shape=input_shape,
+            data_type=data_type,
+        )
 
     def predict(
         self,

@@ -14,10 +14,20 @@ from cyclops.utils.optional import import_optional_module
 if TYPE_CHECKING:
     import shap
 else:
-    shap = import_optional_module(
-        "shap",
-        error="warn",
-    )
+    # imported lazily (see _ensure_shap_imported) rather than at module load,
+    # since shap depends on a third-party package also named `slicer`, which
+    # can collide with this repo's own cyclops/data/slicer.py under some
+    # import mechanisms (e.g. doctest's per-file `sys.path` handling) if shap
+    # were imported merely by importing this module.
+    shap = None
+
+
+def _ensure_shap_imported() -> Any:
+    """Import shap on first use and cache it at module scope."""
+    global shap  # noqa: PLW0603
+    if shap is None:
+        shap = import_optional_module("shap", error="warn")
+    return shap
 
 
 class Explainer:
@@ -38,6 +48,7 @@ class Explainer:
         data: Optional[Any] = None,
         explainer_type: Optional[str] = None,
     ) -> None:
+        _ensure_shap_imported()
         self.model = model
         self.data = data
         self.explainer_type = explainer_type
@@ -51,6 +62,8 @@ class Explainer:
             explainer = shap.DeepExplainer(self.model, self.data)
         elif self.explainer_type == "gradient":
             explainer = shap.GradientExplainer(self.model, self.data)
+        elif self.data is not None:
+            explainer = shap.Explainer(self.model, self.data)
         else:
             explainer = shap.Explainer(self.model)
         return explainer

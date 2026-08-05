@@ -78,7 +78,7 @@ def errorfill(
     """Create custom error fill."""
     ax = ax if ax is not None else plt.gca()
     if color is None:
-        color = next(ax._get_lines.prop_cycler)["color"]
+        color = ax._get_lines.get_next_color()
     if np.isscalar(yerr) or len(yerr) == len(y):
         ymin = y - yerr
         ymax = y + yerr
@@ -185,120 +185,6 @@ def set_bars_color(bars: mpl.container.BarContainer, color: str) -> None:
     """
     for bar_item in bars:
         bar_item.set_color(color)
-
-
-def plot_label_distribution(
-    X: pd.DataFrame,
-    y: pd.DataFrame,
-    label: str,
-    features: List[str],
-) -> None:
-    """Set color attribute for bars in bar plots.
-
-    Parameters
-    ----------
-    bars: mpl.container.BarContainer
-        Bars.
-    X: pd.DataFrame
-        Feature values.
-    y: pd.DataFrame
-        Label outcome values.
-    label: str
-        Column name of outcome variable.
-    features: list
-        Names of features to plot.
-
-    """
-    data = pd.concat([X, y], axis=1)
-    data_pos = data.loc[data[label] == 1]
-    data_neg = data.loc[data[label] == 0]
-    _, axs = plt.subplots(2, 2, figsize=(30, 15), tight_layout=True)
-
-    # Across age.
-    age = None
-    ages = data[age]
-    ages_pos = data_pos[age]
-    ages_neg = data_neg[age]
-    print(
-        f"Mean Age: Outcome present: {np.array(ages_pos).mean()}, \
-        No outcome: {np.array(ages_neg).mean()}",
-    )
-
-    (_, bins, _) = axs[0][0].hist(ages, bins=50, alpha=0.5, color="g")
-    axs[0][0].hist(ages_pos, bins=bins, alpha=0.5, color="r")
-    setup_plot(
-        axs[0][0],
-        "Age distribution",
-        "Age",
-        "Num. of encounters",
-        ["All", "Outcome present"],
-    )
-
-    # Across sex.
-    sex = None
-    sex = list(data[sex].unique())
-    sex_counts = list(data[sex].value_counts())
-    sex_counts_pos = list(data_pos[sex].value_counts())
-
-    sex_bars = axs[0][1].bar(sex, sex_counts, alpha=0.5)
-    set_bars_color(sex_bars, "g")
-    sex_bars_pos = axs[0][1].bar(sex, sex_counts_pos, alpha=0.5)
-    set_bars_color(sex_bars_pos, "r")
-    setup_plot(
-        axs[0][1],
-        "Sex distribution",
-        "Sex",
-        "Num. of encounters",
-        ["All", "Outcome present"],
-    )
-
-    # Across features.
-    len_features = len(features)
-    width = 0.04
-    x = np.arange(0, len([0, 1]))
-
-    for i, feature in enumerate(features):
-        feature_counts = list(data[feature].value_counts())
-        feature_counts_pos = list(data_pos[feature].value_counts())
-        if len(feature_counts) == 1:
-            feature_counts.append(0)
-            icd_counts_pos: List[int] = []
-        if len(icd_counts_pos) == 1:
-            feature_counts_pos.append(0)
-        position = x + (width * (1 - len_features) / 2) + i * width
-        feature_bars = axs[1][0].bar(position, feature_counts, width=width, alpha=0.5)
-        set_bars_color(feature_bars, "g")
-        feature_bars_pos = axs[1][0].bar(
-            position,
-            feature_counts_pos,
-            width=width,
-            alpha=0.5,
-        )
-        set_bars_color(feature_bars_pos, "r")
-
-    setup_plot(
-        axs[1][0],
-        "Feature distribution",
-        "Feature",
-        "Num. of encounters",
-        ["All", "Outcome present"],
-    )
-
-    # Across labels.
-    label_counts = y.value_counts().to_dict().values()
-    labels = data[label].value_counts().to_dict().keys()
-
-    label_bars = axs[1][1].bar(labels, label_counts, alpha=0.5)
-    set_bars_color(label_bars, "g")
-    setup_plot(
-        axs[1][1],
-        "Outcome distribution",
-        "Outcome",
-        "Num. of encounters",
-        ["All"],
-    )
-
-    plt.show()
 
 
 def plot_drift_experiment(

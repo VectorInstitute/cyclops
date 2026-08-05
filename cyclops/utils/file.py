@@ -55,7 +55,8 @@ def exchange_extension(file_path: str, new_ext: str) -> str:
     # Remove a leading dot
     new_ext = new_ext.strip(".")
     _, old_ext = os.path.splitext(file_path)
-    return file_path[: -len(old_ext)] + "." + new_ext
+    stem = file_path[: -len(old_ext)] if old_ext else file_path
+    return stem + "." + new_ext
 
 
 def process_file_save_path(
