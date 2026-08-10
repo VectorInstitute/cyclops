@@ -3665,7 +3665,7 @@ docs = [
     { name = "sphinx-autodoc-typehints", specifier = ">=1.24.0,<2" },
     { name = "sphinx-copybutton", specifier = ">=0.5.0,<0.6" },
     { name = "sphinx-design", specifier = ">=0.5.0,<0.8" },
-    { name = "sphinxcontrib-apidoc", specifier = ">=0.4.0,<0.5" },
+    { name = "sphinxcontrib-apidoc", specifier = ">=0.4.0,<0.7" },
 ]
 test = [
     { name = "codecov", specifier = ">=2.1.13,<3" },
@@ -4656,15 +4656,15 @@ wheels = [
 
 [[package]]
 name = "sphinxcontrib-apidoc"
-version = "0.4.0"
+version = "0.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pbr" },
     { name = "sphinx" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/28/3a/357ba5db05283df67f90f12f11040929c3de23a2616eeb47336c111b30cc/sphinxcontrib-apidoc-0.4.0.tar.gz", hash = "sha256:fe59d15882472aa93c2737afbdea6bedb34ce35cbd34aa4947909f5df1500aad", size = 15958, upload-time = "2023-09-04T10:14:52.944Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1c/8d/161842a1c199c1baed5f5bc0765a59a791324f962fea3b604f105c9493e7/sphinxcontrib_apidoc-0.6.0.tar.gz", hash = "sha256:329b9810d66988f48e127a6bd18cc8efbbd1cd20b8deb4691a35738af49ad88d", size = 16790, upload-time = "2025-05-08T12:55:44.463Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ce/af/8e8461015a2555c2d90606f61bebc63641dcb6ebda822e3530f8e228725a/sphinxcontrib_apidoc-0.4.0-py3-none-any.whl", hash = "sha256:18b9fb0cd4816758ec5f8be41c64f8924991dd40fd7b10e666ec9eed2800baff", size = 8415, upload-time = "2023-09-04T10:14:50.963Z" },
+    { url = "https://files.pythonhosted.org/packages/bf/ac/6b94ecdca590ad0596b83d78277f89d897539a6cfdc997d62f27651540bc/sphinxcontrib_apidoc-0.6.0-py3-none-any.whl", hash = "sha256:668592f933eee858f3bc0d0810d56d50dfa0a70f650a2faaaad501b9a3504633", size = 8765, upload-time = "2025-05-08T12:55:42.733Z" },
 ]
 
 [[package]]
